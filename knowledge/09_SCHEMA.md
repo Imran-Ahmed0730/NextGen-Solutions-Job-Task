@@ -13,13 +13,13 @@
 ---
 ## 1. Auth & Admin
 **users**: id, username(U), email(U, null), mobile(U, null), password_hash, full_name, employee_id(FK→employees, null), is_active, last_login_at, failed_attempts, locked_until
-**roles**: id, name(U), description
+**roles**: id, name(U), description, is_active
 **permissions**: id, code(U) e.g. `sales.invoice.post`, module, description
 **role_permissions**: role_id(FK), permission_id(FK) (PK both)
 **user_roles**: user_id(FK), role_id(FK) (PK both)
 **refresh_tokens**: id, user_id(FK), token_hash, expires_at, revoked_at
 **password_resets**: id, user_id(FK), token_hash, expires_at, used_at
-**audit_logs**: id, user_id, entity_type, entity_id, action(CREATE/UPDATE/DELETE/STATUS/LOGIN), before_json, after_json, ip, created_at
+**audit_logs**: id, user_id(FK→users, null), entity_type, entity_id, action(CREATE/UPDATE/DELETE/STATUS/LOGIN), before_json, after_json, ip, created_at
 **document_sequences**: id, doc_type(U with year), prefix, year, last_number, padding
 **company_settings**: id, name, address, phone, email, logo_path, currency_code, timezone, invoice_footer, credit_limit_mode(WARN/BLOCK), receipt_tolerance_pct
 

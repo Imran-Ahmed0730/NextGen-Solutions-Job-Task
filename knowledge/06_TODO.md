@@ -8,6 +8,11 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Payroll scope: salary + deductions only, or allowances/overtime too?
 - [ ] Invoice/report language: English only or English + Bangla?
 - [ ] Warehouse-level or company-level average cost? (default: company-level)
+- [ ] Password minimum length/complexity policy? (Current implementation requires at least 8 characters.)
+
+## Decisions made
+- Password recovery uses one-time reset links sent to the user's registered email address.
+- Lock an account for 15 minutes after 5 consecutive failed login attempts.
 
 ## Phase 0 — Foundation
 - [x] Create monorepo and git repository
@@ -23,17 +28,17 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Exit: stack boots, CI checks and builds pass locally
 
 ## Phase 1 — Auth & Security
-- [ ] Models: users, roles, permissions, role_permissions, user_roles
-- [ ] Password hashing, JWT access/refresh
-- [ ] Login, logout, refresh endpoints
-- [ ] Forgot/reset password, change password
-- [ ] Permission dependency (`require("module.resource.action")`)
-- [ ] Audit service + `audit_logs`
-- [ ] Seed: admin user, base roles, permission catalog
-- [ ] Screens: Login, Forgot Password, My Profile, Change Password
-- [ ] Screens: User List, User Add/Edit, Roles, Permissions
-- [ ] Permission-aware navigation
-- [ ] Exit: 403 tests for every protected endpoint
+- [x] Models: users, roles, permissions, role_permissions, user_roles, refresh_tokens, password_resets, audit_logs
+- [x] Password hashing, revocable JWT access and rotating refresh sessions
+- [x] Login, logout, refresh endpoints
+- [x] Email-based forgot/reset flow, change password
+- [x] Permission dependency (`require_permission("module.resource.action")`)
+- [x] Audit service + append-only `audit_logs`
+- [x] Seed: admin user, Administrator role, permission catalog
+- [x] Screens: Login, Forgot Password, My Profile, Change Password
+- [x] Screens: User List, User Add/Edit, Roles, Permissions
+- [x] Permission-aware navigation
+- [x] Exit: 403 tests for every protected endpoint
 
 ## Phase 2 — Master Data
 - [ ] `units` module (reference template for all others)
@@ -106,6 +111,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 
 ## Phase 10 — Employees
 - [ ] Employee master
+- [ ] Add `users.employee_id` foreign key to `employees.id`
 - [ ] Attendance
 - [ ] Payroll + salary payment via Money
 - [ ] Screens: Employee List, Add/Edit, Attendance, Basic Payroll

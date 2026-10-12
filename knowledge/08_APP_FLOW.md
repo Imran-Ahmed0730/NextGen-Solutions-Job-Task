@@ -19,17 +19,18 @@
 | **Administration** | User List · User Add/Edit · Roles · Permissions · Approval Rules · Pending Approvals · Audit Log · Document Numbering / System Config |
 | **Reports** | Report Center · Report Viewer |
 
-Sidebar items are shown only if the user has the matching `*.view` permission.
+Sidebar items are shown only if the user has the required `module.resource.action` permission.
 
 ## 2. Authentication flow
 ```
 Open app → no valid token? → Login
 Login (username/email/mobile + password)
   ├─ success → store tokens → Dashboard (or role landing page)
-  ├─ failure → inline error; lock after N attempts
-  └─ Forgot Password → request reset → email/OTP → set new password → Login
+  ├─ failure → inline error; lock for 15 minutes after 5 failed attempts
+  └─ Forgot Password → enter registered email → receive one-time reset link → set new password → Login
 Token expired → silent refresh → if refresh fails → Login
 Change Password (from profile) → verify old → set new → keep session
+Sign out (requires `auth.session.logout`) → revoke current session → Login
 ```
 
 ## 3. Standard document lifecycle

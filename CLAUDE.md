@@ -1,6 +1,16 @@
-# RULES
+# CLAUDE.md
 
-Three groups: **Business rules** (the requirement wins), **Engineering rules**, **AI usage rules**. Keep a copy of this file in `CLAUDE.md` and give it to the AI in every session.
+This repository is the Sabuj Pran Business Management Platform, a modular-monolith ERP-lite built around the requirements in the `knowledge/` folder. The requirement documents win over any AI-generated implementation. Keep this file in sync with the project rules and share it with the AI for every session.
+
+Key source documents:
+- `knowledge/01_PROJECT.md`
+- `knowledge/03_PRD.md`
+- `knowledge/04_RULES.md`
+- `knowledge/05_PLAN.md`
+- `knowledge/09_SCHEMA.md`
+- `knowledge/10_DEVELOPMENT_GUIDE.md` — detailed documentation of the project architecture, implemented features, workflows, and how to run and test the system.
+
+Three groups: **Business rules** (the requirement wins), **Engineering rules**, and **AI usage rules**.
 
 ## A. Business rules
 
@@ -71,6 +81,9 @@ Three groups: **Business rules** (the requirement wins), **Engineering rules**, 
 - E-13: No secrets in code; config via environment variables.
 - E-14: Small commits, one slice each; message format `module: what changed`.
 - E-15: A feature is done only when: code + migration + tests pass + permission added + audit hook + docs updated.
+- E-16: Always write code in an optimized, reusable way and avoid duplicate logic.
+- Create/update documentation for every part
+- Commit after completing a part or module so that it can be rolled back easily to a certain module.
 
 ## C. AI usage rules
 

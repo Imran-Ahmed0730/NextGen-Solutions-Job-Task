@@ -59,3 +59,4 @@ This is also a **job-interview deliverable**. The tech stack is fixed and cannot
 | 07_DESIGN.md | UI/UX design guide |
 | 08_APP_FLOW.md | Screen and process flows |
 | 09_SCHEMA.md | Database schema |
+| 10_DEVELOPMENT_GUIDE.md | Detailed documentation of the implemented application, architecture, workflows, operations, and project status |

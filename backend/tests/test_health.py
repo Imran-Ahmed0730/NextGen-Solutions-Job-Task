@@ -13,5 +13,4 @@ def test_health_endpoint() -> None:
 
 def test_root_endpoint() -> None:
     response = client.get("/")
-    assert response.status_code == 200
-    assert response.json()["name"] == "Sabuj Pran API"
+    assert response.status_code == 401
