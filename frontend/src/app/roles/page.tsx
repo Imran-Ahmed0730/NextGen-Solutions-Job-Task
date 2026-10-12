@@ -136,12 +136,12 @@ function RolesContent() {
         <form key={selected?.id ?? 'new-role'} noValidate className="space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
             Role name<RequiredMark />
-            <input name="name" required aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'role-name-error' : undefined} defaultValue={selected?.name ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="name" placeholder="e.g. Store Manager" required aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'role-name-error' : undefined} defaultValue={selected?.name ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="role-name-error" message={errors.name} />
           </label>
           <label className="block text-sm font-medium">
             Description
-            <textarea name="description" rows={2} defaultValue={selected?.description ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <textarea name="description" rows={2} placeholder="Describe this role's responsibilities (optional)" defaultValue={selected?.description ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
           </label>
           <fieldset className="rounded-lg border border-slate-200 p-4">
             <legend className="px-1 text-sm font-medium">Permissions</legend>

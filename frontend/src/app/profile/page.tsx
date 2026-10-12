@@ -54,21 +54,21 @@ export default function ProfilePage() {
         <form noValidate className="mt-6 max-w-xl space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
             Username
-            <input value={profile.username} readOnly className="mt-1 w-full rounded-md border bg-slate-50 px-3 py-2" />
+            <input value={profile.username} placeholder="Username" readOnly className="mt-1 w-full rounded-md border bg-slate-50 px-3 py-2" />
           </label>
           <label className="block text-sm font-medium">
             Full name<RequiredMark />
-            <input name="full_name" defaultValue={profile.full_name} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'profile-full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="full_name" placeholder="Enter your full name" defaultValue={profile.full_name} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'profile-full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="profile-full-name-error" message={errors.full_name} />
           </label>
           <label className="block text-sm font-medium">
             Email
-            <input name="email" type="email" defaultValue={profile.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'profile-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="email" type="email" placeholder="name@example.com" defaultValue={profile.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'profile-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="profile-email-error" message={errors.email} />
           </label>
           <label className="block text-sm font-medium">
             Mobile
-            <input name="mobile" defaultValue={profile.mobile ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="mobile" placeholder="e.g. 01XXXXXXXXX" defaultValue={profile.mobile ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
           </label>
           <p className="text-sm text-slate-600">Roles: {profile.roles.join(', ') || 'None'}</p>
           <button className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">Save profile</button>

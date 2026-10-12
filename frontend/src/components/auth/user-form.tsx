@@ -115,6 +115,7 @@ export function UserForm({ userId }: { userId: number | null }) {
             Username<RequiredMark />
             <input
               name="username"
+              placeholder="Choose a username"
               defaultValue={record?.username}
               required
               readOnly={Boolean(userId)}
@@ -126,22 +127,22 @@ export function UserForm({ userId }: { userId: number | null }) {
           </label>
           <label className="block text-sm font-medium">
             Full name<RequiredMark />
-            <input name="full_name" defaultValue={record?.full_name} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="full_name" placeholder="Enter the user's full name" defaultValue={record?.full_name} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="full-name-error" message={errors.full_name} />
           </label>
           <label className="block text-sm font-medium">
             Email
-            <input name="email" type="email" defaultValue={record?.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'user-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="email" type="email" placeholder="name@example.com" defaultValue={record?.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'user-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="user-email-error" message={errors.email} />
           </label>
           <label className="block text-sm font-medium">
             Mobile
-            <input name="mobile" defaultValue={record?.mobile ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="mobile" placeholder="e.g. 01XXXXXXXXX" defaultValue={record?.mobile ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
           </label>
           {!userId && (
             <label className="block text-sm font-medium">
               Initial password<RequiredMark />
-              <input name="password" type="password" autoComplete="new-password" required aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'user-password-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+              <input name="password" type="password" placeholder="At least 8 characters" autoComplete="new-password" required aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'user-password-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
               <FieldError id="user-password-error" message={errors.password} />
             </label>
           )}

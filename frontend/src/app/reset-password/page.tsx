@@ -60,6 +60,7 @@ export default function ResetPasswordPage() {
             One-time token from your email<RequiredMark />
             <input
               name="token"
+              placeholder="Paste the one-time token"
               value={token}
               onChange={(event) => setToken(event.target.value)}
               required
@@ -74,6 +75,7 @@ export default function ResetPasswordPage() {
             <input
               name="new_password"
               type="password"
+              placeholder="At least 8 characters"
               autoComplete="new-password"
               required
               aria-invalid={Boolean(errors.new_password)}
@@ -87,6 +89,7 @@ export default function ResetPasswordPage() {
             <input
               name="confirm_password"
               type="password"
+              placeholder="Re-enter your new password"
               autoComplete="new-password"
               required
               aria-invalid={Boolean(errors.confirm_password)}

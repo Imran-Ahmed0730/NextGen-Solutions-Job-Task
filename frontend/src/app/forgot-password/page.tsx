@@ -55,6 +55,7 @@ export default function ForgotPasswordPage() {
             <input
               name="email"
               type="email"
+              placeholder="name@example.com"
               autoComplete="email"
               required
               aria-invalid={Boolean(errors.email)}

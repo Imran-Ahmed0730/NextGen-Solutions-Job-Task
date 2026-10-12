@@ -50,6 +50,7 @@ export default function LoginPage() {
             Username, email, or mobile<RequiredMark />
             <input
               name="username"
+              placeholder="Username, email, or mobile"
               autoComplete="username"
               autoFocus
               minLength={1}
@@ -65,6 +66,7 @@ export default function LoginPage() {
             <input
               name="password"
               type="password"
+              placeholder="Enter your password"
               autoComplete="current-password"
               minLength={1}
               required
