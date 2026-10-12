@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
+import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
 import { apiRequest } from '@/lib/auth-api';
 import { roleSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -18,11 +19,12 @@ type RoleRecord = {
   permission_codes: string[];
 };
 
-export default function RolesPage() {
+function RolesContent() {
   const profile = useSessionProfile();
   const [roles, setRoles] = useState<RoleRecord[]>([]);
   const [permissions, setPermissions] = useState<PermissionRecord[]>([]);
   const [selected, setSelected] = useState<RoleRecord | null>(null);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   async function load() {
     try {
@@ -53,9 +55,10 @@ export default function RolesPage() {
       permission_ids: form.getAll('permission_ids').map(Number),
     });
     if (!parsed.success) {
-      showErrorToast(parsed.error.issues[0]?.message ?? 'Check the role details');
+      setErrors(getFieldErrors(parsed.error.issues));
       return;
     }
+    setErrors({});
     try {
       const result = await apiRequest<RoleRecord>(
         selected ? `/api/v1/auth/roles/${selected.id}` : '/api/v1/auth/roles',
@@ -96,7 +99,7 @@ export default function RolesPage() {
   }
 
   return (
-    <ProtectedPage>
+    <>
       <h1 className="text-2xl font-semibold">Roles</h1>
       <p className="mt-1 text-sm text-slate-600">Create roles and grant permissions from the catalog.</p>
       <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr]">
@@ -130,10 +133,11 @@ export default function RolesPage() {
         {(selected
           ? profile?.permissions.includes('auth.roles.update')
           : profile?.permissions.includes('auth.roles.create')) && (
-        <form key={selected?.id ?? 'new-role'} className="space-y-4" onSubmit={submit}>
+        <form key={selected?.id ?? 'new-role'} noValidate className="space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
-            Role name
-            <input name="name" required defaultValue={selected?.name ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            Role name<RequiredMark />
+            <input name="name" required aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'role-name-error' : undefined} defaultValue={selected?.name ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <FieldError id="role-name-error" message={errors.name} />
           </label>
           <label className="block text-sm font-medium">
             Description
@@ -180,6 +184,14 @@ export default function RolesPage() {
         </form>
         )}
       </div>
+    </>
+  );
+}
+
+export default function RolesPage() {
+  return (
+    <ProtectedPage>
+      <RolesContent />
     </ProtectedPage>
   );
 }

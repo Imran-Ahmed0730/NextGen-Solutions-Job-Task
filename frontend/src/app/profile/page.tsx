@@ -3,12 +3,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
 import { ApiError, apiRequest, type Profile } from '@/lib/auth-api';
 import { profileSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     apiRequest<Profile>('/api/v1/auth/me')
@@ -22,9 +24,10 @@ export default function ProfilePage() {
     event.preventDefault();
     const parsed = profileSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
     if (!parsed.success) {
-      showErrorToast(parsed.error.issues[0]?.message ?? 'Check your profile details');
+      setErrors(getFieldErrors(parsed.error.issues));
       return;
     }
+    setErrors({});
     try {
       const updated = await apiRequest<Profile>('/api/v1/auth/me', {
         method: 'PATCH',
@@ -48,18 +51,20 @@ export default function ProfilePage() {
       {!profile ? (
         <p className="mt-6 text-sm text-slate-500">Loading profile…</p>
       ) : (
-        <form className="mt-6 max-w-xl space-y-4" onSubmit={submit}>
+        <form noValidate className="mt-6 max-w-xl space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
             Username
             <input value={profile.username} readOnly className="mt-1 w-full rounded-md border bg-slate-50 px-3 py-2" />
           </label>
           <label className="block text-sm font-medium">
-            Full name
-            <input name="full_name" defaultValue={profile.full_name} required className="mt-1 w-full rounded-md border px-3 py-2" />
+            Full name<RequiredMark />
+            <input name="full_name" defaultValue={profile.full_name} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'profile-full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <FieldError id="profile-full-name-error" message={errors.full_name} />
           </label>
           <label className="block text-sm font-medium">
             Email
-            <input name="email" type="email" defaultValue={profile.email ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="email" type="email" defaultValue={profile.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'profile-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <FieldError id="profile-email-error" message={errors.email} />
           </label>
           <label className="block text-sm font-medium">
             Mobile

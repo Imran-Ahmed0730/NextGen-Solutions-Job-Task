@@ -6,14 +6,14 @@ export const loginSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().trim().email('Enter a valid email address'),
+  email: z.string().trim().min(1, 'Email address is required').email('Enter a valid email address'),
 });
 
 export const resetPasswordSchema = z
   .object({
     token: z.string().trim().min(1, 'Enter the reset token'),
     new_password: z.string().min(8, 'Use at least 8 characters'),
-    confirm_password: z.string(),
+    confirm_password: z.string().min(1, 'Confirm your password'),
   })
   .refine((value) => value.new_password === value.confirm_password, {
     message: 'Passwords do not match',
@@ -24,7 +24,7 @@ export const changePasswordSchema = z
   .object({
     current_password: z.string().min(1, 'Enter your current password'),
     new_password: z.string().min(8, 'Use at least 8 characters'),
-    confirm_password: z.string(),
+    confirm_password: z.string().min(1, 'Confirm your password'),
   })
   .refine((value) => value.new_password === value.confirm_password, {
     message: 'Passwords do not match',

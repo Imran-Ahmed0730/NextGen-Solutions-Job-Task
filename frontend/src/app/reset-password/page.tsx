@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 
+import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
 import { apiRequest } from '@/lib/auth-api';
 import { resetPasswordSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -12,6 +13,7 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [token, setToken] = useState('');
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     setToken(new URLSearchParams(window.location.search).get('token') ?? '');
@@ -23,9 +25,10 @@ export default function ResetPasswordPage() {
       Object.fromEntries(new FormData(event.currentTarget)),
     );
     if (!parsed.success) {
-      showErrorToast(parsed.error.issues[0]?.message ?? 'Check the reset details');
+      setErrors(getFieldErrors(parsed.error.issues));
       return;
     }
+    setErrors({});
     setBusy(true);
     try {
       await apiRequest<void>(
@@ -52,36 +55,45 @@ export default function ResetPasswordPage() {
     <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10">
       <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
         <h1 className="text-2xl font-semibold">Set a new password</h1>
-        <form className="mt-6 space-y-4" onSubmit={submit}>
+        <form noValidate className="mt-6 space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
-            One-time token from your email
+            One-time token from your email<RequiredMark />
             <input
               name="token"
               value={token}
               onChange={(event) => setToken(event.target.value)}
               required
+              aria-invalid={Boolean(errors.token)}
+              aria-describedby={errors.token ? 'reset-token-error' : undefined}
               className="mt-1 w-full rounded-md border px-3 py-2"
             />
+            <FieldError id="reset-token-error" message={errors.token} />
           </label>
           <label className="block text-sm font-medium">
-            New password
+            New password<RequiredMark />
             <input
               name="new_password"
               type="password"
               autoComplete="new-password"
               required
+              aria-invalid={Boolean(errors.new_password)}
+              aria-describedby={errors.new_password ? 'reset-password-error' : undefined}
               className="mt-1 w-full rounded-md border px-3 py-2"
             />
+            <FieldError id="reset-password-error" message={errors.new_password} />
           </label>
           <label className="block text-sm font-medium">
-            Confirm password
+            Confirm password<RequiredMark />
             <input
               name="confirm_password"
               type="password"
               autoComplete="new-password"
               required
+              aria-invalid={Boolean(errors.confirm_password)}
+              aria-describedby={errors.confirm_password ? 'reset-confirm-password-error' : undefined}
               className="mt-1 w-full rounded-md border px-3 py-2"
             />
+            <FieldError id="reset-confirm-password-error" message={errors.confirm_password} />
           </label>
           <button
             disabled={busy}

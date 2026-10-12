@@ -17,7 +17,7 @@ type UserRecord = {
   roles: string[];
 };
 
-export default function UsersPage() {
+function UsersContent() {
   const profile = useSessionProfile();
   const [users, setUsers] = useState<UserRecord[]>([]);
 
@@ -46,7 +46,7 @@ export default function UsersPage() {
   }
 
   return (
-    <ProtectedPage>
+    <>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Users</h1>
@@ -93,6 +93,14 @@ export default function UsersPage() {
           </tbody>
         </table>
       </div>
+    </>
+  );
+}
+
+export default function UsersPage() {
+  return (
+    <ProtectedPage>
+      <UsersContent />
     </ProtectedPage>
   );
 }

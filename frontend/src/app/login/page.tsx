@@ -5,21 +5,24 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 
 import { apiRequest, storeSession, type SessionTokens } from '@/lib/auth-api';
+import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
 import { loginSchema } from '@/lib/auth-validation';
 import { showErrorToast } from '@/lib/notifications';
 
 export default function LoginPage() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget));
     const parsed = loginSchema.safeParse(values);
     if (!parsed.success) {
-      showErrorToast(parsed.error.issues[0]?.message ?? 'Check your login details');
+      setErrors(getFieldErrors(parsed.error.issues));
       return;
     }
+    setErrors({});
     setBusy(true);
     try {
       const tokens = await apiRequest<SessionTokens>(
@@ -42,28 +45,34 @@ export default function LoginPage() {
         <p className="text-sm font-semibold tracking-[0.18em] text-emerald-700">SABUJ PRAN</p>
         <h1 className="mt-2 text-2xl font-semibold">Sign in</h1>
         <p className="mt-2 text-sm text-slate-500">Use your username, email, or mobile number.</p>
-        <form className="mt-6 space-y-4" onSubmit={submit}>
+        <form noValidate className="mt-6 space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
-            Username, email, or mobile
+            Username, email, or mobile<RequiredMark />
             <input
               name="username"
               autoComplete="username"
               autoFocus
               minLength={1}
               required
+              aria-invalid={Boolean(errors.username)}
+              aria-describedby={errors.username ? 'login-username-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
             />
+            <FieldError id="login-username-error" message={errors.username} />
           </label>
           <label className="block text-sm font-medium">
-            Password
+            Password<RequiredMark />
             <input
               name="password"
               type="password"
               autoComplete="current-password"
               minLength={1}
               required
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={errors.password ? 'login-password-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
             />
+            <FieldError id="login-password-error" message={errors.password} />
           </label>
           <button
             type="submit"

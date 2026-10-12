@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 
+import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
 import { apiRequest } from '@/lib/auth-api';
 import { forgotPasswordSchema } from '@/lib/auth-validation';
-import { showErrorToast, showSuccessToast, showToast } from '@/lib/notifications';
+import { showSuccessToast, showToast } from '@/lib/notifications';
 
 export default function ForgotPasswordPage() {
   const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -16,9 +18,10 @@ export default function ForgotPasswordPage() {
       Object.fromEntries(new FormData(event.currentTarget)),
     );
     if (!parsed.success) {
-      showErrorToast(parsed.error.issues[0]?.message ?? 'Enter your email address');
+      setErrors(getFieldErrors(parsed.error.issues));
       return;
     }
+    setErrors({});
     setBusy(true);
     try {
       const result = await apiRequest<{ message: string }>(
@@ -46,16 +49,19 @@ export default function ForgotPasswordPage() {
           Enter the email address on your account. If it matches, we’ll email you a one-time
           password reset link.
         </p>
-        <form className="mt-6 space-y-4" onSubmit={submit}>
+        <form noValidate className="mt-6 space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
-            Email address
+            Email address<RequiredMark />
             <input
               name="email"
               type="email"
               autoComplete="email"
               required
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'forgot-email-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
             />
+            <FieldError id="forgot-email-error" message={errors.email} />
           </label>
           <button
             disabled={busy}

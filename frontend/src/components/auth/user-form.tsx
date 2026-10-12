@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
 import { apiRequest } from '@/lib/auth-api';
 import { userSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -27,6 +28,7 @@ export function UserForm({ userId }: { userId: number | null }) {
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
   const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     Promise.all([
@@ -58,18 +60,19 @@ export function UserForm({ userId }: { userId: number | null }) {
       role_ids: selectedRoleIds,
     });
     if (!parsed.success) {
-      showErrorToast(parsed.error.issues[0]?.message ?? 'Check the user details');
+      setErrors(getFieldErrors(parsed.error.issues));
       return;
     }
     if (!userId && !parsed.data.password) {
-      showErrorToast('Set an initial password for this user');
+      setErrors({ password: 'Set an initial password for this user' });
       return;
     }
     if (parsed.data.password && parsed.data.password.length < 8) {
-      showErrorToast('Use at least 8 characters for the password');
+      setErrors({ password: 'Use at least 8 characters for the password' });
       return;
     }
 
+    setErrors({});
     const payload = {
       username: parsed.data.username,
       full_name: parsed.data.full_name,
@@ -107,24 +110,29 @@ export function UserForm({ userId }: { userId: number | null }) {
       ) : userId && loadFailed ? (
         <p className="mt-6 text-sm text-slate-600">User data could not be loaded.</p>
       ) : (
-        <form key={record?.id ?? 'new'} className="mt-6 max-w-2xl space-y-4" onSubmit={submit}>
+        <form key={record?.id ?? 'new'} noValidate className="mt-6 max-w-2xl space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
-            Username
+            Username<RequiredMark />
             <input
               name="username"
               defaultValue={record?.username}
               required
               readOnly={Boolean(userId)}
+              aria-invalid={Boolean(errors.username)}
+              aria-describedby={errors.username ? 'username-error' : undefined}
               className="mt-1 w-full rounded-md border px-3 py-2 read-only:bg-slate-50"
             />
+            <FieldError id="username-error" message={errors.username} />
           </label>
           <label className="block text-sm font-medium">
-            Full name
-            <input name="full_name" defaultValue={record?.full_name} required className="mt-1 w-full rounded-md border px-3 py-2" />
+            Full name<RequiredMark />
+            <input name="full_name" defaultValue={record?.full_name} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <FieldError id="full-name-error" message={errors.full_name} />
           </label>
           <label className="block text-sm font-medium">
             Email
-            <input name="email" type="email" defaultValue={record?.email ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="email" type="email" defaultValue={record?.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'user-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <FieldError id="user-email-error" message={errors.email} />
           </label>
           <label className="block text-sm font-medium">
             Mobile
@@ -132,8 +140,9 @@ export function UserForm({ userId }: { userId: number | null }) {
           </label>
           {!userId && (
             <label className="block text-sm font-medium">
-              Initial password
-              <input name="password" type="password" autoComplete="new-password" required className="mt-1 w-full rounded-md border px-3 py-2" />
+              Initial password<RequiredMark />
+              <input name="password" type="password" autoComplete="new-password" required aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'user-password-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+              <FieldError id="user-password-error" message={errors.password} />
             </label>
           )}
           <fieldset className="rounded-lg border border-slate-200 p-4">
