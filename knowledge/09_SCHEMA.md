@@ -1,0 +1,139 @@
+# DATABASE SCHEMA (MySQL 8, InnoDB, utf8mb4)
+
+## Conventions
+- Table names: `snake_case`, plural. PK: `id BIGINT UNSIGNED AUTO_INCREMENT`.
+- Money `DECIMAL(18,2)`, quantity `DECIMAL(18,3)`, unit cost `DECIMAL(18,4)`.
+- Audit columns on most tables: `created_at, updated_at, created_by, updated_by`.
+- Master tables add `is_active TINYINT(1)` and `deleted_at DATETIME NULL` (soft delete).
+- Documents have `doc_no VARCHAR(30) UNIQUE`, `status`, `doc_date`, and optional `approval_request_id`.
+- Foreign keys everywhere; indexes on FKs, `doc_date`, `status`, and (product_id, warehouse_id).
+- Ledger tables (`stock_transactions`, `money_transactions`, `audit_logs`) are append-only.
+- `(PK)` primary key, `(FK→table)` foreign key, `(U)` unique.
+
+---
+## 1. Auth & Admin
+**users**: id, username(U), email(U, null), mobile(U, null), password_hash, full_name, employee_id(FK→employees, null), is_active, last_login_at, failed_attempts, locked_until
+**roles**: id, name(U), description
+**permissions**: id, code(U) e.g. `sales.invoice.post`, module, description
+**role_permissions**: role_id(FK), permission_id(FK) (PK both)
+**user_roles**: user_id(FK), role_id(FK) (PK both)
+**refresh_tokens**: id, user_id(FK), token_hash, expires_at, revoked_at
+**password_resets**: id, user_id(FK), token_hash, expires_at, used_at
+**audit_logs**: id, user_id, entity_type, entity_id, action(CREATE/UPDATE/DELETE/STATUS/LOGIN), before_json, after_json, ip, created_at
+**document_sequences**: id, doc_type(U with year), prefix, year, last_number, padding
+**company_settings**: id, name, address, phone, email, logo_path, currency_code, timezone, invoice_footer, credit_limit_mode(WARN/BLOCK), receipt_tolerance_pct
+
+## 2. Master Data
+**units**: id, name, code(U), allow_decimal
+**product_categories**: id, name, parent_id(FK→self, null)
+**products**: id, sku(U), name, type(RAW/FINISHED/TRADING), category_id(FK), unit_id(FK), is_stocked, reorder_level, avg_cost(DECIMAL 18,4), sales_price_default, description
+**price_lists**: id, name, is_default, valid_from, valid_to
+**product_prices**: id, price_list_id(FK), product_id(FK), price, (U price_list_id+product_id)
+**warehouses**: id, name, code(U), address, is_default
+**expense_categories**: id, name, parent_id(null)
+**income_categories**: id, name
+**payment_methods**: id, name, type(CASH/BANK/MFS/ONLINE)
+**money_accounts**: id, name, type(CASH/BANK/MFS), payment_method_id(FK), account_no(null), opening_balance, allow_overdraft
+
+## 3. Parties
+**customers**: id, code(U), name, mobile, email, address, credit_limit, opening_due, price_list_id(FK, null)
+**suppliers**: id, code(U), name, mobile, email, address, opening_due
+**party_contacts**: id, party_type(CUSTOMER/SUPPLIER), party_id, name, phone, email, designation
+
+## 4. Inventory
+**stock_transactions** (ledger, append-only): id, txn_date, product_id(FK), warehouse_id(FK), movement_type, qty_signed, unit_cost, source_type, source_id, source_line_id, note, created_by, created_at
+**stock_balances**: product_id(FK), warehouse_id(FK) (PK both), qty_on_hand, qty_reserved, updated_at
+**stock_reservations**: id, sales_order_line_id(FK), product_id, warehouse_id, qty, status(ACTIVE/RELEASED/CONSUMED)
+**stock_transfers**: id, doc_no, doc_date, from_warehouse_id, to_warehouse_id, status, note
+**stock_transfer_lines**: id, transfer_id(FK), product_id, qty
+**stock_adjustments**: id, doc_no, doc_date, warehouse_id, reason, status
+**stock_adjustment_lines**: id, adjustment_id(FK), product_id, qty_signed, unit_cost
+**physical_counts**: id, doc_no, count_date, warehouse_id, status(OPEN/COUNTED/POSTED)
+**physical_count_lines**: id, count_id(FK), product_id, system_qty, counted_qty, variance_qty
+
+## 5. Purchase
+**purchase_orders**: id, doc_no, doc_date, supplier_id(FK), warehouse_id(FK), status, expected_date, subtotal, discount, total, note
+**purchase_order_lines**: id, po_id(FK), product_id, qty, unit_price, line_total, received_qty
+**goods_receipts**: id, doc_no, doc_date, po_id(FK, null), supplier_id, warehouse_id, status, total, note
+**goods_receipt_lines**: id, receipt_id(FK), po_line_id(FK, null), product_id, qty, unit_cost, line_total
+**direct_purchases**: id, doc_no, doc_date, supplier_id, warehouse_id, status, total, paid_amount, money_account_id(null)
+**direct_purchase_lines**: id, purchase_id(FK), product_id, qty, unit_cost, line_total
+**purchase_returns**: id, doc_no, doc_date, supplier_id, receipt_id(FK), warehouse_id, status, total
+**purchase_return_lines**: id, return_id(FK), receipt_line_id(FK), product_id, qty, unit_cost, line_total
+
+## 6. Production
+**boms**: id, code(U), finished_product_id(FK), output_qty, labor_cost_default, overhead_cost_default, is_active
+**bom_lines**: id, bom_id(FK), raw_product_id(FK), qty
+**production_orders**: id, doc_no, doc_date, bom_id(FK), finished_product_id, planned_qty, actual_qty, warehouse_id, sales_order_id(FK, null), status(DRAFT/IN_PROGRESS/COMPLETED/CANCELLED), labor_cost, overhead_cost, material_cost, total_cost, unit_cost
+**production_consumption**: id, production_order_id(FK), product_id, qty, unit_cost, line_cost
+**production_outputs**: id, production_order_id(FK), product_id, qty, unit_cost
+
+## 7. Sales
+**quotations**: id, doc_no, doc_date, customer_id(FK), valid_until, status, subtotal, discount, total, note
+**quotation_lines**: id, quotation_id(FK), product_id, qty, unit_price, line_total
+**sales_orders**: id, doc_no, doc_date, customer_id(FK), quotation_id(FK, null), warehouse_id, status, delivery_date, subtotal, discount, total, note
+**sales_order_lines**: id, order_id(FK), product_id, qty_ordered, unit_price, line_total, qty_reserved, qty_produced, qty_delivered
+**deliveries**: id, doc_no, doc_date, order_id(FK), customer_id, warehouse_id, status
+**delivery_lines**: id, delivery_id(FK), order_line_id(FK), product_id, qty, unit_cost_cogs
+**invoices**: id, doc_no, doc_date, customer_id, delivery_id(FK, null), order_id(FK, null), due_date, status, subtotal, discount, total, paid_amount, cogs_total
+**invoice_lines**: id, invoice_id(FK), product_id, qty, unit_price, line_total, unit_cost_cogs
+**sales_returns**: id, doc_no, doc_date, customer_id, invoice_id(FK), warehouse_id, status, total
+**sales_return_lines**: id, return_id(FK), invoice_line_id(FK), product_id, qty, unit_price, unit_cost_cogs
+
+## 8. Money
+**money_transactions** (ledger, append-only): id, txn_date, account_id(FK), amount_signed, txn_type(COLLECTION/PAYMENT/EXPENSE/INCOME/TRANSFER_OUT/TRANSFER_IN/OPENING/PURCHASE_PAYMENT/SALARY), source_type, source_id, party_type, party_id, note, created_by, created_at
+**customer_collections**: id, doc_no, doc_date, customer_id, account_id, amount, method_ref, status, note
+**collection_allocations**: id, collection_id(FK), invoice_id(FK), amount
+**supplier_payments**: id, doc_no, doc_date, supplier_id, account_id, amount, status, note
+**payment_allocations**: id, payment_id(FK), ref_type(RECEIPT/DIRECT_PURCHASE), ref_id, amount
+**expenses**: id, doc_no, doc_date, category_id(FK), account_id, amount, paid_to, status, note
+**incomes**: id, doc_no, doc_date, category_id(FK), account_id, amount, status, note
+**fund_transfers**: id, doc_no, doc_date, from_account_id, to_account_id, amount, status, note
+
+## 9. Assets
+**assets**: id, asset_code(U), name, category, purchase_date, purchase_cost, location, status(IN_USE/IN_STORE/UNDER_MAINTENANCE/DISPOSED)
+**asset_assignments**: id, asset_id(FK), employee_id(FK, null), location, assigned_on, returned_on
+**asset_maintenance**: id, asset_id(FK), maintenance_date, description, cost, next_due_date
+
+## 10. Employees
+**employees**: id, code(U), name, mobile, email, designation, department, join_date, base_salary, status
+**attendance**: id, employee_id(FK), att_date, status(PRESENT/ABSENT/LEAVE/LATE), in_time, out_time, (U employee_id+att_date)
+**payroll_runs**: id, doc_no, period_month, period_year, status, total_amount
+**payroll_lines**: id, run_id(FK), employee_id(FK), base_salary, additions, deductions, net_pay, paid_txn_id(FK→money_transactions, null)
+
+## 11. Approvals
+**approval_rules**: id, doc_type, min_amount, max_amount(null), approver_role_id(FK), is_active
+**approval_requests**: id, doc_type, doc_id, requested_by, rule_id(FK), status(PENDING/APPROVED/REJECTED), requested_at, decided_at
+**approval_actions**: id, request_id(FK), user_id, action(APPROVE/REJECT), note, acted_at
+
+---
+## Views (read-only)
+| View | Purpose |
+|---|---|
+| `v_current_stock` | product, warehouse, on-hand, reserved, available, avg_cost, value |
+| `v_stock_valuation` | per product and total value (on-hand × avg_cost) |
+| `v_customer_due` | opening + posted invoices − collections − returns, per customer |
+| `v_supplier_due` | opening + receipts/direct purchases − payments − returns, per supplier |
+| `v_account_balance` | opening + SUM(money_transactions) per account |
+| `v_order_status` | ordered / reserved / produced / delivered / remaining per order line |
+| `v_profit_summary` | sales − COGS − expenses by period |
+| `v_dashboard_kpis` | the 11 dashboard KPIs for a date |
+| `v_low_stock` | products at/below reorder level |
+
+## Key constraints
+- `CHECK (qty_on_hand >= 0)` on `stock_balances` (stocked products).
+- `UNIQUE(doc_no)` on every document table.
+- `CHECK (amount > 0)` on collections, payments, expenses, incomes, transfers.
+- `CHECK (from_account_id <> to_account_id)` on `fund_transfers`.
+- `CHECK (from_warehouse_id <> to_warehouse_id)` on `stock_transfers`.
+- Stock and money ledgers: no UPDATE/DELETE (enforced in the service layer, plus DB permissions in production).
+
+## Key indexes
+`stock_transactions(product_id, warehouse_id, txn_date)`, `money_transactions(account_id, txn_date)`, `(source_type, source_id)` on both ledgers, `invoices(customer_id, status)`, `goods_receipts(supplier_id, status)`, `audit_logs(entity_type, entity_id)`.
+
+## Invariants (must have tests)
+1. `stock_balances.qty_on_hand = SUM(stock_transactions.qty_signed)` per product + warehouse.
+2. Account balance = `opening_balance + SUM(money_transactions.amount_signed)`.
+3. Customer due = opening + posted invoices − collections − returns.
+4. Supplier due = opening + posted purchases − payments − returns.
+5. Production `unit_cost × output_qty = material + labor + overhead`.

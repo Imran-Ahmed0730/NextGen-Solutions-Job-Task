@@ -1,0 +1,128 @@
+# APP FLOW
+
+## 1. Navigation map (sidebar → screens, ~71)
+
+| Group | Screens |
+|---|---|
+| **Auth** | Login · Forgot Password · My Profile · Change Password |
+| **Dashboard** | Owner / Management Dashboard |
+| **Master Data** | Product List · Product Add/Edit · Categories · Units · Price List · Warehouses · Expense Categories · Income Categories · Payment Methods · Money Accounts · Company Settings |
+| **Customers** | Customer List · Customer Add/Edit · Customer Statement |
+| **Suppliers** | Supplier List · Supplier Add/Edit · Supplier Statement |
+| **Purchase** | PO List · Create/Edit PO · PO Details · Goods Receive · Direct Purchase · Purchase Return |
+| **Inventory** | Current Stock · Product Stock Ledger · Stock Transfer · Stock Adjustment · Physical Count |
+| **Production** | BOM List · BOM Create/Edit · Production Order List · Create/Edit Production Order · Production Details & Costing |
+| **Sales** | Quotation List · Create/Edit Quotation · Sales Order List · Create/Edit Sales Order · Sales Order Details · Delivery · Invoice List · Invoice Details/Print · Sales Return |
+| **Money** | Account Balances · Customer Collection · Supplier Payment · Expense Entry · Income Entry · Fund Transfer · Opening Balances · Account Ledger / Cash Book |
+| **Assets** | Asset List · Asset Add/Edit · Asset Assignment & Maintenance |
+| **Employees** | Employee List · Employee Add/Edit · Attendance · Basic Payroll |
+| **Administration** | User List · User Add/Edit · Roles · Permissions · Approval Rules · Pending Approvals · Audit Log · Document Numbering / System Config |
+| **Reports** | Report Center · Report Viewer |
+
+Sidebar items are shown only if the user has the matching `*.view` permission.
+
+## 2. Authentication flow
+```
+Open app → no valid token? → Login
+Login (username/email/mobile + password)
+  ├─ success → store tokens → Dashboard (or role landing page)
+  ├─ failure → inline error; lock after N attempts
+  └─ Forgot Password → request reset → email/OTP → set new password → Login
+Token expired → silent refresh → if refresh fails → Login
+Change Password (from profile) → verify old → set new → keep session
+```
+
+## 3. Standard document lifecycle
+```
+DRAFT ──submit──▶ (rule matches?) ─yes─▶ PENDING_APPROVAL ─approve─▶ APPROVED
+   │                   └─no──────────────────────────────────────────▶ APPROVED
+   │                                                         reject ─▶ REJECTED (→ edit → DRAFT)
+   └──cancel──▶ CANCELLED
+APPROVED ──post──▶ POSTED (immutable; stock/money/due effects written in one transaction)
+POSTED ──return/reversal/adjustment──▶ new document (never edit the original)
+```
+
+## 4. Master business cycle
+```
+Supplier ─▶ Purchase Order ─▶ Goods Receive ─▶ [Stock ↑, Avg Cost, Supplier Due ↑]
+                                   │
+                                   ▼
+Sales Quotation ─▶ Sales Order ─▶ Reserve stock ─▶ enough? ──no──▶ Production Order
+                                   │                                  │ consume raw, output FG, cost
+                                   ▼ yes                              ▼
+                               Delivery ◀─────────────────────────────┘
+                     [Stock ↓, COGS recorded] ─▶ Invoice [Customer Due ↑]
+                                   │
+                                   ▼
+                      Customer Collection ─▶ [Customer Due ↓, Cash/Bank/MFS ↑]
+                                   │
+Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Income [account ↑]
+                                   ▼
+                       Management Dashboard + Reports
+```
+
+## 5. Module flows
+
+### 5.1 Purchase
+1. Create PO (supplier, warehouse, lines) → Save Draft → Submit.
+2. Approval rule check → Approved.
+3. Goods Receive against PO (partial allowed) → Post → stock ledger rows, average cost update, supplier due raised, PO status `PARTIALLY_RECEIVED/RECEIVED`.
+4. Direct Purchase: same effects without PO (and optional immediate payment).
+5. Purchase Return: pick receipt, qty ≤ received → Post → stock ↓, supplier due ↓.
+6. Supplier Payment from Money module reduces due.
+
+### 5.2 Inventory
+- **Transfer:** from-warehouse → to-warehouse, lines → Post → `TRANSFER_OUT` + `TRANSFER_IN` atomically.
+- **Adjustment:** reason + lines (+/−) → (approval if configured) → Post → `ADJUSTMENT_IN/OUT`.
+- **Physical Count:** start count sheet (snapshot) → enter counted qty → review variances → Post → `COUNT_ADJUSTMENT` rows.
+- **Stock Ledger:** product + warehouse + date filters → every movement with running balance and source document link.
+
+### 5.3 Production
+1. BOM defines inputs per unit of finished good.
+2. Create Production Order (FG, qty, BOM, optional link to sales order).
+3. Start → check raw availability; shortage blocks with message.
+4. Complete → enter actual output qty, labor/overhead → Post: consume raw (`PRODUCTION_CONSUME`), add FG (`PRODUCTION_OUTPUT`), compute unit cost, update FG average cost.
+5. Linked sales order updates its *Produced* quantity.
+
+### 5.4 Sales
+1. Quotation → Send → Accept → Convert to Sales Order (or create order directly).
+2. Sales Order → Reserve: reserves available stock; shortage can raise a Production Order.
+3. Order Details shows Ordered / Available / Reserved / Produced / Delivered / Remaining.
+4. Delivery (partial allowed) → Post → stock ↓, COGS stored per line, reservation released.
+5. Invoice from delivery → Post → customer due ↑ (credit-limit check).
+6. Sales Return → qty ≤ delivered → Post → stock ↑ at original COGS, customer due ↓ (or credit note).
+
+### 5.5 Money
+- **Customer Collection:** customer, account, amount, allocate to invoices → Post → customer due ↓, account ↑.
+- **Supplier Payment:** supplier, account, amount, allocate to bills → Post → supplier due ↓, account ↓.
+- **Expense / Income:** category, account, amount (approval if over threshold) → Post → account ↓/↑.
+- **Fund Transfer:** from account → to account → two linked ledger rows.
+- **Opening Balances:** one-time per account/party at go-live.
+
+### 5.5b Employees
+Employee master → daily/monthly Attendance → Payroll run (salary, deductions) → Approve → Pay via Money (account ↓, expense recorded) → payslip.
+
+### 5.6 Assets
+Register asset → assign to employee/location → log maintenance → view history.
+
+### 5.7 Approvals
+```
+Document submitted → engine finds rule (type + amount) → creates approval request
+→ approver role sees it in Pending Approvals → Approve / Reject (with note)
+→ approved: document becomes APPROVED and can be posted
+→ rejected: back to requester with reason
+Requester ≠ approver. All actions audit-logged.
+```
+
+### 5.8 Reports & Dashboard
+Report Center (grouped list) → choose report → Report Viewer (parameters, table, totals, chart where useful) → Print / PDF / CSV. Dashboard KPIs read from database views; clicking a KPI opens the matching report.
+
+## 6. Error and edge flows
+| Situation | Behavior |
+|---|---|
+| Insufficient stock | Block post; show product, warehouse, available qty |
+| Over-receiving / over-delivering | Block beyond tolerance |
+| Editing posted document | Not allowed; offer Return/Reversal |
+| Permission missing | Hide action; API returns 403 with `PERMISSION_DENIED` |
+| Concurrent edit | Version check; ask user to reload |
+| Posting failure | Whole transaction rolled back; user sees reason; nothing partially saved |
