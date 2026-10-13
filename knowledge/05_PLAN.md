@@ -25,7 +25,7 @@ Inventory (4) comes before Purchase, Production and Sales. Money (6) comes befor
 **Screens:** Product List (+add/edit), Categories, Units, Price List, Expense Categories, Income Categories, Payment Methods, Warehouses, Money Accounts, Company Settings, Document Numbering.
 **Exit:** CRUD + validation + soft delete + permissions + audit; numbering gap-free in tests.
 
-**Progress:** Units CRUD, permission checks, soft delete/restore, audit logging, and screen are implemented. Remaining Phase 2 modules and the phase exit criteria are still pending.
+**Progress:** Units and product categories have CRUD screens, permission checks, soft-delete/restore, audit logging, and tests. Remaining Phase 2 modules and the phase exit criteria are still pending.
 
 ## Phase 3 — Customers & Suppliers
 **Build:** customer/supplier masters, contacts, opening dues, statements (running balance).

@@ -42,7 +42,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 
 ## Phase 2 — Master Data
 - [x] `units` module (reference template for all others)
-- [ ] Product categories
+- [x] Product categories
 - [ ] Products (type, unit, category, stocked flag, reorder level)
 - [ ] Price lists / product prices
 - [ ] Warehouses

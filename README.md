@@ -9,7 +9,7 @@ This repository is the foundation for the Sabuj Pran modular monolith described 
 - Next.js frontend with TypeScript, Tailwind CSS, and shared UI primitives
 - Ruff, Mypy, Pytest, Vitest, and CI checks
 - Phase 1 authentication, role-based permissions, audit logging, and administration screens
-- Phase 2 Units master-data module as the reference pattern for upcoming modules
+- Phase 2 Units and hierarchical product-category master-data modules
 
 ## Stack
 
@@ -38,9 +38,10 @@ docker compose run --rm --no-deps api python -m app.modules.auth.seed
 The seed command creates `admin` with a randomly generated Argon2-hashed password and an
 Administrator role. The plaintext password is printed only when the account is first created;
 save it securely. Running the command again does not reset an existing password. Sign in at
-`/login`; the Administrator role is assigned the seeded auth and `master_data.units.*` permissions.
-Run the seed again after upgrading the database to add newly introduced permissions to an existing
-Administrator role; this does not change the existing admin password.
+`/login`; the Administrator role is assigned the seeded auth and master-data permissions, including
+`master_data.units.*` and `master_data.product_categories.*`. Run the seed again after upgrading
+the database to add newly introduced permissions to an existing Administrator role; this does not
+change the existing admin password.
 
 ## Run the web app locally
 
@@ -81,6 +82,7 @@ the API; reset tokens are never displayed in the Users screen or written to the 
 
 ## Phase 2 progress
 
-The Units master-data slice is implemented at `/units`. It supports create, update, soft-delete,
-restore, fractional-quantity configuration, permission checks, and audit logging. Other Phase 2
-master-data modules remain in the project plan and are not yet implemented.
+The Units master-data slice is implemented at `/units`. Product categories are managed at
+`/categories`, including parent-child hierarchies. Both support create, update, soft-delete, restore,
+permission checks, and audit logging. Other Phase 2 master-data modules remain in the project plan
+and are not yet implemented.

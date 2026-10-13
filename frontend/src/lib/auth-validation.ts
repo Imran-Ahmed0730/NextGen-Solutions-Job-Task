@@ -57,3 +57,12 @@ export const unitSchema = z.object({
   code: z.string().trim().min(1, 'Unit code is required').max(30, 'Use at most 30 characters'),
   allow_decimal: z.boolean(),
 });
+
+export const productCategorySchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Category name is required')
+    .max(100, 'Use at most 100 characters'),
+  parent_id: z.number().nullable(),
+});

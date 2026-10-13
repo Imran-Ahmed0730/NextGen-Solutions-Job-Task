@@ -14,6 +14,11 @@ const navigation = [
   { href: '/users', label: 'Users', permissions: ['auth.users.read'] },
   { href: '/units', label: 'Units', permissions: ['master_data.units.read'] },
   {
+    href: '/categories',
+    label: 'Product Categories',
+    permissions: ['master_data.product_categories.read'],
+  },
+  {
     href: '/roles',
     label: 'Roles',
     permissions: ['auth.roles.read', 'auth.permissions.read'],

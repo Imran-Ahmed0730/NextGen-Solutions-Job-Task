@@ -47,6 +47,18 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("master_data.units.create", "master_data", "Create units"),
     PermissionDefinition("master_data.units.update", "master_data", "Update units"),
     PermissionDefinition("master_data.units.delete", "master_data", "Delete units"),
+    PermissionDefinition(
+        "master_data.product_categories.read", "master_data", "View product categories"
+    ),
+    PermissionDefinition(
+        "master_data.product_categories.create", "master_data", "Create product categories"
+    ),
+    PermissionDefinition(
+        "master_data.product_categories.update", "master_data", "Update product categories"
+    ),
+    PermissionDefinition(
+        "master_data.product_categories.delete", "master_data", "Delete product categories"
+    ),
 )
 
 

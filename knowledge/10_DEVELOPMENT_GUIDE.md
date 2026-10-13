@@ -54,6 +54,7 @@ is protected.
 │   │   ├── core/                # Configuration, DB, security, exceptions, email
 │   │   ├── modules/auth/        # Authentication and user/role administration
 │   │   ├── modules/units/       # Measurement-unit master-data reference module
+│   │   ├── modules/product_categories/ # Hierarchical product categories
 │   │   └── main.py              # FastAPI app and router registration
 │   ├── alembic/versions/        # Versioned database changes
 │   └── tests/                   # Backend service/API/model/mail tests
@@ -71,8 +72,9 @@ is protected.
 `backend/app/modules/auth/` contains the auth and administration router, Pydantic schemas,
 SQLAlchemy models, service logic, repository queries, audit helper, and initial-admin seed script.
 `backend/app/modules/units/` is the first Phase 2 business module and follows the same
-router/schema/model/service/repository split. `backend/app/core/` contains shared facilities such
-as JWT/session validation, configuration, database access, and SMTP delivery.
+router/schema/model/service/repository split. `backend/app/modules/product_categories/` follows
+that structure for hierarchical categories. `backend/app/core/` contains shared facilities such as
+JWT/session validation, configuration, database access, and SMTP delivery.
 
 The frontend route tree currently includes:
 
@@ -90,6 +92,7 @@ The frontend route tree currently includes:
 | `/roles` | Create/update roles and grant permissions |
 | `/permissions` | Read-only permission catalog |
 | `/units` | List, create, update, soft-delete, and restore measurement units |
+| `/categories` | List, create, update, soft-delete, and restore product categories |
 
 Routes are implemented under `frontend/src/app/`. Protected routes use the shared authentication
 shell and permission-aware navigation.
@@ -113,8 +116,8 @@ The router maps HTTP operations and delegates application behavior to each modul
 Pydantic schemas validate incoming payloads and document responses. Services own business
 workflows, repositories hold reusable queries, and models map persisted data.
 
-`backend/app/main.py` registers the health, authentication, and units routers, configures CORS for
-`FRONTEND_ORIGIN`, and protects the API root. The auth router is mounted under
+`backend/app/main.py` registers the health, authentication, units, and product-category routers,
+configures CORS for `FRONTEND_ORIGIN`, and protects the API root. The auth router is mounted under
 `/api/v1/auth`.
 
 ## 5. Authentication and account flows
@@ -210,6 +213,11 @@ The implemented auth API is:
 | `PATCH /api/v1/units/{id}` | `master_data.units.update` | Update a unit |
 | `DELETE /api/v1/units/{id}` | `master_data.units.delete` | Soft-delete a unit |
 | `POST /api/v1/units/{id}/activate` | `master_data.units.update` | Restore a soft-deleted unit |
+| `GET /api/v1/product-categories` | `master_data.product_categories.read` | List categories; `include_inactive=true` includes deleted categories |
+| `POST /api/v1/product-categories` | `master_data.product_categories.create` | Create a category with an optional parent |
+| `PATCH /api/v1/product-categories/{id}` | `master_data.product_categories.update` | Update a category or its parent |
+| `DELETE /api/v1/product-categories/{id}` | `master_data.product_categories.delete` | Soft-delete a category |
+| `POST /api/v1/product-categories/{id}/activate` | `master_data.product_categories.update` | Restore a soft-deleted category |
 
 The public health endpoint is `GET /health`. The API root endpoint requires
 `auth.profile.read`. Query pagination for user/audit/unit lists currently uses `offset` and
@@ -228,8 +236,11 @@ Authentication currently persists:
 
 The first master-data migration adds `units` with its name, unique code, fractional-quantity flag,
 active/deleted state, and timestamps. Unit changes are recorded in `audit_logs`; deleted units
-remain stored and may be restored. Product categories, products, price lists, warehouses, and the
-other Phase 2 setup data have not yet been implemented.
+remain stored and may be restored. The next migration adds `product_categories`, with an optional
+self-referencing parent, active/deleted state, and timestamps. Category services reject missing or
+inactive parents and parent changes that would create a cycle. Category create/update/delete/restore
+operations write audit records; deleting a category is soft and preserves child references.
+Products, price lists, warehouses, and the other Phase 2 setup data have not yet been implemented.
 
 The current migration chain is:
 
@@ -239,6 +250,7 @@ The current migration chain is:
 4. `20261013_remove_reset_perm` — removes the obsolete operator-issued reset
    permission now that recovery is email-based.
 5. `20261013_units` — creates the first master-data table.
+6. `20261013_categories` — creates hierarchical product categories.
 
 Do not edit a migration after it has been applied to an environment. Add a new Alembic revision for
 subsequent schema changes. Offline SQL generation checks migration construction; applying a
@@ -334,18 +346,25 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   permissions screens.
 - SweetAlert2 toast feedback for frontend validation, success, and action errors.
 
-### Implemented Phase 2 slice — Units
+### Implemented Phase 2 slices — Units and product categories
 
 - Unit API, persistence model, schema validation, repository, and service.
 - Permission-controlled unit list/create/update/delete/restore, with audit entries and soft-delete
   behavior.
 - Administrator seed includes the `master_data.units.*` permissions.
 - Units screen is available at `/units`.
+- Product-category API and persistence model with optional self-referencing parent categories.
+- Parent existence/active-state validation and cycle prevention for category hierarchy changes.
+- Permission-controlled category list/create/update/delete/restore, with audit entries and
+  soft-delete behavior.
+- Administrator seed includes the `master_data.product_categories.*` permissions.
+- Product-category screen is available at `/categories`.
 
 ### Planned, not yet implemented
 
-The remaining roadmap is master data, customers/suppliers, inventory, purchase, money, production,
-sales, assets, employees, approvals, reports/dashboard, and full-cycle hardening. Consult
+The remaining roadmap is products, pricing, warehouses, other master data, customers/suppliers,
+inventory, purchase, money, production, sales, assets, employees, approvals, reports/dashboard, and
+full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens
 are actually delivered.
