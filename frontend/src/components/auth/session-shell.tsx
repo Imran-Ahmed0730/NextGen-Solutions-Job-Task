@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { ApiError, apiRequest, clearSession, type Profile } from '@/lib/auth-api';
 import { showErrorToast } from '@/lib/notifications';
@@ -184,6 +184,8 @@ export function SessionShell({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState('');
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!sessionStorage.getItem('access_token')) {
@@ -201,6 +203,27 @@ export function SessionShell({ children }: { children: ReactNode }) {
         }
       });
   }, [router]);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    function handlePointerDown(event: MouseEvent) {
+      if (
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target as Node)
+      ) {
+        setAccountMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setAccountMenuOpen(false);
+    }
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [accountMenuOpen]);
 
   async function signOut() {
     try {
@@ -391,7 +414,63 @@ export function SessionShell({ children }: { children: ReactNode }) {
               </p>
             </div>
           </div>
-          <span className="hidden text-sm text-slate-600 sm:block">{profile.full_name}</span>
+          <div ref={accountMenuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setAccountMenuOpen((open) => !open)}
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+              aria-expanded={accountMenuOpen}
+              aria-haspopup="menu"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-800">
+                {profile.full_name.slice(0, 1).toUpperCase()}
+              </span>
+              <span className="hidden max-w-40 truncate sm:block">{profile.full_name}</span>
+            </button>
+            {accountMenuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+              >
+                {profile.permissions.includes('auth.profile.read') && (
+                  <Link
+                    href="/profile"
+                    role="menuitem"
+                    onClick={() => setAccountMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <AppIcon name="user" className="h-4 w-4" />
+                    My Profile
+                  </Link>
+                )}
+                {profile.permissions.includes('auth.password.change') && (
+                  <Link
+                    href="/change-password"
+                    role="menuitem"
+                    onClick={() => setAccountMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <AppIcon name="key" className="h-4 w-4" />
+                    Change Password
+                  </Link>
+                )}
+                {profile.permissions.includes('auth.session.logout') && (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setAccountMenuOpen(false);
+                      signOut();
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-rose-700 hover:bg-rose-50"
+                  >
+                    <AppIcon name="logout" className="h-4 w-4" />
+                    Sign Out
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </header>
         <SessionContext.Provider value={profile}>
           <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6 lg:p-8">
