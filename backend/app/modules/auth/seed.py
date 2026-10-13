@@ -127,6 +127,18 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "master_data.price_lists.delete", "master_data", "Delete price lists"
     ),
+    PermissionDefinition(
+        "master_data.company_settings.read", "master_data", "View company settings"
+    ),
+    PermissionDefinition(
+        "master_data.company_settings.create", "master_data", "Create company settings"
+    ),
+    PermissionDefinition(
+        "master_data.company_settings.update", "master_data", "Update company settings"
+    ),
+    PermissionDefinition(
+        "master_data.company_settings.delete", "master_data", "Delete company settings"
+    ),
 )
 
 

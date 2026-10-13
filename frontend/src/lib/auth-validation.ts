@@ -230,3 +230,12 @@ export const productPriceSchema = z.object({
   product_id: z.number().int().positive(),
   price: z.coerce.number().min(0, 'Price must be zero or greater'),
 });
+
+export const companySettingSchema = z.object({
+  key: z
+    .string()
+    .trim()
+    .min(1, 'Setting key is required')
+    .max(100, 'Use at most 100 characters'),
+  value: z.string(),
+});

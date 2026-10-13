@@ -48,7 +48,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Warehouses
 - [x] Expense categories, income categories
 - [x] Payment methods, money accounts
-- [ ] Company settings
+- [x] Company settings
 - [ ] Document numbering service
 - [ ] All Phase 2 screens
 - [ ] Exit: CRUD, soft delete, permissions, audit tested
