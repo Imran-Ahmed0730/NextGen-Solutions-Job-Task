@@ -98,6 +98,23 @@ const navigation = [
       },
     ],
   },
+  {
+    label: 'Parties',
+    items: [
+      {
+        href: '/customers',
+        label: 'Customers',
+        icon: 'customer',
+        permissions: ['master_data.customers.read'],
+      },
+      {
+        href: '/suppliers',
+        label: 'Suppliers',
+        icon: 'supplier',
+        permissions: ['master_data.suppliers.read'],
+      },
+    ],
+  },
 ] as const;
 
 const iconPaths = {
@@ -143,6 +160,8 @@ const iconPaths = {
   ),
   settings: <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Zm7.4-2.1 1.3 1-1.4 2.4-1.6-.6a6.7 6.7 0 0 1-1.3.75l-.2 1.7h-2.4l-.2-1.7a6.7 6.7 0 0 1-1.3-.75l-1.6.6L4.7 14.4l1.3-1a6.6 6.6 0 0 1 0-1.5l-1.3-1 1.4-2.4 1.6.6a6.7 6.7 0 0 1 1.3-.75l.2-1.7h2.4l.2 1.7a6.7 6.7 0 0 1 1.3.75l1.6-.6 1.4 2.4-1.3 1a6.6 6.6 0 0 1 0 1.5Z" />,
   number: <path d="M7 4v16M17 4v16M4 8h16M4 16h16" />,
+  customer: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />,
+  supplier: <path d="M3 7h18M5 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2M4 7v13h16V7M9 11h6" />,
   shield: <path d="M12 3 20 6v5.5c0 4.6-3.1 7.8-8 9.5-4.9-1.7-8-4.9-8-9.5V6l8-3Zm-3.5 9 2.3 2.3 4.8-5" />,
   list: <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />,
   logout: <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5m5-4 4-4-4-4m4 4H9" />,

@@ -151,6 +151,14 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "master_data.document_numbering.delete", "master_data", "Delete document numbering"
     ),
+    PermissionDefinition("master_data.customers.read", "master_data", "View customers"),
+    PermissionDefinition("master_data.customers.create", "master_data", "Create customers"),
+    PermissionDefinition("master_data.customers.update", "master_data", "Update customers"),
+    PermissionDefinition("master_data.customers.delete", "master_data", "Delete customers"),
+    PermissionDefinition("master_data.suppliers.read", "master_data", "View suppliers"),
+    PermissionDefinition("master_data.suppliers.create", "master_data", "Create suppliers"),
+    PermissionDefinition("master_data.suppliers.update", "master_data", "Update suppliers"),
+    PermissionDefinition("master_data.suppliers.delete", "master_data", "Delete suppliers"),
 )
 
 

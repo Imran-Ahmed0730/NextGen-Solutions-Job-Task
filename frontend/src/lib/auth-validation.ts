@@ -240,6 +240,28 @@ export const companySettingSchema = z.object({
   value: z.string(),
 });
 
+export const customerSchema = z.object({
+  code: z.string().trim().min(1, 'Customer code is required').max(30, 'Use at most 30 characters'),
+  name: z.string().trim().min(1, 'Customer name is required').max(255, 'Use at most 255 characters'),
+  mobile: z.string().trim().max(30, 'Use at most 30 characters').nullable().optional(),
+  email: z.string().trim().max(255, 'Use at most 255 characters').nullable().optional(),
+  address: z.string().trim().max(1000, 'Use at most 1000 characters').nullable().optional(),
+  credit_limit: z.coerce.number().min(0),
+  opening_due: z.coerce.number(),
+  price_list_id: z.number().int().positive().nullable().optional(),
+  is_active: z.boolean(),
+});
+
+export const supplierSchema = z.object({
+  code: z.string().trim().min(1, 'Supplier code is required').max(30, 'Use at most 30 characters'),
+  name: z.string().trim().min(1, 'Supplier name is required').max(255, 'Use at most 255 characters'),
+  mobile: z.string().trim().max(30, 'Use at most 30 characters').nullable().optional(),
+  email: z.string().trim().max(255, 'Use at most 255 characters').nullable().optional(),
+  address: z.string().trim().max(1000, 'Use at most 1000 characters').nullable().optional(),
+  opening_due: z.coerce.number(),
+  is_active: z.boolean(),
+});
+
 export const documentNumberingSchema = z.object({
   doc_type: z.string().trim().min(1, 'Document type is required').max(50, 'Use at most 50 characters'),
   prefix: z.string().trim().min(1, 'Prefix is required').max(30, 'Use at most 30 characters'),
