@@ -26,7 +26,11 @@ def create_category(
         raise HTTPException(status_code=422, detail="Parent category id must be an integer")
     _validate_parent(db, parent_id, exclude_id=None)
 
-    category = ProductCategory(name=name, parent_id=parent_id)
+    is_active = data.get("is_active", True)
+    if not isinstance(is_active, bool):
+        raise HTTPException(status_code=422, detail="is_active must be a boolean")
+
+    category = ProductCategory(name=name, parent_id=parent_id, is_active=is_active)
     db.add(category)
     db.flush()
     record_audit(
@@ -66,16 +70,30 @@ def update_category(
         if parent_id != category.parent_id:
             _validate_parent(db, parent_id, exclude_id=category.id)
 
+    is_active = category.is_active
+    if "is_active" in data:
+        value = data["is_active"]
+        if not isinstance(value, bool):
+            raise HTTPException(status_code=422, detail="is_active must be a boolean")
+        is_active = value
+
     before = _snapshot(category)
     category.name = name
     category.parent_id = parent_id
+    category.is_active = is_active
     db.flush()
     record_audit(
         db,
         actor_id=actor.id,
         entity_type="product_category",
         entity_id=category.id,
-        action="UPDATE",
+        action=(
+            "STATUS"
+            if is_active != before["is_active"]
+            and name == before["name"]
+            and parent_id == before["parent_id"]
+            else "UPDATE"
+        ),
         before=before,
         after=_snapshot(category),
         ip=ip,

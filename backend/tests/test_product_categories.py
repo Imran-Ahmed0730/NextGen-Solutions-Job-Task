@@ -175,6 +175,52 @@ def test_update_preserves_reference_to_soft_deleted_parent(
     assert updated.json()["parent_id"] == parent["id"]
 
 
+def test_category_can_be_created_inactive_and_status_changes_are_audited(
+    client: TestClient, db_session: Session
+) -> None:
+    headers = _login_admin(client, db_session)
+    created = client.post(
+        "/api/v1/product-categories",
+        headers=headers,
+        json={"name": "Temporarily unavailable", "is_active": False},
+    )
+    assert created.status_code == 201
+    assert created.json()["is_active"] is False
+    assert created.json()["deleted_at"] is None
+
+    assert client.get("/api/v1/product-categories", headers=headers).json() == []
+    all_categories = client.get(
+        "/api/v1/product-categories?include_inactive=true", headers=headers
+    ).json()
+    assert len(all_categories) == 1
+
+    activated = client.patch(
+        f"/api/v1/product-categories/{created.json()['id']}",
+        headers=headers,
+        json={"is_active": True},
+    )
+    assert activated.status_code == 200
+    assert activated.json()["is_active"] is True
+
+    deactivated = client.patch(
+        f"/api/v1/product-categories/{created.json()['id']}",
+        headers=headers,
+        json={"is_active": False},
+    )
+    assert deactivated.status_code == 200
+    assert deactivated.json()["is_active"] is False
+
+    status_audits = list(
+        db_session.scalars(
+            select(AuditLog).where(
+                AuditLog.entity_type == "product_category",
+                AuditLog.action == "STATUS",
+            )
+        )
+    )
+    assert len(status_audits) == 2
+
+
 def test_product_category_permission_denial(client: TestClient, db_session: Session) -> None:
     _login_admin(client, db_session)
     user = User(

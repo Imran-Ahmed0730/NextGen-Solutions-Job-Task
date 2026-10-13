@@ -65,4 +65,5 @@ export const productCategorySchema = z.object({
     .min(1, 'Category name is required')
     .max(100, 'Use at most 100 characters'),
   parent_id: z.number().nullable(),
+  is_active: z.boolean(),
 });

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
+import Swal from 'sweetalert2';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
@@ -81,6 +82,7 @@ function CategoriesContent() {
     const parsed = productCategorySchema.safeParse({
       name: form.get('name'),
       parent_id: typeof parentValue === 'string' && parentValue ? Number(parentValue) : null,
+      is_active: form.get('is_active') === 'active',
     });
     if (!parsed.success) {
       setErrors(getFieldErrors(parsed.error.issues));
@@ -97,6 +99,7 @@ function CategoriesContent() {
         },
       );
       showSuccessToast(selected ? 'Category updated.' : 'Category created.');
+      if (!parsed.data.is_active) setIncludeInactive(true);
       setSelected(null);
     } catch (cause) {
       showErrorToast(cause instanceof Error ? cause.message : 'Could not save category');
@@ -109,15 +112,28 @@ function CategoriesContent() {
     }
   }
 
-  async function setActive(category: CategoryRecord, active: boolean) {
+  async function setDeleted(category: CategoryRecord, deleted: boolean) {
+    if (deleted) {
+      const confirmation = await Swal.fire({
+        title: 'Delete this category?',
+        text: 'The category will be soft-deleted and can be restored later.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete category',
+        confirmButtonColor: '#be123c',
+        cancelButtonText: 'Cancel',
+      });
+      if (!confirmation.isConfirmed) return;
+    }
+
     try {
       await apiRequest<CategoryRecord>(
-        active
-          ? `/api/v1/product-categories/${category.id}/activate`
-          : `/api/v1/product-categories/${category.id}`,
-        { method: active ? 'POST' : 'DELETE' },
+        deleted
+          ? `/api/v1/product-categories/${category.id}`
+          : `/api/v1/product-categories/${category.id}/activate`,
+        { method: deleted ? 'DELETE' : 'POST' },
       );
-      showSuccessToast(active ? 'Category restored.' : 'Category deleted.');
+      showSuccessToast(deleted ? 'Category deleted.' : 'Category restored.');
       if (selected?.id === category.id) setSelected(null);
     } catch (cause) {
       showErrorToast(cause instanceof Error ? cause.message : 'Could not update category');
@@ -217,6 +233,29 @@ function CategoriesContent() {
             </select>
             <FieldError id="category-parent-error" message={errors.parent_id} />
           </label>
+          <fieldset className="sm:col-span-2">
+            <legend className="text-sm font-medium">Status</legend>
+            <div className="mt-2 flex flex-wrap gap-4">
+              {[
+                { value: 'active', label: 'Active', checked: selected?.is_active ?? true },
+                { value: 'inactive', label: 'Inactive', checked: selected ? !selected.is_active : false },
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <input
+                    type="radio"
+                    name="is_active"
+                    value={option.value}
+                    defaultChecked={option.checked}
+                    className="h-4 w-4 accent-emerald-700"
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <div className="flex gap-3 sm:col-span-2">
             <button className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">
               {selected ? 'Save category' : 'Create category'}
@@ -240,7 +279,7 @@ function CategoriesContent() {
           checked={includeInactive}
           onChange={(event) => setIncludeInactive(event.target.checked)}
         />
-        Show deleted categories
+        Show inactive and deleted categories
       </label>
 
       <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200">
@@ -263,39 +302,94 @@ function CategoriesContent() {
                     {category.name}
                   </td>
                   <td className="px-4 py-3">{parent?.name ?? '—'}</td>
-                  <td className="px-4 py-3">{category.is_active ? 'Active' : 'Deleted'}</td>
-                  <td className="space-x-3 px-4 py-3">
-                    {category.is_active &&
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                        category.deleted_at !== null
+                          ? 'bg-slate-100 text-slate-600'
+                          : category.is_active
+                            ? 'bg-emerald-50 text-emerald-800'
+                            : 'bg-amber-50 text-amber-800'
+                      }`}
+                    >
+                      {category.deleted_at !== null
+                        ? 'Deleted'
+                        : category.is_active
+                          ? 'Active'
+                          : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {category.deleted_at === null &&
                       profile?.permissions.includes('master_data.product_categories.update') && (
                         <button
                           type="button"
+                          title="Edit category"
+                          aria-label={`Edit ${category.name}`}
                           onClick={() => {
                             setErrors({});
                             setSelected(category);
                           }}
-                          className="text-emerald-800 underline"
+                          className="mr-1 inline-flex rounded-lg p-2 text-emerald-800 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                         >
-                          Edit
+                          <svg
+                            aria-hidden="true"
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.7"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="m14 5 5 5M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z" />
+                          </svg>
                         </button>
                       )}
-                    {category.is_active &&
+                    {category.deleted_at === null &&
                       profile?.permissions.includes('master_data.product_categories.delete') && (
                         <button
                           type="button"
-                          onClick={() => void setActive(category, false)}
-                          className="text-rose-700 underline"
+                          title="Delete category"
+                          aria-label={`Delete ${category.name}`}
+                          onClick={() => void setDeleted(category, true)}
+                          className="mr-1 inline-flex rounded-lg p-2 text-rose-700 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600"
                         >
-                          Delete
+                          <svg
+                            aria-hidden="true"
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.7"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M4 7h16m-10 4v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3" />
+                          </svg>
                         </button>
                       )}
-                    {!category.is_active &&
+                    {category.deleted_at !== null &&
                       profile?.permissions.includes('master_data.product_categories.update') && (
                         <button
                           type="button"
-                          onClick={() => void setActive(category, true)}
-                          className="text-emerald-800 underline"
+                          title="Restore category"
+                          aria-label={`Restore ${category.name}`}
+                          onClick={() => void setDeleted(category, false)}
+                          className="inline-flex rounded-lg p-2 text-emerald-800 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                         >
-                          Restore
+                          <svg
+                            aria-hidden="true"
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.7"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M4 11a8 8 0 1 1 2.2 5.5M4 4v7h7" />
+                          </svg>
                         </button>
                       )}
                   </td>

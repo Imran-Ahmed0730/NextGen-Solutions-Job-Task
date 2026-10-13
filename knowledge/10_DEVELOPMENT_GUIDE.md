@@ -76,6 +76,9 @@ router/schema/model/service/repository split. `backend/app/modules/product_categ
 that structure for hierarchical categories. `backend/app/core/` contains shared facilities such as
 JWT/session validation, configuration, database access, and SMTP delivery.
 
+The protected app shell uses a permission-filtered, grouped sidebar on desktop and a toggleable
+drawer on smaller screens. The top bar shows the current route and signed-in account.
+
 The frontend route tree currently includes:
 
 | Route | Purpose |
@@ -115,6 +118,10 @@ Next.js page
 The router maps HTTP operations and delegates application behavior to each module's `service.py`.
 Pydantic schemas validate incoming payloads and document responses. Services own business
 workflows, repositories hold reusable queries, and models map persisted data.
+The HTTP interface is REST-style: collection reads/creates use `GET`/`POST`, resource updates use
+`PATCH`, and soft deletion uses `DELETE`, with JSON request/response bodies. Category activation is
+updated through `PATCH` on the category resource; restoration from soft deletion uses its explicit
+restore action.
 
 `backend/app/main.py` registers the health, authentication, units, and product-category routers,
 configures CORS for `FRONTEND_ORIGIN`, and protects the API root. The auth router is mounted under
@@ -214,8 +221,8 @@ The implemented auth API is:
 | `DELETE /api/v1/units/{id}` | `master_data.units.delete` | Soft-delete a unit |
 | `POST /api/v1/units/{id}/activate` | `master_data.units.update` | Restore a soft-deleted unit |
 | `GET /api/v1/product-categories` | `master_data.product_categories.read` | List categories; `include_inactive=true` includes deleted categories |
-| `POST /api/v1/product-categories` | `master_data.product_categories.create` | Create a category with an optional parent |
-| `PATCH /api/v1/product-categories/{id}` | `master_data.product_categories.update` | Update a category or its parent |
+| `POST /api/v1/product-categories` | `master_data.product_categories.create` | Create a category with an optional parent and active state |
+| `PATCH /api/v1/product-categories/{id}` | `master_data.product_categories.update` | Update a category, parent, or active state |
 | `DELETE /api/v1/product-categories/{id}` | `master_data.product_categories.delete` | Soft-delete a category |
 | `POST /api/v1/product-categories/{id}/activate` | `master_data.product_categories.update` | Restore a soft-deleted category |
 
@@ -239,7 +246,9 @@ active/deleted state, and timestamps. Unit changes are recorded in `audit_logs`;
 remain stored and may be restored. The next migration adds `product_categories`, with an optional
 self-referencing parent, active/deleted state, and timestamps. Category services reject missing or
 inactive parents and parent changes that would create a cycle. Category create/update/delete/restore
-operations write audit records; deleting a category is soft and preserves child references.
+operations write audit records. Active state can be switched with the screen's Active/Inactive
+radio controls; deactivation hides a category from the default list without marking it deleted.
+Deleting a category is a separate soft-delete action and preserves child references.
 Products, price lists, warehouses, and the other Phase 2 setup data have not yet been implemented.
 
 The current migration chain is:

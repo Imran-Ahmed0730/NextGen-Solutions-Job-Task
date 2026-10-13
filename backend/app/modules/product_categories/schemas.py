@@ -11,11 +11,13 @@ CategoryName = Annotated[
 class ProductCategoryCreate(BaseModel):
     name: CategoryName
     parent_id: int | None = None
+    is_active: bool = True
 
 
 class ProductCategoryUpdate(BaseModel):
     name: CategoryName | None = None
     parent_id: int | None = None
+    is_active: bool = True
 
 
 class ProductCategoryResponse(BaseModel):

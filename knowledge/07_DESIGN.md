@@ -11,7 +11,8 @@ Goal: a fast, clear, data-entry-friendly business UI. Consistency over decoratio
 6. Desktop first; usable on tablet.
 
 ## 2. Layout
-- **Sidebar** (collapsible) grouped by module; items filtered by permission.
+- **Sidebar** (collapsible) grouped by module; items filtered by permission. On small screens,
+  show it as a toggleable drawer.
 - **Top bar:** breadcrumb, global search (documents/parties/products), notifications (pending approvals), user menu.
 - **Content:** page title + primary action on the right, filter bar, data table or form.
 
@@ -36,7 +37,8 @@ Goal: a fast, clear, data-entry-friendly business UI. Consistency over decoratio
 
 ## 5. Screen patterns
 ### List screen
-Title, "New" button, filter bar (search, date range, status, party), table with row actions (View, Edit, Post/Cancel by status), pagination, export.
+Title, "New" button, filter bar (search, date range, status, party), table with icon row actions
+(View, Edit, Post/Cancel by status); icon actions must have accessible labels and tooltips.
 
 ### Create/Edit form
 Header fields in sections, `LineItemsGrid` for lines with live totals, sticky footer: *Save Draft*, *Submit/Post*, *Cancel*. Posted documents open read-only.
