@@ -11,7 +11,7 @@ const navigation = [
   {
     label: 'Workspace',
     items: [
-      { href: '/', label: 'Overview', icon: 'grid', permissions: ['auth.profile.read'] },
+      { href: '/', label: 'Dashboard', icon: 'grid', permissions: ['auth.profile.read'] },
     ],
   },
   {
@@ -362,18 +362,6 @@ export function SessionShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-
-        <div className="border-t border-slate-100 p-4">
-          <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-800">
-              {profile.full_name.slice(0, 1).toUpperCase()}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">
-              {profile.full_name}
-            </span>
-
-          </div>
-        </div>
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
