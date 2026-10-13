@@ -474,8 +474,8 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 
 ### Planned, not yet implemented
 
-The remaining roadmap is customers/suppliers,
-inventory, purchase, money, production, sales, assets, employees, approvals, reports/dashboard, and
+The remaining roadmap is inventory, purchase, money, production, sales, assets, employees, approvals,
+reports/dashboard, and
 full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens

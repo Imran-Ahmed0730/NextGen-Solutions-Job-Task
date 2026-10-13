@@ -54,11 +54,11 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Exit: CRUD, validation, permissions, audit, gap-free numbering tested
 
 ## Phase 3 — Customers & Suppliers
-- [ ] Customer + supplier models, contacts
-- [ ] Opening dues
-- [ ] Statement service (running balance)
-- [ ] Screens: lists, add/edit, statements (x2)
-- [ ] Exit: statement math tested
+- [x] Customer + supplier models, contacts
+- [x] Opening dues
+- [x] Statement service (running balance foundation)
+- [x] Screens: lists, add/edit, statements (x2)
+- [x] Exit: statement math and permissions tested
 
 ## Phase 4 — Inventory Engine
 - [ ] `stock_transactions`, `stock_balances`, reservations
