@@ -45,6 +45,10 @@ describe('field-error helpers', () => {
       expect(
         getApiFieldErrors(new ApiError('Unit code is already in use', 409)),
       ).toEqual({ code: 'Unit code is already in use' });
+
+      expect(
+        getApiFieldErrors(new ApiError('Product SKU is already in use', 409)),
+      ).toEqual({ sku: 'Product SKU is already in use' });
     });
 
     it('handles password mismatch errors', () => {

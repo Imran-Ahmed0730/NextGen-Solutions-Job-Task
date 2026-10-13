@@ -5,11 +5,13 @@ import {
   forgotPasswordSchema,
   loginSchema,
   productCategorySchema,
+  productSchema,
   profileSchema,
   resetPasswordSchema,
   roleSchema,
   unitSchema,
   userSchema,
+  warehouseSchema,
 } from './auth-validation';
 
 describe('auth-validation schemas', () => {
@@ -159,6 +161,98 @@ describe('auth-validation schemas', () => {
       productCategorySchema.safeParse({
         name: 'Phones',
         parent_id: -1,
+        is_active: true,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('validates productSchema fields, types, and numbers', () => {
+    expect(
+      productSchema.safeParse({
+        sku: 'RAW-WHEAT-01',
+        name: 'Wheat Grain',
+        type: 'RAW',
+        category_id: 1,
+        unit_id: 2,
+        is_stocked: true,
+        reorder_level: 10,
+        sales_price_default: 25.5,
+        description: 'Test wheat',
+        is_active: true,
+      }).success,
+    ).toBe(true);
+
+    // Invalid SKU format
+    expect(
+      productSchema.safeParse({
+        sku: 'invalid sku with spaces',
+        name: 'Wheat Grain',
+        type: 'RAW',
+        category_id: 1,
+        unit_id: 2,
+        is_stocked: true,
+        reorder_level: 10,
+        sales_price_default: 25,
+        is_active: true,
+      }).success,
+    ).toBe(false);
+
+    // Negative reorder level
+    expect(
+      productSchema.safeParse({
+        sku: 'SKU-01',
+        name: 'Wheat Grain',
+        type: 'RAW',
+        category_id: 1,
+        unit_id: 2,
+        is_stocked: true,
+        reorder_level: -5,
+        sales_price_default: 25,
+        is_active: true,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('validates warehouseSchema fields and defaults', () => {
+    expect(
+      warehouseSchema.safeParse({
+        name: 'Main Store',
+        code: 'MS',
+        address: 'Dhaka',
+        is_default: true,
+        is_active: true,
+      }).success,
+    ).toBe(true);
+
+    // Empty address is allowed
+    expect(
+      warehouseSchema.safeParse({
+        name: 'Overflow',
+        code: 'OF',
+        address: null,
+        is_default: false,
+        is_active: true,
+      }).success,
+    ).toBe(true);
+
+    // Missing name or code is rejected
+    expect(
+      warehouseSchema.safeParse({
+        name: '',
+        code: 'OF',
+        address: '',
+        is_default: false,
+        is_active: true,
+      }).success,
+    ).toBe(false);
+
+    // Over-long address is rejected
+    expect(
+      warehouseSchema.safeParse({
+        name: 'Overflow',
+        code: 'OF',
+        address: 'a'.repeat(256),
+        is_default: false,
         is_active: true,
       }).success,
     ).toBe(false);

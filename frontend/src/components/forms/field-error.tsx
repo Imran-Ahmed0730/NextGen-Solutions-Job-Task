@@ -17,10 +17,14 @@ export function getApiFieldErrors(cause: unknown): FieldErrors {
   if (!(cause instanceof ApiError)) return {};
 
   const duplicate = cause.message.match(
-    /^(username|email|mobile|role name|unit code) is already in use$/i,
+    /^(username|email|mobile|role name|unit code|product sku) is already in use$/i,
   );
   if (cause.status === 409 && duplicate) {
-    const field = duplicate[1].toLowerCase().replace('role name', 'name').replace('unit code', 'code');
+    const field = duplicate[1]
+      .toLowerCase()
+      .replace('role name', 'name')
+      .replace('unit code', 'code')
+      .replace('product sku', 'sku');
     return { [field]: `${duplicate[1]} is already in use` };
   }
   if (/^current password is incorrect$/i.test(cause.message)) {

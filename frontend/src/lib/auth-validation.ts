@@ -129,3 +129,44 @@ export const productCategorySchema = z.object({
   parent_id: z.number().int().positive().nullable(),
   is_active: z.boolean(),
 });
+
+export const productSchema = z.object({
+  sku: z
+    .string()
+    .trim()
+    .min(1, 'Product SKU is required')
+    .max(50, 'Use at most 50 characters')
+    .regex(
+      usernamePattern,
+      'SKU must start with a letter or digit and contain only letters, numbers, dots, hyphens, or underscores',
+    ),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Product name is required')
+    .max(255, 'Use at most 255 characters'),
+  type: z.enum(['RAW', 'FINISHED', 'TRADING'] as const),
+  category_id: z.number().int().positive('Category is required'),
+  unit_id: z.number().int().positive('Unit is required'),
+  is_stocked: z.boolean(),
+  reorder_level: z.coerce.number().min(0, 'Reorder level cannot be negative'),
+  sales_price_default: z.coerce.number().min(0, 'Sales price cannot be negative'),
+  description: z.string().max(1000, 'Use at most 1000 characters').optional().nullable(),
+  is_active: z.boolean(),
+});
+
+export const warehouseSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Warehouse name is required')
+    .max(100, 'Use at most 100 characters'),
+  code: z
+    .string()
+    .trim()
+    .min(1, 'Warehouse code is required')
+    .max(30, 'Use at most 30 characters'),
+  address: z.string().trim().max(255, 'Use at most 255 characters').optional().nullable(),
+  is_default: z.boolean(),
+  is_active: z.boolean(),
+});
