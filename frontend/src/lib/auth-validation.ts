@@ -189,3 +189,27 @@ export const incomeCategorySchema = z.object({
     .max(100, 'Use at most 100 characters'),
   is_active: z.boolean(),
 });
+
+export const paymentMethodSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Payment method name is required')
+    .max(100, 'Use at most 100 characters'),
+  type: z.enum(['CASH', 'BANK', 'MFS', 'ONLINE'] as const),
+  is_active: z.boolean(),
+});
+
+export const moneyAccountSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Money account name is required')
+    .max(100, 'Use at most 100 characters'),
+  type: z.enum(['CASH', 'BANK', 'MFS'] as const),
+  payment_method_id: z.number().int().positive().nullable(),
+  account_no: z.string().trim().max(50, 'Use at most 50 characters').optional().nullable(),
+  opening_balance: z.coerce.number(),
+  allow_overdraft: z.boolean(),
+  is_active: z.boolean(),
+});

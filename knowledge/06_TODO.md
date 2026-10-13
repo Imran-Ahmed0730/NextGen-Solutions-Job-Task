@@ -43,11 +43,11 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 ## Phase 2 — Master Data
 - [x] `units` module (reference template for all others)
 - [x] Product categories
-- [ ] Products (type, unit, category, stocked flag, reorder level)
+- [x] Products (type, unit, category, stocked flag, reorder level)
 - [ ] Price lists / product prices
-- [ ] Warehouses
-- [ ] Expense categories, income categories
-- [ ] Payment methods, money accounts
+- [x] Warehouses
+- [x] Expense categories, income categories
+- [x] Payment methods, money accounts
 - [ ] Company settings
 - [ ] Document numbering service
 - [ ] All Phase 2 screens

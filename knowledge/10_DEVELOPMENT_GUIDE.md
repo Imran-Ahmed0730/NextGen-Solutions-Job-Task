@@ -56,6 +56,12 @@ is protected.
 │   │   ├── modules/auth/        # Authentication and user/role administration
 │   │   ├── modules/units/       # Measurement-unit master-data reference module
 │   │   ├── modules/product_categories/ # Hierarchical product categories
+│   │   ├── modules/products/    # Products (stocked/trading) with category and unit
+│   │   ├── modules/warehouses/  # Storage locations with a single default
+│   │   ├── modules/expense_categories/ # Hierarchical expense categories
+│   │   ├── modules/income_categories/  # Flat income categories
+│   │   ├── modules/payment_methods/    # CASH/BANK/MFS/ONLINE payment methods
+│   │   ├── modules/money_accounts/     # Cash/bank/MFS accounts for money movements
 │   │   └── main.py              # FastAPI app and router registration
 │   ├── alembic/versions/        # Versioned database changes
 │   └── tests/                   # Backend service/API/model/mail tests
@@ -74,7 +80,9 @@ is protected.
 SQLAlchemy models, service logic, repository queries, audit helper, and initial-admin seed script.
 `backend/app/modules/units/` is the first Phase 2 business module and follows the same
 router/schema/model/service/repository split. `backend/app/modules/product_categories/` follows
-that structure for hierarchical categories. `backend/app/core/` contains shared facilities such as
+that structure for hierarchical categories. The `products`, `warehouses`, `expense_categories`,
+`income_categories`, `payment_methods`, and `money_accounts` modules follow the same
+router/schema/model/service/repository split. `backend/app/core/` contains shared facilities such as
 JWT/session validation, configuration, database access, and SMTP delivery.
 
 The protected app shell uses a permission-filtered, grouped sidebar on desktop and a toggleable
@@ -97,6 +105,12 @@ The frontend route tree currently includes:
 | `/permissions` | Read-only permission catalog |
 | `/units` | List, create, update, soft-delete, and restore measurement units |
 | `/categories` | List, create, update, soft-delete, and restore product categories |
+| `/products` | List, create, update, soft-delete, and restore products |
+| `/warehouses` | List, create, update, soft-delete, and restore warehouses |
+| `/expense-categories` | List, create, update, soft-delete, and restore expense categories |
+| `/income-categories` | List, create, update, soft-delete, and restore income categories |
+| `/payment-methods` | List, create, update, soft-delete, and restore payment methods |
+| `/money-accounts` | List, create, update, soft-delete, and restore money accounts |
 
 Routes are implemented under `frontend/src/app/`. Protected routes use the shared authentication
 shell and permission-aware navigation.
@@ -226,6 +240,36 @@ The implemented auth API is:
 | `PATCH /api/v1/product-categories/{id}` | `master_data.product_categories.update` | Update a category, parent, or active state |
 | `DELETE /api/v1/product-categories/{id}` | `master_data.product_categories.delete` | Soft-delete a category |
 | `POST /api/v1/product-categories/{id}/activate` | `master_data.product_categories.update` | Restore a soft-deleted category |
+| `GET /api/v1/products` | `master_data.products.read` | List active products; `include_inactive=true` includes deleted products |
+| `POST /api/v1/products` | `master_data.products.create` | Create a product with SKU, type, category, unit, and pricing |
+| `PATCH /api/v1/products/{id}` | `master_data.products.update` | Update a product |
+| `DELETE /api/v1/products/{id}` | `master_data.products.delete` | Soft-delete a product |
+| `POST /api/v1/products/{id}/activate` | `master_data.products.update` | Restore a soft-deleted product |
+| `GET /api/v1/warehouses` | `master_data.warehouses.read` | List active warehouses; `include_inactive=true` includes deleted warehouses |
+| `POST /api/v1/warehouses` | `master_data.warehouses.create` | Create a warehouse, optionally as the single default |
+| `PATCH /api/v1/warehouses/{id}` | `master_data.warehouses.update` | Update a warehouse |
+| `DELETE /api/v1/warehouses/{id}` | `master_data.warehouses.delete` | Soft-delete a warehouse |
+| `POST /api/v1/warehouses/{id}/activate` | `master_data.warehouses.update` | Restore a soft-deleted warehouse |
+| `GET /api/v1/expense-categories` | `master_data.expense_categories.read` | List expense categories; `include_inactive=true` includes deleted categories |
+| `POST /api/v1/expense-categories` | `master_data.expense_categories.create` | Create an expense category with an optional parent |
+| `PATCH /api/v1/expense-categories/{id}` | `master_data.expense_categories.update` | Update an expense category |
+| `DELETE /api/v1/expense-categories/{id}` | `master_data.expense_categories.delete` | Soft-delete an expense category |
+| `POST /api/v1/expense-categories/{id}/activate` | `master_data.expense_categories.update` | Restore a soft-deleted expense category |
+| `GET /api/v1/income-categories` | `master_data.income_categories.read` | List income categories; `include_inactive=true` includes deleted categories |
+| `POST /api/v1/income-categories` | `master_data.income_categories.create` | Create an income category |
+| `PATCH /api/v1/income-categories/{id}` | `master_data.income_categories.update` | Update an income category |
+| `DELETE /api/v1/income-categories/{id}` | `master_data.income_categories.delete` | Soft-delete an income category |
+| `POST /api/v1/income-categories/{id}/activate` | `master_data.income_categories.update` | Restore a soft-deleted income category |
+| `GET /api/v1/payment-methods` | `master_data.payment_methods.read` | List active payment methods; `include_inactive=true` includes deleted methods |
+| `POST /api/v1/payment-methods` | `master_data.payment_methods.create` | Create a payment method (CASH/BANK/MFS/ONLINE) |
+| `PATCH /api/v1/payment-methods/{id}` | `master_data.payment_methods.update` | Update a payment method |
+| `DELETE /api/v1/payment-methods/{id}` | `master_data.payment_methods.delete` | Soft-delete a payment method |
+| `POST /api/v1/payment-methods/{id}/activate` | `master_data.payment_methods.update` | Restore a soft-deleted payment method |
+| `GET /api/v1/money-accounts` | `master_data.money_accounts.read` | List active money accounts; `include_inactive=true` includes deleted accounts |
+| `POST /api/v1/money-accounts` | `master_data.money_accounts.create` | Create a money account with opening balance and overdraft flag |
+| `PATCH /api/v1/money-accounts/{id}` | `master_data.money_accounts.update` | Update a money account |
+| `DELETE /api/v1/money-accounts/{id}` | `master_data.money_accounts.delete` | Soft-delete a money account |
+| `POST /api/v1/money-accounts/{id}/activate` | `master_data.money_accounts.update` | Restore a soft-deleted money account |
 
 The public health endpoint is `GET /health`. The API root endpoint requires
 `auth.profile.read`. Query pagination for user/audit/unit lists currently uses `offset` and
@@ -250,7 +294,17 @@ inactive parents and parent changes that would create a cycle. Category create/u
 operations write audit records. Active state can be switched with the screen's accessible
 `StatusSwitch` toggle control; deactivation hides a category from the default list without marking it
 deleted. Deleting a category is a separate soft-delete action and preserves child references.
-Products, price lists, warehouses, and the other Phase 2 setup data have not yet been implemented.
+
+The subsequent master-data migrations add `products` (stocked/trading/finished, with category and
+unit references, reorder level, default sales price, and soft-delete state), `warehouses` (storage
+locations where at most one row holds the default flag), hierarchical `expense_categories`, flat
+`income_categories`, `payment_methods` (typed CASH/BANK/MFS/ONLINE), and `money_accounts` (typed
+CASH/BANK/MFS with an optional payment-method reference, optional account number, `opening_balance`
+as `DECIMAL(18,2)`, and an `allow_overdraft` flag). Each module validates its inputs, writes audit
+records on create/update/status/delete/restore, and uses soft delete for removal. Money-account
+creation rejects a missing or deleted payment method.
+
+Price lists and company settings/document numbering have not yet been implemented.
 
 The current migration chain is:
 
@@ -261,6 +315,12 @@ The current migration chain is:
    permission now that recovery is email-based.
 5. `20261013_units` — creates the first master-data table.
 6. `20261013_categories` — creates hierarchical product categories.
+7. `20261013_products` — creates the products table.
+8. `20261013_warehouses` — creates the warehouses table.
+9. `20261013_expense_categories` — creates hierarchical expense categories.
+10. `20261013_income_categories` — creates flat income categories.
+11. `20261013_payment_methods` — creates typed payment methods.
+12. `20261013_money_accounts` — creates money accounts with an optional payment-method reference.
 
 Do not edit a migration after it has been applied to an environment. Add a new Alembic revision for
 subsequent schema changes. Offline SQL generation checks migration construction; applying a
@@ -356,7 +416,7 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   permissions screens.
 - SweetAlert2 toast feedback for frontend validation, success, and action errors.
 
-### Implemented Phase 2 slices — Units and product categories
+### Implemented Phase 2 slices — Master data
 
 - Unit API, persistence model, schema validation, repository, and service.
 - Permission-controlled unit list/create/update/delete/restore, with audit entries and soft-delete
@@ -369,10 +429,20 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   soft-delete behavior.
 - Administrator seed includes the `master_data.product_categories.*` permissions.
 - Product-category screen is available at `/categories`.
+- Products with SKU/type/category/unit, reorder level, default sales price, stocked flag, and
+  soft-delete, exposed at `/products`.
+- Warehouses with a single enforced default, exposed at `/warehouses`.
+- Hierarchical expense categories at `/expense-categories` and flat income categories at
+  `/income-categories`.
+- Payment methods (CASH/BANK/MFS/ONLINE) at `/payment-methods`.
+- Money accounts (CASH/BANK/MFS) with optional payment-method link, account number, opening
+  balance, and overdraft flag at `/money-accounts`.
+- Each module validates inputs, writes audit records, uses soft delete, and ships
+  permission-controlled list/create/update/delete/restore endpoints.
 
 ### Planned, not yet implemented
 
-The remaining roadmap is products, pricing, warehouses, other master data, customers/suppliers,
+The remaining roadmap is price lists, company settings and document numbering, customers/suppliers,
 inventory, purchase, money, production, sales, assets, employees, approvals, reports/dashboard, and
 full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim

@@ -6,6 +6,8 @@ import {
   forgotPasswordSchema,
   incomeCategorySchema,
   loginSchema,
+  moneyAccountSchema,
+  paymentMethodSchema,
   productCategorySchema,
   productSchema,
   profileSchema,
@@ -291,6 +293,86 @@ describe('auth-validation schemas', () => {
 
     expect(
       incomeCategorySchema.safeParse({ name: '', is_active: true }).success,
+    ).toBe(false);
+  });
+
+  it('validates paymentMethodSchema type and status', () => {
+    expect(
+      paymentMethodSchema.safeParse({ name: 'Cash', type: 'CASH', is_active: true }).success,
+    ).toBe(true);
+
+    expect(
+      paymentMethodSchema.safeParse({ name: 'Bank', type: 'BANK', is_active: true }).success,
+    ).toBe(true);
+
+    expect(
+      paymentMethodSchema.safeParse({ name: 'Crypto', type: 'CRYPTO', is_active: true }).success,
+    ).toBe(false);
+
+    expect(
+      paymentMethodSchema.safeParse({ name: '', type: 'CASH', is_active: true }).success,
+    ).toBe(false);
+  });
+
+  it('validates moneyAccountSchema fields and numbers', () => {
+    expect(
+      moneyAccountSchema.safeParse({
+        name: 'Main Bank',
+        type: 'BANK',
+        payment_method_id: 1,
+        account_no: '1234567890',
+        opening_balance: 5000.5,
+        allow_overdraft: false,
+        is_active: true,
+      }).success,
+    ).toBe(true);
+
+    // Optional payment method and account number
+    expect(
+      moneyAccountSchema.safeParse({
+        name: 'Petty Cash',
+        type: 'CASH',
+        payment_method_id: null,
+        account_no: null,
+        opening_balance: 0,
+        allow_overdraft: false,
+        is_active: true,
+      }).success,
+    ).toBe(true);
+
+    // Invalid type
+    expect(
+      moneyAccountSchema.safeParse({
+        name: 'Wallet',
+        type: 'CASH',
+        payment_method_id: null,
+        opening_balance: 0,
+        allow_overdraft: false,
+        is_active: true,
+      }).success,
+    ).toBe(true);
+
+    expect(
+      moneyAccountSchema.safeParse({
+        name: 'Wallet',
+        type: 'ONLINE',
+        payment_method_id: null,
+        opening_balance: 0,
+        allow_overdraft: false,
+        is_active: true,
+      }).success,
+    ).toBe(false);
+
+    // Non-numeric opening balance is coerced/rejected
+    expect(
+      moneyAccountSchema.safeParse({
+        name: 'Wallet',
+        type: 'MFS',
+        payment_method_id: null,
+        opening_balance: 'not-a-number',
+        allow_overdraft: false,
+        is_active: true,
+      }).success,
     ).toBe(false);
   });
 });

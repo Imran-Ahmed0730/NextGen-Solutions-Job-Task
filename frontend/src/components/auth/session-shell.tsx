@@ -73,6 +73,18 @@ const navigation = [
         icon: 'income',
         permissions: ['master_data.income_categories.read'],
       },
+      {
+        href: '/payment-methods',
+        label: 'Payment Methods',
+        icon: 'payment',
+        permissions: ['master_data.payment_methods.read'],
+      },
+      {
+        href: '/money-accounts',
+        label: 'Money Accounts',
+        icon: 'account',
+        permissions: ['master_data.money_accounts.read'],
+      },
     ],
   },
 ] as const;
@@ -105,6 +117,13 @@ const iconPaths = {
   warehouse: <path d="M3 21V9l9-6 9 6v12M3 21h18M9.5 21v-6h5v6" />,
   expense: <path d="m5 12 7-7 7 7M12 5v14" />,
   income: <path d="m5 12 7 7 7-7M12 19V5" />,
+  payment: <path d="M2.5 8.5h19M2.5 6.5h19v11h-19zM6 14.5h4" />,
+  account: (
+    <>
+      <rect x="3" y="6" width="18" height="13" rx="2" />
+      <path d="M3 10h18M7 15h3" />
+    </>
+  ),
   shield: <path d="M12 3 20 6v5.5c0 4.6-3.1 7.8-8 9.5-4.9-1.7-8-4.9-8-9.5V6l8-3Zm-3.5 9 2.3 2.3 4.8-5" />,
   list: <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />,
   logout: <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5m5-4 4-4-4-4m4 4H9" />,
