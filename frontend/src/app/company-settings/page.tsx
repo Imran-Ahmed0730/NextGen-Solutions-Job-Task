@@ -1,36 +1,87 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import Swal from 'sweetalert2';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
-import {
-  FieldError,
-  getApiFieldErrors,
-  getFieldErrors,
-  RequiredMark,
-  type FieldErrors,
-} from '@/components/forms/field-error';
-import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
+import { ActionIcon } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
-import { companySettingSchema } from '@/lib/auth-validation';
 
 type CompanySettingRecord = {
   key: string;
   value: string;
 };
 
+type FieldDefinition = {
+  key: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'number';
+  options?: { value: string; label: string }[];
+  placeholder?: string;
+};
+
+type SettingsGroup = {
+  title: string;
+  description: string;
+  fields: FieldDefinition[];
+};
+
+const groups: SettingsGroup[] = [
+  {
+    title: 'Company profile',
+    description: 'Basic details shown on documents and reports.',
+    fields: [
+      { key: 'company_name', label: 'Company name', type: 'text', placeholder: 'Sabuj Pran' },
+      { key: 'company_email', label: 'Company email', type: 'email', placeholder: 'info@example.com' },
+      { key: 'company_phone', label: 'Company phone', type: 'tel', placeholder: '+880...' },
+      { key: 'company_address', label: 'Company address', type: 'textarea', placeholder: 'Street, city, country' },
+    ],
+  },
+  {
+    title: 'Regional settings',
+    description: 'Currency and timezone used for display and calculations.',
+    fields: [
+      { key: 'currency_code', label: 'Currency code', type: 'text', placeholder: 'BDT' },
+      { key: 'timezone', label: 'Timezone', type: 'text', placeholder: 'Asia/Dhaka' },
+    ],
+  },
+  {
+    title: 'Sales and billing',
+    description: 'Invoice notes and credit-control defaults.',
+    fields: [
+      { key: 'invoice_footer', label: 'Invoice footer', type: 'textarea', placeholder: 'Thank you for your business' },
+      {
+        key: 'credit_limit_mode',
+        label: 'Credit limit mode',
+        type: 'select',
+        options: [
+          { value: 'WARN', label: 'Warn only' },
+          { value: 'BLOCK', label: 'Block order/invoice' },
+        ],
+      },
+      {
+        key: 'receipt_tolerance_pct',
+        label: 'Receiving tolerance (%)',
+        type: 'number',
+        placeholder: '0',
+      },
+    ],
+  },
+];
+
 function CompanySettingsContent() {
   const profile = useSessionProfile();
-  const [settings, setSettings] = useState<CompanySettingRecord[]>([]);
-  const [selected, setSelected] = useState<CompanySettingRecord | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [errors, setErrors] = useState<FieldErrors>({});
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [loaded, setLoaded] = useState(false);
+  const [savingGroup, setSavingGroup] = useState<string | null>(null);
 
   async function reload() {
-    setSettings(await apiRequest<CompanySettingRecord[]>('/api/v1/company-settings'));
+    const records = await apiRequest<CompanySettingRecord[]>('/api/v1/company-settings');
+    const next: Record<string, string> = {};
+    for (const record of records) next[record.key] = record.value;
+    setValues(next);
+    setLoaded(true);
   }
 
   useEffect(() => {
@@ -39,200 +90,165 @@ function CompanySettingsContent() {
     );
   }, []);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const parsed = companySettingSchema.safeParse({
-      key: form.get('key'),
-      value: form.get('value'),
-    });
-    if (!parsed.success) {
-      setErrors(getFieldErrors(parsed.error.issues));
-      return;
-    }
-    setErrors({});
+  async function saveGroup(group: SettingsGroup, form: HTMLFormElement) {
+    if (!profile?.permissions.includes('master_data.company_settings.update')) return;
+    setSavingGroup(group.title);
+    const data = new FormData(form);
+    const updates = group.fields.map((field) => ({
+      key: field.key,
+      value: String(data.get(field.key) ?? ''),
+    }));
 
-    const isNew = selected === null;
     try {
-      await apiRequest<CompanySettingRecord>(
-        isNew ? '/api/v1/company-settings' : `/api/v1/company-settings/${encodeURIComponent(selected.key)}`,
-        {
-          method: isNew ? 'POST' : 'PATCH',
-          body: JSON.stringify(parsed.data),
-        },
+      await Promise.all(
+        updates.map((item) =>
+          apiRequest<CompanySettingRecord>(
+            `/api/v1/company-settings/${encodeURIComponent(item.key)}`,
+            {
+              method: 'PUT',
+              body: JSON.stringify({ key: item.key, value: item.value }),
+            },
+          ),
+        ),
       );
-      showSuccessToast(isNew ? 'Setting created.' : 'Setting updated.');
-      setSelected(null);
-      setIsFormOpen(false);
+      setValues((current) => {
+        const next = { ...current };
+        for (const item of updates) next[item.key] = item.value;
+        return next;
+      });
+      showSuccessToast(`${group.title} saved.`);
     } catch (cause) {
-      const apiErrors = getApiFieldErrors(cause);
-      if (Object.keys(apiErrors).length) setErrors(apiErrors);
-      else showErrorToast(cause instanceof Error ? cause.message : 'Could not save company setting');
-      return;
-    }
-    try {
-      await reload();
-    } catch (cause) {
-      showErrorToast(cause instanceof Error ? cause.message : 'Could not refresh company settings');
+      showErrorToast(cause instanceof Error ? cause.message : `Could not save ${group.title.toLowerCase()}`);
+    } finally {
+      setSavingGroup(null);
     }
   }
 
-  async function deleteSetting(setting: CompanySettingRecord) {
-    const confirmation = await Swal.fire({
-      title: 'Delete setting?',
-      text: `Are you sure you want to delete "${setting.key}"?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#b91c1c',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Yes, delete',
-    });
-    if (!confirmation.isConfirmed) return;
-    try {
-      await apiRequest<void>(
-        `/api/v1/company-settings/${encodeURIComponent(setting.key)}`,
-        { method: 'DELETE' },
-      );
-      showSuccessToast('Setting deleted.');
-      await reload();
-    } catch (cause) {
-      showErrorToast(cause instanceof Error ? cause.message : 'Could not delete company setting');
-    }
+  function handleChange(key: string, value: string) {
+    setValues((current) => ({ ...current, [key]: value }));
+  }
+
+  function handleSubmit(group: SettingsGroup) {
+    return (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      saveGroup(group, event.currentTarget);
+    };
+  }
+
+  if (!loaded) {
+    return (
+      <section className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">
+        Loading company settings...
+      </section>
+    );
+  }
+
+  const canUpdate = profile?.permissions.includes('master_data.company_settings.update') ?? false;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Company Settings</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Manage company information and defaults in organized sections.
+        </p>
+      </div>
+
+      {groups.map((group) => (
+        <section key={group.title} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">{group.title}</h2>
+            <p className="mt-1 text-sm text-slate-500">{group.description}</p>
+          </div>
+
+          <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit(group)}>
+            {group.fields.map((field) => (
+              <label
+                key={field.key}
+                className={`block text-sm font-medium ${field.type === 'textarea' ? 'sm:col-span-2' : ''}`}
+              >
+                {field.label}
+                <FieldInput
+                  field={field}
+                  value={values[field.key] ?? ''}
+                  disabled={!canUpdate}
+                  onChange={(value) => handleChange(field.key, value)}
+                />
+              </label>
+            ))}
+
+            {canUpdate && (
+              <div className="sm:col-span-2">
+                <button
+                  type="submit"
+                  disabled={savingGroup === group.title}
+                  className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <ActionIcon name="save" />
+                  {savingGroup === group.title ? 'Saving...' : `Save ${group.title}`}
+                </button>
+              </div>
+            )}
+          </form>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function FieldInput({
+  field,
+  value,
+  disabled,
+  onChange,
+}: {
+  field: FieldDefinition;
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) {
+  const className =
+    'mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100';
+
+  if (field.type === 'textarea') {
+    return (
+      <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        rows={4}
+        disabled={disabled}
+        placeholder={field.placeholder}
+        className={className}
+      />
+    );
+  }
+
+  if (field.type === 'select') {
+    return (
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        className={className}
+      >
+        {(field.options ?? []).map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    );
   }
 
   return (
-    <>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Company Settings</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Store flexible company configuration as key/value pairs.
-          </p>
-        </div>
-        {profile?.permissions.includes('master_data.company_settings.create') && !isFormOpen && (
-          <button
-            type="button"
-            onClick={() => {
-              setErrors({});
-              setSelected(null);
-              setIsFormOpen(true);
-            }}
-            className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-800"
-          >
-            <ActionIcon name="add" />
-            Add setting
-          </button>
-        )}
-      </div>
-
-      {isFormOpen && (
-        <form
-          key={selected?.key ?? 'new-company-setting'}
-          noValidate
-          className="mt-6 grid max-w-3xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-          onSubmit={submit}
-        >
-          <label className="block text-sm font-medium">
-            Key<RequiredMark />
-            <input
-              name="key"
-              placeholder="e.g. company_name"
-              defaultValue={selected?.key ?? ''}
-              minLength={1}
-              maxLength={100}
-              required
-              readOnly={selected !== null}
-              aria-invalid={Boolean(errors.key)}
-              aria-describedby={errors.key ? 'company-setting-key-error' : undefined}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-            />
-            <FieldError id="company-setting-key-error" message={errors.key} />
-          </label>
-
-          <label className="block text-sm font-medium">
-            Value
-            <textarea
-              name="value"
-              placeholder="Setting value"
-              defaultValue={selected?.value ?? ''}
-              rows={4}
-              aria-invalid={Boolean(errors.value)}
-              aria-describedby={errors.value ? 'company-setting-value-error' : undefined}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-            />
-            <FieldError id="company-setting-value-error" message={errors.value} />
-          </label>
-
-          <div className="flex gap-3 self-end">
-            <button className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 font-medium text-white shadow-sm hover:bg-emerald-800">
-              <ActionIcon name="save" />
-              {selected ? 'Save setting' : 'Create setting'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSelected(null);
-                setIsFormOpen(false);
-              }}
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
-      <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600">
-            <tr>
-              <th className="px-4 py-3">Key</th>
-              <th className="px-4 py-3">Value</th>
-              <th className="px-4 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {settings.map((setting) => (
-              <tr key={setting.key} className="hover:bg-slate-50/60">
-                <td className="px-4 py-3 font-medium text-slate-900">{setting.key}</td>
-                <td className="px-4 py-3 text-slate-600">
-                  <span className="whitespace-pre-wrap">{setting.value}</span>
-                </td>
-                <td className="px-4 py-3">
-                  {profile?.permissions.includes('master_data.company_settings.update') && (
-                    <IconActionButton
-                      icon="edit"
-                      label={`Edit ${setting.key}`}
-                      onClick={() => {
-                        setErrors({});
-                        setSelected(setting);
-                        setIsFormOpen(true);
-                      }}
-                      className="mr-1 p-2 text-emerald-800 hover:bg-emerald-50"
-                    />
-                  )}
-                  {profile?.permissions.includes('master_data.company_settings.delete') && (
-                    <IconActionButton
-                      icon="delete"
-                      label={`Delete ${setting.key}`}
-                      onClick={() => void deleteSetting(setting)}
-                      className="p-2 text-rose-700 hover:bg-rose-50"
-                    />
-                  )}
-                </td>
-              </tr>
-            ))}
-            {settings.length === 0 && (
-              <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
-                  No company settings found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </>
+    <input
+      type={field.type}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      disabled={disabled}
+      placeholder={field.placeholder}
+      className={className}
+    />
   );
 }
 
