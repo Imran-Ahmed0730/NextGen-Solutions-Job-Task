@@ -327,8 +327,8 @@ flag and optional validity range) and `product_prices` (one price per product pe
 price list may be soft-deleted; suspended/referenced product records cannot be hard-deleted.
 Product prices validate product and price-list references and prevent duplicates.
 
-Company settings are implemented as a flexible key/value store. Document numbering has not yet
-been implemented.
+Company settings are implemented as a flexible key/value store. Document numbering is implemented
+as typed sequences with locking, gap-free number generation.
 
 The current migration chain is:
 
@@ -347,6 +347,7 @@ The current migration chain is:
 12. `20261013_money_accounts` — creates money accounts with an optional payment-method reference.
 13. `20261013_price_lists` — creates price lists and product prices.
 14. `20261013_company_settings` — creates the key/value company settings table.
+15. `20261013_document_sequences` — creates document numbering sequences.
 
 Do not edit a migration after it has been applied to an environment. Add a new Alembic revision for
 subsequent schema changes. Offline SQL generation checks migration construction; applying a
@@ -467,12 +468,13 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   management for each list.
 - Company settings as a flexible key/value store at `/company-settings`, with an environment-aware
   seeder.
+- Document numbering sequences at `/document-numbering`, with locking gap-free number generation.
 - Each module validates inputs, writes audit records, uses soft delete, and ships
   permission-controlled list/create/update/delete/restore endpoints.
 
 ### Planned, not yet implemented
 
-The remaining roadmap is price lists, company settings and document numbering, customers/suppliers,
+The remaining roadmap is customers/suppliers,
 inventory, purchase, money, production, sales, assets, employees, approvals, reports/dashboard, and
 full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim

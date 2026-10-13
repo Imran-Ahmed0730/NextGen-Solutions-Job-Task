@@ -49,9 +49,9 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Expense categories, income categories
 - [x] Payment methods, money accounts
 - [x] Company settings
-- [ ] Document numbering service
-- [ ] All Phase 2 screens
-- [ ] Exit: CRUD, soft delete, permissions, audit tested
+- [x] Document numbering service
+- [x] All Phase 2 screens
+- [x] Exit: CRUD, validation, permissions, audit, gap-free numbering tested
 
 ## Phase 3 — Customers & Suppliers
 - [ ] Customer + supplier models, contacts
