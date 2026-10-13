@@ -44,7 +44,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] `units` module (reference template for all others)
 - [x] Product categories
 - [x] Products (type, unit, category, stocked flag, reorder level)
-- [ ] Price lists / product prices
+- [x] Price lists / product prices
 - [x] Warehouses
 - [x] Expense categories, income categories
 - [x] Payment methods, money accounts

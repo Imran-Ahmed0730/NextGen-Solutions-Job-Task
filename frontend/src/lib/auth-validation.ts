@@ -213,3 +213,20 @@ export const moneyAccountSchema = z.object({
   allow_overdraft: z.boolean(),
   is_active: z.boolean(),
 });
+
+export const priceListSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Price list name is required')
+    .max(100, 'Use at most 100 characters'),
+  is_default: z.boolean(),
+  valid_from: z.string().trim().max(10).nullable().optional(),
+  valid_to: z.string().trim().max(10).nullable().optional(),
+  is_active: z.boolean(),
+});
+
+export const productPriceSchema = z.object({
+  product_id: z.number().int().positive(),
+  price: z.coerce.number().min(0, 'Price must be zero or greater'),
+});

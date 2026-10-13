@@ -85,6 +85,12 @@ const navigation = [
         icon: 'account',
         permissions: ['master_data.money_accounts.read'],
       },
+      {
+        href: '/price-lists',
+        label: 'Price Lists',
+        icon: 'pricelist',
+        permissions: ['master_data.price_lists.read'],
+      },
     ],
   },
 ] as const;
@@ -122,6 +128,12 @@ const iconPaths = {
     <>
       <rect x="3" y="6" width="18" height="13" rx="2" />
       <path d="M3 10h18M7 15h3" />
+    </>
+  ),
+  pricelist: (
+    <>
+      <path d="M4 7h16v13H4z" />
+      <path d="M8 11h8M8 15h5" />
     </>
   ),
   shield: <path d="M12 3 20 6v5.5c0 4.6-3.1 7.8-8 9.5-4.9-1.7-8-4.9-8-9.5V6l8-3Zm-3.5 9 2.3 2.3 4.8-5" />,

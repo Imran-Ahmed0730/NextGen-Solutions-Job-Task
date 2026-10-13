@@ -62,6 +62,7 @@ is protected.
 │   │   ├── modules/income_categories/  # Flat income categories
 │   │   ├── modules/payment_methods/    # CASH/BANK/MFS/ONLINE payment methods
 │   │   ├── modules/money_accounts/     # Cash/bank/MFS accounts for money movements
+│   │   ├── modules/price_lists/        # Price lists and product prices
 │   │   └── main.py              # FastAPI app and router registration
 │   ├── alembic/versions/        # Versioned database changes
 │   └── tests/                   # Backend service/API/model/mail tests
@@ -81,7 +82,7 @@ SQLAlchemy models, service logic, repository queries, audit helper, and initial-
 `backend/app/modules/units/` is the first Phase 2 business module and follows the same
 router/schema/model/service/repository split. `backend/app/modules/product_categories/` follows
 that structure for hierarchical categories. The `products`, `warehouses`, `expense_categories`,
-`income_categories`, `payment_methods`, and `money_accounts` modules follow the same
+`income_categories`, `payment_methods`, `money_accounts`, and `price_lists` modules follow the same
 router/schema/model/service/repository split. `backend/app/core/` contains shared facilities such as
 JWT/session validation, configuration, database access, and SMTP delivery.
 
@@ -111,6 +112,7 @@ The frontend route tree currently includes:
 | `/income-categories` | List, create, update, soft-delete, and restore income categories |
 | `/payment-methods` | List, create, update, soft-delete, and restore payment methods |
 | `/money-accounts` | List, create, update, soft-delete, and restore money accounts |
+| `/price-lists` | List, create, update, soft-delete, and restore price lists and their product prices |
 
 Routes are implemented under `frontend/src/app/`. Protected routes use the shared authentication
 shell and permission-aware navigation.
@@ -270,6 +272,15 @@ The implemented auth API is:
 | `PATCH /api/v1/money-accounts/{id}` | `master_data.money_accounts.update` | Update a money account |
 | `DELETE /api/v1/money-accounts/{id}` | `master_data.money_accounts.delete` | Soft-delete a money account |
 | `POST /api/v1/money-accounts/{id}/activate` | `master_data.money_accounts.update` | Restore a soft-deleted money account |
+| `GET /api/v1/price-lists` | `master_data.price_lists.read` | List price lists; `include_inactive=true` includes deleted lists |
+| `POST /api/v1/price-lists` | `master_data.price_lists.create` | Create a price list with optional validity range and default flag |
+| `PATCH /api/v1/price-lists/{id}` | `master_data.price_lists.update` | Update a price list |
+| `DELETE /api/v1/price-lists/{id}` | `master_data.price_lists.delete` | Soft-delete a price list |
+| `POST /api/v1/price-lists/{id}/activate` | `master_data.price_lists.update` | Restore a soft-deleted price list |
+| `GET /api/v1/price-lists/{id}/prices` | `master_data.price_lists.read` | List product prices for a price list |
+| `POST /api/v1/price-lists/{id}/prices` | `master_data.price_lists.create` | Add a product price to a price list |
+| `PATCH /api/v1/price-lists/{id}/prices/{price_id}` | `master_data.price_lists.update` | Update a product price |
+| `DELETE /api/v1/price-lists/{id}/prices/{price_id}` | `master_data.price_lists.delete` | Remove a product price |
 
 The public health endpoint is `GET /health`. The API root endpoint requires
 `auth.profile.read`. Query pagination for user/audit/unit lists currently uses `offset` and
@@ -304,7 +315,12 @@ as `DECIMAL(18,2)`, and an `allow_overdraft` flag). Each module validates its in
 records on create/update/status/delete/restore, and uses soft delete for removal. Money-account
 creation rejects a missing or deleted payment method.
 
-Price lists and company settings/document numbering have not yet been implemented.
+The subsequent master-data migration adds `price_lists` (named price lists with an `is_default`
+flag and optional validity range) and `product_prices` (one price per product per price list). A
+price list may be soft-deleted; suspended/referenced product records cannot be hard-deleted.
+Product prices validate product and price-list references and prevent duplicates.
+
+Company settings and document numbering have not yet been implemented.
 
 The current migration chain is:
 
@@ -321,6 +337,7 @@ The current migration chain is:
 10. `20261013_income_categories` — creates flat income categories.
 11. `20261013_payment_methods` — creates typed payment methods.
 12. `20261013_money_accounts` — creates money accounts with an optional payment-method reference.
+13. `20261013_price_lists` — creates price lists and product prices.
 
 Do not edit a migration after it has been applied to an environment. Add a new Alembic revision for
 subsequent schema changes. Offline SQL generation checks migration construction; applying a
@@ -437,6 +454,8 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 - Payment methods (CASH/BANK/MFS/ONLINE) at `/payment-methods`.
 - Money accounts (CASH/BANK/MFS) with optional payment-method link, account number, opening
   balance, and overdraft flag at `/money-accounts`.
+- Price lists with default handling and validity dates at `/price-lists`, plus product-price
+  management for each list.
 - Each module validates inputs, writes audit records, uses soft delete, and ships
   permission-controlled list/create/update/delete/restore endpoints.
 

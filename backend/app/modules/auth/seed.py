@@ -115,6 +115,18 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "master_data.money_accounts.delete", "master_data", "Delete money accounts"
     ),
+    PermissionDefinition(
+        "master_data.price_lists.read", "master_data", "View price lists"
+    ),
+    PermissionDefinition(
+        "master_data.price_lists.create", "master_data", "Create price lists"
+    ),
+    PermissionDefinition(
+        "master_data.price_lists.update", "master_data", "Update price lists"
+    ),
+    PermissionDefinition(
+        "master_data.price_lists.delete", "master_data", "Delete price lists"
+    ),
 )
 
 

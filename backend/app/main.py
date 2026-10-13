@@ -11,6 +11,7 @@ from app.modules.expense_categories.router import router as expense_categories_r
 from app.modules.income_categories.router import router as income_categories_router
 from app.modules.money_accounts.router import router as money_accounts_router
 from app.modules.payment_methods.router import router as payment_methods_router
+from app.modules.price_lists.router import router as price_lists_router
 from app.modules.product_categories.router import router as product_categories_router
 from app.modules.products.router import router as products_router
 from app.modules.units.router import router as units_router
@@ -35,6 +36,7 @@ app.include_router(expense_categories_router)
 app.include_router(income_categories_router)
 app.include_router(payment_methods_router)
 app.include_router(money_accounts_router)
+app.include_router(price_lists_router)
 
 
 @app.get("/")
