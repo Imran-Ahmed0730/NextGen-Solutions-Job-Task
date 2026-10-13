@@ -61,6 +61,18 @@ const navigation = [
         icon: 'warehouse',
         permissions: ['master_data.warehouses.read'],
       },
+      {
+        href: '/expense-categories',
+        label: 'Expense Categories',
+        icon: 'expense',
+        permissions: ['master_data.expense_categories.read'],
+      },
+      {
+        href: '/income-categories',
+        label: 'Income Categories',
+        icon: 'income',
+        permissions: ['master_data.income_categories.read'],
+      },
     ],
   },
 ] as const;
@@ -91,6 +103,8 @@ const iconPaths = {
   folder: <path d="M3.5 6.5h7l2 2h8v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-11Z" />,
   tag: <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Zm-5 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z" />,
   warehouse: <path d="M3 21V9l9-6 9 6v12M3 21h18M9.5 21v-6h5v6" />,
+  expense: <path d="m5 12 7-7 7 7M12 5v14" />,
+  income: <path d="m5 12 7 7 7-7M12 19V5" />,
   shield: <path d="M12 3 20 6v5.5c0 4.6-3.1 7.8-8 9.5-4.9-1.7-8-4.9-8-9.5V6l8-3Zm-3.5 9 2.3 2.3 4.8-5" />,
   list: <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />,
   logout: <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5m5-4 4-4-4-4m4 4H9" />,

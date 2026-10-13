@@ -170,3 +170,22 @@ export const warehouseSchema = z.object({
   is_default: z.boolean(),
   is_active: z.boolean(),
 });
+
+export const expenseCategorySchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Category name is required')
+    .max(100, 'Use at most 100 characters'),
+  parent_id: z.number().int().positive().nullable(),
+  is_active: z.boolean(),
+});
+
+export const incomeCategorySchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Category name is required')
+    .max(100, 'Use at most 100 characters'),
+  is_active: z.boolean(),
+});

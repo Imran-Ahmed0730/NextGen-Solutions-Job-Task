@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   changePasswordSchema,
+  expenseCategorySchema,
   forgotPasswordSchema,
+  incomeCategorySchema,
   loginSchema,
   productCategorySchema,
   productSchema,
@@ -255,6 +257,40 @@ describe('auth-validation schemas', () => {
         is_default: false,
         is_active: true,
       }).success,
+    ).toBe(false);
+  });
+
+  it('validates expense and income category schemas', () => {
+    expect(
+      expenseCategorySchema.safeParse({
+        name: 'Transport',
+        parent_id: null,
+        is_active: true,
+      }).success,
+    ).toBe(true);
+
+    expect(
+      expenseCategorySchema.safeParse({
+        name: 'Fuel',
+        parent_id: 3,
+        is_active: true,
+      }).success,
+    ).toBe(true);
+
+    expect(
+      expenseCategorySchema.safeParse({
+        name: '',
+        parent_id: null,
+        is_active: true,
+      }).success,
+    ).toBe(false);
+
+    expect(
+      incomeCategorySchema.safeParse({ name: 'Interest Income', is_active: true }).success,
+    ).toBe(true);
+
+    expect(
+      incomeCategorySchema.safeParse({ name: '', is_active: true }).success,
     ).toBe(false);
   });
 });

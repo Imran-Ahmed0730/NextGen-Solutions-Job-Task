@@ -67,6 +67,30 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("master_data.warehouses.create", "master_data", "Create warehouses"),
     PermissionDefinition("master_data.warehouses.update", "master_data", "Update warehouses"),
     PermissionDefinition("master_data.warehouses.delete", "master_data", "Delete warehouses"),
+    PermissionDefinition(
+        "master_data.expense_categories.read", "master_data", "View expense categories"
+    ),
+    PermissionDefinition(
+        "master_data.expense_categories.create", "master_data", "Create expense categories"
+    ),
+    PermissionDefinition(
+        "master_data.expense_categories.update", "master_data", "Update expense categories"
+    ),
+    PermissionDefinition(
+        "master_data.expense_categories.delete", "master_data", "Delete expense categories"
+    ),
+    PermissionDefinition(
+        "master_data.income_categories.read", "master_data", "View income categories"
+    ),
+    PermissionDefinition(
+        "master_data.income_categories.create", "master_data", "Create income categories"
+    ),
+    PermissionDefinition(
+        "master_data.income_categories.update", "master_data", "Update income categories"
+    ),
+    PermissionDefinition(
+        "master_data.income_categories.delete", "master_data", "Delete income categories"
+    ),
 )
 
 
