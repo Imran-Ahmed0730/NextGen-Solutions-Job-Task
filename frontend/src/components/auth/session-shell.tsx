@@ -12,6 +12,7 @@ const navigation = [
   { href: '/profile', label: 'My Profile', permissions: ['auth.profile.read'] },
   { href: '/change-password', label: 'Change Password', permissions: ['auth.password.change'] },
   { href: '/users', label: 'Users', permissions: ['auth.users.read'] },
+  { href: '/units', label: 'Units', permissions: ['master_data.units.read'] },
   {
     href: '/roles',
     label: 'Roles',
@@ -63,7 +64,51 @@ export function SessionShell({ children }: { children: ReactNode }) {
     return <main className="mx-auto max-w-3xl p-8 text-rose-700">{error}</main>;
   }
   if (!profile) {
-    return <main className="p-8 text-slate-600">Loading your workspace…</main>;
+    return (
+      <main
+        aria-live="polite"
+        className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-amber-50 px-5 py-12"
+      >
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl" />
+          <div className="absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-amber-200/40 blur-3xl" />
+        </div>
+
+        <section
+          role="status"
+          className="relative w-full max-w-lg rounded-2xl border border-white/80 bg-white/90 p-7 shadow-xl shadow-emerald-950/5 backdrop-blur sm:p-10"
+        >
+          <div className="mb-10 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-700 text-sm font-bold tracking-wide text-white shadow-md shadow-emerald-900/15">
+              SP
+            </div>
+            <div>
+              <p className="text-sm font-bold tracking-[0.14em] text-emerald-900">SABUJ PRAN</p>
+              <p className="text-xs text-slate-500">Business Suite</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div
+              aria-hidden="true"
+              className="mt-1 h-6 w-6 shrink-0 animate-spin rounded-full border-[3px] border-emerald-100 border-t-emerald-700 motion-reduce:animate-none"
+            />
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900">Preparing your workspace</h1>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                We’re securely loading your profile and the tools available to you.
+              </p>
+            </div>
+          </div>
+
+          <div aria-hidden="true" className="mt-9 space-y-3">
+            <div className="h-2.5 w-2/5 animate-pulse rounded-full bg-slate-100 motion-reduce:animate-none" />
+            <div className="h-2.5 w-full animate-pulse rounded-full bg-slate-100 motion-reduce:animate-none" />
+            <div className="h-2.5 w-4/5 animate-pulse rounded-full bg-slate-100 motion-reduce:animate-none" />
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (

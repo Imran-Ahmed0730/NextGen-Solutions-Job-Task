@@ -41,7 +41,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Exit: 403 tests for every protected endpoint
 
 ## Phase 2 — Master Data
-- [ ] `units` module (reference template for all others)
+- [x] `units` module (reference template for all others)
 - [ ] Product categories
 - [ ] Products (type, unit, category, stocked flag, reorder level)
 - [ ] Price lists / product prices

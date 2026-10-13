@@ -51,3 +51,9 @@ export const roleSchema = z.object({
   description: z.string().optional(),
   permission_ids: z.array(z.number()),
 });
+
+export const unitSchema = z.object({
+  name: z.string().trim().min(1, 'Unit name is required').max(100, 'Use at most 100 characters'),
+  code: z.string().trim().min(1, 'Unit code is required').max(30, 'Use at most 30 characters'),
+  allow_decimal: z.boolean(),
+});

@@ -1,6 +1,6 @@
 """Remove obsolete operator-issued password reset permission.
 
-Revision ID: 20261013_remove_operator_reset_permission
+Revision ID: 20261013_remove_reset_perm
 Revises: 20261013_auth_audit
 Create Date: 2026-10-13
 """
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision = "20261013_remove_operator_reset_permission"
+revision = "20261013_remove_reset_perm"
 down_revision = "20261013_auth_audit"
 branch_labels = None
 depends_on = None

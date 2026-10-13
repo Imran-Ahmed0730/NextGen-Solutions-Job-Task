@@ -43,6 +43,10 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("auth.roles.delete", "auth", "Deactivate roles"),
     PermissionDefinition("auth.permissions.read", "auth", "View permission catalog"),
     PermissionDefinition("auth.audit_logs.read", "auth", "View audit logs"),
+    PermissionDefinition("master_data.units.read", "master_data", "View units"),
+    PermissionDefinition("master_data.units.create", "master_data", "Create units"),
+    PermissionDefinition("master_data.units.update", "master_data", "Update units"),
+    PermissionDefinition("master_data.units.delete", "master_data", "Delete units"),
 )
 
 

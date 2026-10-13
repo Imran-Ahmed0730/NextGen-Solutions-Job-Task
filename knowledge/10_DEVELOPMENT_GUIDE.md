@@ -53,6 +53,7 @@ is protected.
 │   │   ├── api/                 # Health endpoint
 │   │   ├── core/                # Configuration, DB, security, exceptions, email
 │   │   ├── modules/auth/        # Authentication and user/role administration
+│   │   ├── modules/units/       # Measurement-unit master-data reference module
 │   │   └── main.py              # FastAPI app and router registration
 │   ├── alembic/versions/        # Versioned database changes
 │   └── tests/                   # Backend service/API/model/mail tests
@@ -67,10 +68,11 @@ is protected.
 └── CLAUDE.md
 ```
 
-`backend/app/modules/auth/` contains the module's HTTP router, Pydantic schemas, SQLAlchemy models,
-service logic, repository queries, audit helper, and initial-admin seed script. `backend/app/core/`
-contains shared facilities used by the module, including JWT/session validation, configuration,
-database access, and SMTP delivery.
+`backend/app/modules/auth/` contains the auth and administration router, Pydantic schemas,
+SQLAlchemy models, service logic, repository queries, audit helper, and initial-admin seed script.
+`backend/app/modules/units/` is the first Phase 2 business module and follows the same
+router/schema/model/service/repository split. `backend/app/core/` contains shared facilities such
+as JWT/session validation, configuration, database access, and SMTP delivery.
 
 The frontend route tree currently includes:
 
@@ -87,6 +89,7 @@ The frontend route tree currently includes:
 | `/users/[id]` | Edit user details and roles |
 | `/roles` | Create/update roles and grant permissions |
 | `/permissions` | Read-only permission catalog |
+| `/units` | List, create, update, soft-delete, and restore measurement units |
 
 Routes are implemented under `frontend/src/app/`. Protected routes use the shared authentication
 shell and permission-aware navigation.
@@ -106,12 +109,11 @@ Next.js page
   → MySQL
 ```
 
-The router maps HTTP operations and delegates application behavior to `service.py`. Pydantic
-schemas validate incoming payloads and document responses. The service owns authentication and
-account workflows. Reusable queries are kept in the repository. Model relationships describe the
-persisted user, role, permission, session, reset, and audit data.
+The router maps HTTP operations and delegates application behavior to each module's `service.py`.
+Pydantic schemas validate incoming payloads and document responses. Services own business
+workflows, repositories hold reusable queries, and models map persisted data.
 
-`backend/app/main.py` registers the health and authentication routers, configures CORS for
+`backend/app/main.py` registers the health, authentication, and units routers, configures CORS for
 `FRONTEND_ORIGIN`, and protects the API root. The auth router is mounted under
 `/api/v1/auth`.
 
@@ -203,9 +205,15 @@ The implemented auth API is:
 | `POST /api/v1/auth/roles/{id}/activate` | `auth.roles.update` | Reactivate role |
 | `GET /api/v1/auth/permissions` | `auth.permissions.read` | Read permission catalog |
 | `GET /api/v1/auth/audit-logs` | `auth.audit_logs.read` | Read audit records |
+| `GET /api/v1/units` | `master_data.units.read` | List active units; `include_inactive=true` includes deleted units |
+| `POST /api/v1/units` | `master_data.units.create` | Create a unit |
+| `PATCH /api/v1/units/{id}` | `master_data.units.update` | Update a unit |
+| `DELETE /api/v1/units/{id}` | `master_data.units.delete` | Soft-delete a unit |
+| `POST /api/v1/units/{id}/activate` | `master_data.units.update` | Restore a soft-deleted unit |
 
 The public health endpoint is `GET /health`. The API root endpoint requires
-`auth.profile.read`. Query pagination for user/audit lists currently uses `offset` and `limit`.
+`auth.profile.read`. Query pagination for user/audit/unit lists currently uses `offset` and
+`limit`.
 
 ## 7. Database and migrations
 
@@ -218,13 +226,19 @@ Authentication currently persists:
 - `password_resets`: hashed one-time reset token, expiry, and used state.
 - `audit_logs`: append-only event details and optional actor.
 
+The first master-data migration adds `units` with its name, unique code, fractional-quantity flag,
+active/deleted state, and timestamps. Unit changes are recorded in `audit_logs`; deleted units
+remain stored and may be restored. Product categories, products, price lists, warehouses, and the
+other Phase 2 setup data have not yet been implemented.
+
 The current migration chain is:
 
 1. `20261012_initial_empty` — initial empty migration.
 2. `20261013_auth_models` — core auth/role/permission/session/reset tables.
 3. `20261013_auth_audit` — role active flag and audit table.
-4. `20261013_remove_operator_reset_permission` — removes the obsolete operator-issued reset
+4. `20261013_remove_reset_perm` — removes the obsolete operator-issued reset
    permission now that recovery is email-based.
+5. `20261013_units` — creates the first master-data table.
 
 Do not edit a migration after it has been applied to an environment. Add a new Alembic revision for
 subsequent schema changes. Offline SQL generation checks migration construction; applying a
@@ -319,6 +333,14 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 - Login, forgot/reset password, protected shell, profile, change-password, users, roles, and
   permissions screens.
 - SweetAlert2 toast feedback for frontend validation, success, and action errors.
+
+### Implemented Phase 2 slice — Units
+
+- Unit API, persistence model, schema validation, repository, and service.
+- Permission-controlled unit list/create/update/delete/restore, with audit entries and soft-delete
+  behavior.
+- Administrator seed includes the `master_data.units.*` permissions.
+- Units screen is available at `/units`.
 
 ### Planned, not yet implemented
 

@@ -72,8 +72,9 @@ Three groups: **Business rules** (the requirement wins), **Engineering rules**, 
 - E-14: Small commits, one slice each; message format `module: what changed`.
 - E-15: A feature is done only when: code + migration + tests pass + permission added + audit hook + docs updated.
 - E-16: Always write codes in optimized way and reuse the code instead of duplicating code.
-- Create/update documentation for every part
-- Commit after completing a part or module so that it can be rolled back easily to a certain module.
+- E-17: Create/update documentation for every part
+- E-18: Commit after completing a part or module so that it can be rolled back easily to a certain module.
+- Whenever a permission is added it must be assigned to admin
 
 ## C. AI usage rules
 
