@@ -30,7 +30,8 @@ implemented; see [Section 10](#10-implementation-status).
 | Layer | Current implementation |
 |---|---|
 | Web | Next.js 14 App Router, React 18, TypeScript, Tailwind CSS |
-| Form validation | Zod in the frontend |
+| Form validation | Zod in the frontend, Pydantic with strict constraints (usernames, BD mobiles, positive IDs) in backend; inline API error mapping |
+| UI components | Accessible StatusSwitch toggle, standardized ActionIcon and IconActionButton controls |
 | Notifications | SweetAlert2 toast helper |
 | API | FastAPI, Pydantic, SQLAlchemy 2 |
 | Database | MySQL 8.4, InnoDB, `utf8mb4` |
@@ -246,9 +247,9 @@ active/deleted state, and timestamps. Unit changes are recorded in `audit_logs`;
 remain stored and may be restored. The next migration adds `product_categories`, with an optional
 self-referencing parent, active/deleted state, and timestamps. Category services reject missing or
 inactive parents and parent changes that would create a cycle. Category create/update/delete/restore
-operations write audit records. Active state can be switched with the screen's Active/Inactive
-radio controls; deactivation hides a category from the default list without marking it deleted.
-Deleting a category is a separate soft-delete action and preserves child references.
+operations write audit records. Active state can be switched with the screen's accessible
+`StatusSwitch` toggle control; deactivation hides a category from the default list without marking it
+deleted. Deleting a category is a separate soft-delete action and preserves child references.
 Products, price lists, warehouses, and the other Phase 2 setup data have not yet been implemented.
 
 The current migration chain is:

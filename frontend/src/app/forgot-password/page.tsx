@@ -3,7 +3,13 @@
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 
-import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
+import {
+  FieldError,
+  getApiFieldErrors,
+  getFieldErrors,
+  RequiredMark,
+  type FieldErrors,
+} from '@/components/forms/field-error';
 import { apiRequest } from '@/lib/auth-api';
 import { forgotPasswordSchema } from '@/lib/auth-validation';
 import { showSuccessToast, showToast } from '@/lib/notifications';
@@ -31,11 +37,15 @@ export default function ForgotPasswordPage() {
       );
       showSuccessToast(result.message);
     } catch (cause) {
-      showToast(
-        'error',
-        'Password reset email could not be delivered',
-        cause instanceof Error ? cause.message : 'Could not submit the request',
-      );
+      const apiErrors = getApiFieldErrors(cause);
+      if (Object.keys(apiErrors).length) setErrors(apiErrors);
+      else {
+        showToast(
+          'error',
+          'Password reset email could not be delivered',
+          cause instanceof Error ? cause.message : 'Could not submit the request',
+        );
+      }
     } finally {
       setBusy(false);
     }
@@ -57,6 +67,7 @@ export default function ForgotPasswordPage() {
               type="email"
               placeholder="name@example.com"
               autoComplete="email"
+              maxLength={255}
               required
               aria-invalid={Boolean(errors.email)}
               aria-describedby={errors.email ? 'forgot-email-error' : undefined}

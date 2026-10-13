@@ -5,7 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
-import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
+import {
+  FieldError,
+  getApiFieldErrors,
+  getFieldErrors,
+  RequiredMark,
+  type FieldErrors,
+} from '@/components/forms/field-error';
+import { ActionIcon } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { userSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -90,7 +97,9 @@ export function UserForm({ userId }: { userId: number | null }) {
       showSuccessToast(userId ? 'User updated.' : 'User created.');
       router.push('/users');
     } catch (cause) {
-      showErrorToast(cause instanceof Error ? cause.message : 'Could not save user');
+      const apiErrors = getApiFieldErrors(cause);
+      if (Object.keys(apiErrors).length) setErrors(apiErrors);
+      else showErrorToast(cause instanceof Error ? cause.message : 'Could not save user');
     } finally {
       setBusy(false);
     }
@@ -117,6 +126,10 @@ export function UserForm({ userId }: { userId: number | null }) {
               name="username"
               placeholder="Choose a username"
               defaultValue={record?.username}
+              minLength={1}
+              maxLength={100}
+              pattern="[A-Za-z0-9][A-Za-z0-9._-]*"
+              title="Use letters, numbers, dots, underscores, or hyphens"
               required
               readOnly={Boolean(userId)}
               aria-invalid={Boolean(errors.username)}
@@ -127,26 +140,31 @@ export function UserForm({ userId }: { userId: number | null }) {
           </label>
           <label className="block text-sm font-medium">
             Full name<RequiredMark />
-            <input name="full_name" placeholder="Enter the user's full name" defaultValue={record?.full_name} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="full_name" placeholder="Enter the user's full name" defaultValue={record?.full_name} minLength={1} maxLength={255} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="full-name-error" message={errors.full_name} />
           </label>
           <label className="block text-sm font-medium">
             Email
-            <input name="email" type="email" placeholder="name@example.com" defaultValue={record?.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'user-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="email" type="email" placeholder="name@example.com" maxLength={255} defaultValue={record?.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'user-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="user-email-error" message={errors.email} />
           </label>
           <label className="block text-sm font-medium">
             Mobile
-            <input name="mobile" placeholder="e.g. 01XXXXXXXXX" defaultValue={record?.mobile ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="mobile" type="tel" inputMode="numeric" pattern="01[3-9][0-9]{8}" maxLength={11} placeholder="e.g. 01712345678" defaultValue={record?.mobile ?? ''} aria-invalid={Boolean(errors.mobile)} aria-describedby={errors.mobile ? 'user-mobile-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <FieldError id="user-mobile-error" message={errors.mobile} />
           </label>
           {!userId && (
             <label className="block text-sm font-medium">
               Initial password<RequiredMark />
-              <input name="password" type="password" placeholder="At least 8 characters" autoComplete="new-password" required aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'user-password-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+              <input name="password" type="password" placeholder="At least 8 characters" autoComplete="new-password" minLength={8} maxLength={256} required aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'user-password-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
               <FieldError id="user-password-error" message={errors.password} />
             </label>
           )}
-          <fieldset className="rounded-lg border border-slate-200 p-4">
+          <fieldset
+            className="rounded-lg border border-slate-200 p-4"
+            aria-invalid={Boolean(errors.role_ids)}
+            aria-describedby={errors.role_ids ? 'user-roles-error' : undefined}
+          >
             <legend className="px-1 text-sm font-medium">Roles</legend>
             {roles.length === 0 ? (
               <p className="text-sm text-slate-500">No active roles available.</p>
@@ -171,8 +189,10 @@ export function UserForm({ userId }: { userId: number | null }) {
               </div>
             )}
           </fieldset>
+          <FieldError id="user-roles-error" message={errors.role_ids} />
           {userId && <p className="text-sm text-slate-600">Account status: {record?.is_active ? 'Active' : 'Inactive'}</p>}
-          <button disabled={busy} className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white disabled:opacity-60">
+          <button disabled={busy} className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 font-medium text-white disabled:opacity-60">
+            <ActionIcon name="save" />
             {busy ? 'Saving…' : 'Save user'}
           </button>
         </form>

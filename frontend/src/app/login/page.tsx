@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 
 import { apiRequest, storeSession, type SessionTokens } from '@/lib/auth-api';
-import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
+import {
+  FieldError,
+  getApiFieldErrors,
+  getFieldErrors,
+  RequiredMark,
+  type FieldErrors,
+} from '@/components/forms/field-error';
 import { loginSchema } from '@/lib/auth-validation';
 import { showErrorToast } from '@/lib/notifications';
 
@@ -33,7 +39,9 @@ export default function LoginPage() {
       storeSession(tokens);
       router.replace('/');
     } catch (cause) {
-      showErrorToast(cause instanceof Error ? cause.message : 'Sign in failed');
+      const apiErrors = getApiFieldErrors(cause);
+      if (Object.keys(apiErrors).length) setErrors(apiErrors);
+      else showErrorToast(cause instanceof Error ? cause.message : 'Sign in failed');
     } finally {
       setBusy(false);
     }
@@ -54,6 +62,7 @@ export default function LoginPage() {
               autoComplete="username"
               autoFocus
               minLength={1}
+              maxLength={255}
               required
               aria-invalid={Boolean(errors.username)}
               aria-describedby={errors.username ? 'login-username-error' : undefined}
@@ -69,6 +78,7 @@ export default function LoginPage() {
               placeholder="Enter your password"
               autoComplete="current-password"
               minLength={1}
+              maxLength={256}
               required
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? 'login-password-error' : undefined}

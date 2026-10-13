@@ -1,18 +1,46 @@
 import { z } from 'zod';
 
+const bangladeshMobilePattern = /^01[3-9]\d{8}$/;
+const usernamePattern = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+const optionalEmail = z
+  .string()
+  .trim()
+  .max(255, 'Use at most 255 characters')
+  .email('Enter a valid email address')
+  .or(z.literal(''))
+  .optional();
+const optionalBangladeshMobile = z
+  .string()
+  .trim()
+  .max(11, 'Use an 11-digit Bangladesh mobile number')
+  .refine(
+    (value) => value === undefined || value === '' || bangladeshMobilePattern.test(value),
+    'Use a valid Bangladesh mobile number, e.g. 01712345678',
+  )
+  .optional();
+
 export const loginSchema = z.object({
-  username: z.string().trim().min(1, 'Enter your username, email, or mobile number'),
-  password: z.string().min(1, 'Enter your password'),
+  username: z
+    .string()
+    .trim()
+    .min(1, 'Enter your username, email, or mobile number')
+    .max(255, 'Use at most 255 characters'),
+  password: z.string().min(1, 'Enter your password').max(256, 'Use at most 256 characters'),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().trim().min(1, 'Email address is required').email('Enter a valid email address'),
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email address is required')
+    .max(255, 'Use at most 255 characters')
+    .email('Enter a valid email address'),
 });
 
 export const resetPasswordSchema = z
   .object({
-    token: z.string().trim().min(1, 'Enter the reset token'),
-    new_password: z.string().min(8, 'Use at least 8 characters'),
+    token: z.string().trim().min(1, 'Enter the reset token').max(512, 'Token is too long'),
+    new_password: z.string().min(8, 'Use at least 8 characters').max(256, 'Use at most 256 characters'),
     confirm_password: z.string().min(1, 'Confirm your password'),
   })
   .refine((value) => value.new_password === value.confirm_password, {
@@ -22,8 +50,11 @@ export const resetPasswordSchema = z
 
 export const changePasswordSchema = z
   .object({
-    current_password: z.string().min(1, 'Enter your current password'),
-    new_password: z.string().min(8, 'Use at least 8 characters'),
+    current_password: z
+      .string()
+      .min(1, 'Enter your current password')
+      .max(256, 'Use at most 256 characters'),
+    new_password: z.string().min(8, 'Use at least 8 characters').max(256, 'Use at most 256 characters'),
     confirm_password: z.string().min(1, 'Confirm your password'),
   })
   .refine((value) => value.new_password === value.confirm_password, {
@@ -32,28 +63,59 @@ export const changePasswordSchema = z
   });
 
 export const profileSchema = z.object({
-  full_name: z.string().trim().min(1, 'Name is required'),
-  email: z.union([z.string().trim().email(), z.literal('')]),
-  mobile: z.string().max(30).optional(),
+  full_name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(255, 'Use at most 255 characters'),
+  email: optionalEmail,
+  mobile: optionalBangladeshMobile,
 });
 
 export const userSchema = z.object({
-  username: z.string().trim().min(1, 'Username is required'),
-  full_name: z.string().trim().min(1, 'Name is required'),
-  email: z.union([z.string().trim().email(), z.literal('')]),
-  mobile: z.string().max(30).optional(),
-  password: z.string().optional(),
-  role_ids: z.array(z.number()),
+  username: z
+    .string()
+    .trim()
+    .min(1, 'Username is required')
+    .max(100, 'Use at most 100 characters')
+    .regex(usernamePattern, 'Use letters, numbers, dots, underscores, or hyphens'),
+  full_name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(255, 'Use at most 255 characters'),
+  email: optionalEmail,
+  mobile: optionalBangladeshMobile,
+  password: z
+    .string()
+    .max(256, 'Use at most 256 characters')
+    .refine((value) => value === '' || value.length >= 8, 'Use at least 8 characters')
+    .optional(),
+  role_ids: z.array(z.number().int().positive()).refine(
+    (ids) => new Set(ids).size === ids.length,
+    'A role may only be selected once',
+  ),
 });
 
 export const roleSchema = z.object({
-  name: z.string().trim().min(1, 'Role name is required'),
-  description: z.string().optional(),
-  permission_ids: z.array(z.number()),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Role name is required')
+    .max(100, 'Use at most 100 characters'),
+  description: z.string().max(2000, 'Use at most 2000 characters').optional(),
+  permission_ids: z.array(z.number().int().positive()).refine(
+    (ids) => new Set(ids).size === ids.length,
+    'A permission may only be selected once',
+  ),
 });
 
 export const unitSchema = z.object({
-  name: z.string().trim().min(1, 'Unit name is required').max(100, 'Use at most 100 characters'),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Unit name is required')
+    .max(100, 'Use at most 100 characters'),
   code: z.string().trim().min(1, 'Unit code is required').max(30, 'Use at most 30 characters'),
   allow_decimal: z.boolean(),
 });
@@ -64,6 +126,6 @@ export const productCategorySchema = z.object({
     .trim()
     .min(1, 'Category name is required')
     .max(100, 'Use at most 100 characters'),
-  parent_id: z.number().nullable(),
+  parent_id: z.number().int().positive().nullable(),
   is_active: z.boolean(),
 });

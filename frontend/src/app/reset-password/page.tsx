@@ -4,7 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 
-import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
+import {
+  FieldError,
+  getApiFieldErrors,
+  getFieldErrors,
+  RequiredMark,
+  type FieldErrors,
+} from '@/components/forms/field-error';
 import { apiRequest } from '@/lib/auth-api';
 import { resetPasswordSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -45,7 +51,9 @@ export default function ResetPasswordPage() {
       showSuccessToast('Password updated. You can now sign in.');
       window.setTimeout(() => router.replace('/login'), 1200);
     } catch (cause) {
-      showErrorToast(cause instanceof Error ? cause.message : 'Password reset failed');
+      const apiErrors = getApiFieldErrors(cause);
+      if (Object.keys(apiErrors).length) setErrors(apiErrors);
+      else showErrorToast(cause instanceof Error ? cause.message : 'Password reset failed');
     } finally {
       setBusy(false);
     }
@@ -60,6 +68,7 @@ export default function ResetPasswordPage() {
             One-time token from your email<RequiredMark />
             <input
               name="token"
+              maxLength={512}
               placeholder="Paste the one-time token"
               value={token}
               onChange={(event) => setToken(event.target.value)}
@@ -77,6 +86,8 @@ export default function ResetPasswordPage() {
               type="password"
               placeholder="At least 8 characters"
               autoComplete="new-password"
+              minLength={8}
+              maxLength={256}
               required
               aria-invalid={Boolean(errors.new_password)}
               aria-describedby={errors.new_password ? 'reset-password-error' : undefined}
@@ -91,6 +102,8 @@ export default function ResetPasswordPage() {
               type="password"
               placeholder="Re-enter your new password"
               autoComplete="new-password"
+              minLength={1}
+              maxLength={256}
               required
               aria-invalid={Boolean(errors.confirm_password)}
               aria-describedby={errors.confirm_password ? 'reset-confirm-password-error' : undefined}

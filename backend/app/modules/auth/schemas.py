@@ -1,6 +1,31 @@
 from datetime import datetime
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic.types import StringConstraints
+
+Username = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=100,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$",
+    ),
+]
+FullName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
+RoleName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+MobileNumber = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=11,
+        max_length=11,
+        pattern=r"^01[3-9]\d{8}$",
+    ),
+]
+EmailAddress = Annotated[EmailStr, Field(max_length=255)]
+PositiveId = Annotated[int, Field(strict=True, gt=0)]
 
 
 class LoginRequest(BaseModel):
@@ -29,7 +54,7 @@ class ChangePasswordRequest(BaseModel):
 
 
 class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+    email: EmailAddress
 
 
 class ResetPasswordRequest(BaseModel):
@@ -38,9 +63,9 @@ class ResetPasswordRequest(BaseModel):
 
 
 class ProfileUpdate(BaseModel):
-    full_name: str = Field(min_length=1, max_length=255)
-    email: EmailStr | None = None
-    mobile: str | None = Field(default=None, max_length=30)
+    full_name: FullName
+    email: EmailAddress | None = None
+    mobile: MobileNumber | None = None
 
 
 class ProfileResponse(BaseModel):
@@ -54,19 +79,19 @@ class ProfileResponse(BaseModel):
 
 
 class UserCreate(BaseModel):
-    username: str = Field(min_length=1, max_length=100)
-    email: EmailStr | None = None
-    mobile: str | None = Field(default=None, max_length=30)
-    full_name: str = Field(min_length=1, max_length=255)
+    username: Username
+    email: EmailAddress | None = None
+    mobile: MobileNumber | None = None
+    full_name: FullName
     password: str = Field(min_length=8, max_length=256)
-    role_ids: list[int] = Field(default_factory=list)
+    role_ids: list[PositiveId] = Field(default_factory=list)
 
 
 class UserUpdate(BaseModel):
-    email: EmailStr | None = None
-    mobile: str | None = Field(default=None, max_length=30)
-    full_name: str | None = Field(default=None, min_length=1, max_length=255)
-    role_ids: list[int] | None = None
+    email: EmailAddress | None = None
+    mobile: MobileNumber | None = None
+    full_name: FullName | None = None
+    role_ids: list[PositiveId] | None = None
 
 
 class UserResponse(BaseModel):
@@ -83,15 +108,19 @@ class UserResponse(BaseModel):
 
 
 class RoleCreate(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
-    description: str | None = None
-    permission_ids: list[int] = Field(default_factory=list)
+    name: RoleName
+    description: (
+        Annotated[str, StringConstraints(strip_whitespace=True, max_length=2000)] | None
+    ) = None
+    permission_ids: list[PositiveId] = Field(default_factory=list)
 
 
 class RoleUpdate(BaseModel):
-    name: str | None = Field(default=None, min_length=1, max_length=100)
-    description: str | None = None
-    permission_ids: list[int] | None = None
+    name: RoleName | None = None
+    description: (
+        Annotated[str, StringConstraints(strip_whitespace=True, max_length=2000)] | None
+    ) = None
+    permission_ids: list[PositiveId] | None = None
 
 
 class RoleResponse(BaseModel):

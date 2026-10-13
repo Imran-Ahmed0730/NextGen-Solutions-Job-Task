@@ -6,6 +6,7 @@ import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import {
   FieldError,
+  getApiFieldErrors,
   getFieldErrors,
   RequiredMark,
   type FieldErrors,
@@ -13,6 +14,7 @@ import {
 import { apiRequest } from '@/lib/auth-api';
 import { unitSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
+import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 
 type UnitRecord = {
   id: number;
@@ -69,7 +71,9 @@ function UnitsContent() {
       showSuccessToast(selected ? 'Unit updated.' : 'Unit created.');
       setSelected(null);
     } catch (cause) {
-      showErrorToast(cause instanceof Error ? cause.message : 'Could not save unit');
+      const apiErrors = getApiFieldErrors(cause);
+      if (Object.keys(apiErrors).length) setErrors(apiErrors);
+      else showErrorToast(cause instanceof Error ? cause.message : 'Could not save unit');
       return;
     }
     try {
@@ -112,8 +116,9 @@ function UnitsContent() {
               setErrors({});
               setSelected(null);
             }}
-            className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
+            className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
           >
+            <ActionIcon name="add" />
             Add unit
           </button>
         )}
@@ -134,6 +139,8 @@ function UnitsContent() {
               name="name"
               placeholder="e.g. Kilogram"
               defaultValue={selected?.name ?? ''}
+              minLength={1}
+              maxLength={100}
               required
               aria-invalid={Boolean(errors.name)}
               aria-describedby={errors.name ? 'unit-name-error' : undefined}
@@ -147,6 +154,8 @@ function UnitsContent() {
               name="code"
               placeholder="e.g. kg"
               defaultValue={selected?.code ?? ''}
+              minLength={1}
+              maxLength={30}
               required
               aria-invalid={Boolean(errors.code)}
               aria-describedby={errors.code ? 'unit-code-error' : undefined}
@@ -164,7 +173,8 @@ function UnitsContent() {
             Allow fractional quantities
           </label>
           <div className="flex gap-3 sm:col-span-2">
-            <button className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">
+            <button className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">
+              <ActionIcon name="save" />
               {selected ? 'Save unit' : 'Create unit'}
             </button>
             {selected && (
@@ -209,34 +219,31 @@ function UnitsContent() {
                 <td className="px-4 py-3">{unit.is_active ? 'Active' : 'Deleted'}</td>
                 <td className="space-x-3 px-4 py-3">
                   {unit.is_active && profile?.permissions.includes('master_data.units.update') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="edit"
+                      label={`Edit ${unit.name}`}
                       onClick={() => {
                         setErrors({});
                         setSelected(unit);
                       }}
-                      className="text-emerald-800 underline"
-                    >
-                      Edit
-                    </button>
+                      className="mr-1 p-2 text-emerald-800 hover:bg-emerald-50"
+                    />
                   )}
                   {unit.is_active && profile?.permissions.includes('master_data.units.delete') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="delete"
+                      label={`Delete ${unit.name}`}
                       onClick={() => void setActive(unit, false)}
-                      className="text-rose-700 underline"
-                    >
-                      Delete
-                    </button>
+                      className="mr-1 p-2 text-rose-700 hover:bg-rose-50"
+                    />
                   )}
                   {!unit.is_active && profile?.permissions.includes('master_data.units.update') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="restore"
+                      label={`Restore ${unit.name}`}
                       onClick={() => void setActive(unit, true)}
-                      className="text-emerald-800 underline"
-                    >
-                      Restore
-                    </button>
+                      className="p-2 text-emerald-800 hover:bg-emerald-50"
+                    />
                   )}
                 </td>
               </tr>

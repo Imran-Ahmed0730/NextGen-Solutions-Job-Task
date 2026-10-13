@@ -7,6 +7,7 @@ import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
+import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 
 type UserRecord = {
   id: number;
@@ -53,7 +54,8 @@ function UsersContent() {
           <p className="mt-1 text-sm text-slate-600">Manage user accounts and roles.</p>
         </div>
         {profile?.permissions.includes('auth.users.create') && (
-          <Link href="/users/new" className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white">
+          <Link href="/users/new" className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white">
+            <ActionIcon name="add" />
             Add user
           </Link>
         )}
@@ -77,14 +79,23 @@ function UsersContent() {
                 <td className="px-4 py-3">{user.roles.join(', ') || 'None'}</td>
                 <td className="px-4 py-3">{user.is_active ? 'Active' : 'Inactive'}</td>
                 <td className="px-4 py-3">
-                  {profile?.permissions.includes(user.is_active ? 'auth.users.delete' : 'auth.users.update') && (
-                    <button
-                      type="button"
-                      onClick={() => void setActive(user.id, !user.is_active)}
-                      className="text-slate-700 underline"
+                  {profile?.permissions.includes('auth.users.update') && (
+                    <Link
+                      href={`/users/${user.id}`}
+                      title={`Edit ${user.full_name}`}
+                      aria-label={`Edit ${user.full_name}`}
+                      className="mr-1 inline-flex rounded-lg p-2 text-emerald-800 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                     >
-                      {user.is_active ? 'Deactivate' : 'Activate'}
-                    </button>
+                      <ActionIcon name="edit" />
+                    </Link>
+                  )}
+                  {profile?.permissions.includes(user.is_active ? 'auth.users.delete' : 'auth.users.update') && (
+                    <IconActionButton
+                      icon={user.is_active ? 'deactivate' : 'activate'}
+                      label={`${user.is_active ? 'Deactivate' : 'Activate'} ${user.full_name}`}
+                      onClick={() => void setActive(user.id, !user.is_active)}
+                      className={user.is_active ? 'p-2 text-rose-700 hover:bg-rose-50' : 'p-2 text-emerald-800 hover:bg-emerald-50'}
+                    />
                   )}
                 </td>
               </tr>

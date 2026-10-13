@@ -7,10 +7,13 @@ import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import {
   FieldError,
+  getApiFieldErrors,
   getFieldErrors,
   RequiredMark,
   type FieldErrors,
 } from '@/components/forms/field-error';
+import { StatusSwitch } from '@/components/forms/status-switch';
+import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { productCategorySchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -82,7 +85,7 @@ function CategoriesContent() {
     const parsed = productCategorySchema.safeParse({
       name: form.get('name'),
       parent_id: typeof parentValue === 'string' && parentValue ? Number(parentValue) : null,
-      is_active: form.get('is_active') === 'active',
+      is_active: form.get('is_active') === 'on',
     });
     if (!parsed.success) {
       setErrors(getFieldErrors(parsed.error.issues));
@@ -102,7 +105,9 @@ function CategoriesContent() {
       if (!parsed.data.is_active) setIncludeInactive(true);
       setSelected(null);
     } catch (cause) {
-      showErrorToast(cause instanceof Error ? cause.message : 'Could not save category');
+      const apiErrors = getApiFieldErrors(cause);
+      if (Object.keys(apiErrors).length) setErrors(apiErrors);
+      else showErrorToast(cause instanceof Error ? cause.message : 'Could not save category');
       return;
     }
     try {
@@ -178,8 +183,9 @@ function CategoriesContent() {
               setErrors({});
               setSelected(null);
             }}
-            className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
+            className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
           >
+            <ActionIcon name="add" />
             Add category
           </button>
         )}
@@ -200,6 +206,8 @@ function CategoriesContent() {
               name="name"
               placeholder="e.g. Raw Materials"
               defaultValue={selected?.name ?? ''}
+              minLength={1}
+              maxLength={100}
               required
               aria-invalid={Boolean(errors.name)}
               aria-describedby={errors.name ? 'category-name-error' : undefined}
@@ -233,31 +241,16 @@ function CategoriesContent() {
             </select>
             <FieldError id="category-parent-error" message={errors.parent_id} />
           </label>
-          <fieldset className="sm:col-span-2">
-            <legend className="text-sm font-medium">Status</legend>
-            <div className="mt-2 flex flex-wrap gap-4">
-              {[
-                { value: 'active', label: 'Active', checked: selected?.is_active ?? true },
-                { value: 'inactive', label: 'Inactive', checked: selected ? !selected.is_active : false },
-              ].map((option) => (
-                <label
-                  key={option.value}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                >
-                  <input
-                    type="radio"
-                    name="is_active"
-                    value={option.value}
-                    defaultChecked={option.checked}
-                    className="h-4 w-4 accent-emerald-700"
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <div className="sm:col-span-2">
+            <StatusSwitch
+              name="is_active"
+              label="Active"
+              defaultChecked={selected?.is_active ?? true}
+            />
+          </div>
           <div className="flex gap-3 sm:col-span-2">
-            <button className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">
+            <button className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">
+              <ActionIcon name="save" />
               {selected ? 'Save category' : 'Create category'}
             </button>
             {selected && (
@@ -322,75 +315,33 @@ function CategoriesContent() {
                   <td className="px-4 py-3">
                     {category.deleted_at === null &&
                       profile?.permissions.includes('master_data.product_categories.update') && (
-                        <button
-                          type="button"
-                          title="Edit category"
-                          aria-label={`Edit ${category.name}`}
+                        <IconActionButton
+                          icon="edit"
+                          label={`Edit ${category.name}`}
                           onClick={() => {
                             setErrors({});
                             setSelected(category);
                           }}
-                          className="mr-1 inline-flex rounded-lg p-2 text-emerald-800 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
-                        >
-                          <svg
-                            aria-hidden="true"
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.7"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="m14 5 5 5M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z" />
-                          </svg>
-                        </button>
+                          className="mr-1 p-2 text-emerald-800 hover:bg-emerald-50"
+                        />
                       )}
                     {category.deleted_at === null &&
                       profile?.permissions.includes('master_data.product_categories.delete') && (
-                        <button
-                          type="button"
-                          title="Delete category"
-                          aria-label={`Delete ${category.name}`}
+                        <IconActionButton
+                          icon="delete"
+                          label={`Delete ${category.name}`}
                           onClick={() => void setDeleted(category, true)}
-                          className="mr-1 inline-flex rounded-lg p-2 text-rose-700 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600"
-                        >
-                          <svg
-                            aria-hidden="true"
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.7"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M4 7h16m-10 4v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3" />
-                          </svg>
-                        </button>
+                          className="mr-1 p-2 text-rose-700 hover:bg-rose-50"
+                        />
                       )}
                     {category.deleted_at !== null &&
                       profile?.permissions.includes('master_data.product_categories.update') && (
-                        <button
-                          type="button"
-                          title="Restore category"
-                          aria-label={`Restore ${category.name}`}
+                        <IconActionButton
+                          icon="restore"
+                          label={`Restore ${category.name}`}
                           onClick={() => void setDeleted(category, false)}
-                          className="inline-flex rounded-lg p-2 text-emerald-800 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
-                        >
-                          <svg
-                            aria-hidden="true"
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.7"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M4 11a8 8 0 1 1 2.2 5.5M4 4v7h7" />
-                          </svg>
-                        </button>
+                          className="p-2 text-emerald-800 hover:bg-emerald-50"
+                        />
                       )}
                   </td>
                 </tr>

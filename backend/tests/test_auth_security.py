@@ -69,24 +69,33 @@ def test_refresh_rotates_tokens_and_logout_revokes_session(
     assert refreshed.status_code == 200
     rotated = refreshed.json()
     assert rotated["refresh_token"] != original["refresh_token"]
-    assert client.post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": original["refresh_token"]},
-    ).status_code == 401
+    assert (
+        client.post(
+            "/api/v1/auth/refresh",
+            json={"refresh_token": original["refresh_token"]},
+        ).status_code
+        == 401
+    )
 
     logged_out = client.post(
         "/api/v1/auth/logout",
         headers={"Authorization": f"Bearer {rotated['access_token']}"},
     )
     assert logged_out.status_code == 204
-    assert client.post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": rotated["refresh_token"]},
-    ).status_code == 401
-    assert client.get(
-        "/api/v1/auth/me",
-        headers={"Authorization": f"Bearer {rotated['access_token']}"},
-    ).status_code == 401
+    assert (
+        client.post(
+            "/api/v1/auth/refresh",
+            json={"refresh_token": rotated["refresh_token"]},
+        ).status_code
+        == 401
+    )
+    assert (
+        client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {rotated['access_token']}"},
+        ).status_code
+        == 401
+    )
     assert db_session.scalar(select(AuditLog).where(AuditLog.action == "LOGIN")) is not None
 
 
@@ -133,19 +142,28 @@ def test_password_reset_email_link_is_single_use_and_audited(
         json={"token": reset_token, "new_password": "New-Secret-123"},
     )
     assert changed.status_code == 204
-    assert client.post(
-        "/api/v1/auth/reset-password",
-        json={"token": reset_token, "new_password": "Another-Secret-123"},
-    ).status_code == 400
-    assert client.post(
-        "/api/v1/auth/login",
-        json={"username": "admin", "password": "New-Secret-123"},
-    ).status_code == 200
+    assert (
+        client.post(
+            "/api/v1/auth/reset-password",
+            json={"token": reset_token, "new_password": "Another-Secret-123"},
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post(
+            "/api/v1/auth/login",
+            json={"username": "admin", "password": "New-Secret-123"},
+        ).status_code
+        == 200
+    )
     assert client.get("/api/v1/auth/me", headers=headers).status_code == 401
 
-    assert db_session.scalar(
-        select(AuditLog).where(AuditLog.after_json["event"].as_string() == "password_reset")
-    ) is not None
+    assert (
+        db_session.scalar(
+            select(AuditLog).where(AuditLog.after_json["event"].as_string() == "password_reset")
+        )
+        is not None
+    )
 
 
 def test_change_password_keeps_new_session_and_invalidates_old_session(
@@ -175,19 +193,28 @@ def test_change_password_keeps_new_session_and_invalidates_old_session(
     )
     assert changed.status_code == 200
     new_session = changed.json()
-    assert client.get(
-        "/api/v1/auth/me",
-        headers={"Authorization": f"Bearer {new_session['access_token']}"},
-    ).status_code == 200
+    assert (
+        client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {new_session['access_token']}"},
+        ).status_code
+        == 200
+    )
     assert client.get("/api/v1/auth/me", headers=old_headers).status_code == 401
-    assert client.post(
-        "/api/v1/auth/login",
-        json={"username": "admin", "password": password},
-    ).status_code == 401
-    assert client.post(
-        "/api/v1/auth/login",
-        json={"username": "admin", "password": "Updated-Password"},
-    ).status_code == 200
+    assert (
+        client.post(
+            "/api/v1/auth/login",
+            json={"username": "admin", "password": password},
+        ).status_code
+        == 401
+    )
+    assert (
+        client.post(
+            "/api/v1/auth/login",
+            json={"username": "admin", "password": "Updated-Password"},
+        ).status_code
+        == 200
+    )
 
 
 def test_profile_user_and_role_changes_are_audited_and_soft_deletable(
@@ -206,7 +233,7 @@ def test_profile_user_and_role_changes_are_audited_and_soft_deletable(
         json={
             "full_name": "Administrator Updated",
             "email": "admin@example.com",
-            "mobile": "01234567890",
+            "mobile": "01712345678",
         },
     )
     assert profile.status_code == 200
@@ -283,15 +310,21 @@ def test_profile_user_and_role_changes_are_audited_and_soft_deletable(
     )
     assert renamed_role.status_code == 200
     assert renamed_role.json()["name"] == "Store Staff"
-    assert client.post(
-        f"/api/v1/auth/roles/{role_id}/deactivate",
-        headers=headers,
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/v1/auth/roles/{role_id}/deactivate",
+            headers=headers,
+        ).status_code
+        == 200
+    )
     assert client.get("/api/v1/auth/me", headers=staff_headers).status_code == 403
-    assert client.post(
-        f"/api/v1/auth/roles/{role_id}/activate",
-        headers=headers,
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/v1/auth/roles/{role_id}/activate",
+            headers=headers,
+        ).status_code
+        == 200
+    )
     assert client.get("/api/v1/auth/me", headers=staff_headers).status_code == 200
 
     assert db_session.scalar(select(AuditLog).where(AuditLog.entity_type == "user")) is not None
@@ -311,24 +344,36 @@ def test_last_administrator_cannot_deactivate_or_remove_own_role(
     admin_role = db_session.scalar(select(Role).where(Role.name == "Administrator"))
     assert admin_role is not None
 
-    assert client.post(
-        f"/api/v1/auth/users/{admin.id}/deactivate",
-        headers=headers,
-    ).status_code == 409
-    assert client.patch(
-        f"/api/v1/auth/users/{admin.id}",
-        headers=headers,
-        json={"role_ids": []},
-    ).status_code == 409
-    assert client.post(
-        f"/api/v1/auth/roles/{admin_role.id}/deactivate",
-        headers=headers,
-    ).status_code == 409
-    assert client.patch(
-        f"/api/v1/auth/roles/{admin_role.id}",
-        headers=headers,
-        json={"name": "Former Administrator"},
-    ).status_code == 409
+    assert (
+        client.post(
+            f"/api/v1/auth/users/{admin.id}/deactivate",
+            headers=headers,
+        ).status_code
+        == 409
+    )
+    assert (
+        client.patch(
+            f"/api/v1/auth/users/{admin.id}",
+            headers=headers,
+            json={"role_ids": []},
+        ).status_code
+        == 409
+    )
+    assert (
+        client.post(
+            f"/api/v1/auth/roles/{admin_role.id}/deactivate",
+            headers=headers,
+        ).status_code
+        == 409
+    )
+    assert (
+        client.patch(
+            f"/api/v1/auth/roles/{admin_role.id}",
+            headers=headers,
+            json={"name": "Former Administrator"},
+        ).status_code
+        == 409
+    )
 
 
 def test_fifth_failed_attempt_locks_account(client: TestClient, db_session: Session) -> None:
@@ -354,10 +399,13 @@ def test_fifth_failed_attempt_locks_account(client: TestClient, db_session: Sess
     db_session.refresh(user)
     assert user.failed_attempts == 5
     assert user.locked_until is not None
-    assert client.post(
-        "/api/v1/auth/login",
-        json={"username": "staff", "password": "Correct-Password"},
-    ).json()["detail"] == "Account is locked"
+    assert (
+        client.post(
+            "/api/v1/auth/login",
+            json={"username": "staff", "password": "Correct-Password"},
+        ).json()["detail"]
+        == "Account is locked"
+    )
 
 
 @pytest.mark.parametrize(
@@ -403,3 +451,48 @@ def test_auth_endpoints_require_permissions(
 
     response = client.request(method, path, json=payload, headers=headers)
     assert response.status_code == 403
+
+
+def test_auth_schema_validation_rejects_invalid_inputs(
+    client: TestClient, db_session: Session
+) -> None:
+    admin, password = _admin(db_session)
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"username": "admin", "password": password},
+    ).json()
+    headers = {"Authorization": f"Bearer {login['access_token']}"}
+
+    # Invalid mobile format in profile update
+    res = client.patch(
+        "/api/v1/auth/me",
+        headers=headers,
+        json={"full_name": "Admin", "mobile": "01234567890"},
+    )
+    assert res.status_code == 422
+
+    # Invalid username format in user creation
+    res = client.post(
+        "/api/v1/auth/users",
+        headers=headers,
+        json={
+            "username": "invalid username with spaces",
+            "full_name": "Test User",
+            "password": "Password-123",
+            "role_ids": [1],
+        },
+    )
+    assert res.status_code == 422
+
+    # Non-positive role ID in user creation
+    res = client.post(
+        "/api/v1/auth/users",
+        headers=headers,
+        json={
+            "username": "valid_user",
+            "full_name": "Test User",
+            "password": "Password-123",
+            "role_ids": [0],
+        },
+    )
+    assert res.status_code == 422

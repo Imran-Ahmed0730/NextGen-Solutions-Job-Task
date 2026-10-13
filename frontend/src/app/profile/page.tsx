@@ -3,7 +3,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
-import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
+import {
+  FieldError,
+  getApiFieldErrors,
+  getFieldErrors,
+  RequiredMark,
+  type FieldErrors,
+} from '@/components/forms/field-error';
+import { ActionIcon } from '@/components/ui/action-icon';
 import { ApiError, apiRequest, type Profile } from '@/lib/auth-api';
 import { profileSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -40,7 +47,9 @@ export default function ProfilePage() {
       setProfile(updated);
       showSuccessToast('Profile updated.');
     } catch (cause) {
-      showErrorToast(cause instanceof ApiError ? cause.message : 'Could not update profile');
+      const apiErrors = getApiFieldErrors(cause);
+      if (Object.keys(apiErrors).length) setErrors(apiErrors);
+      else showErrorToast(cause instanceof ApiError ? cause.message : 'Could not update profile');
     }
   }
 
@@ -58,20 +67,24 @@ export default function ProfilePage() {
           </label>
           <label className="block text-sm font-medium">
             Full name<RequiredMark />
-            <input name="full_name" placeholder="Enter your full name" defaultValue={profile.full_name} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'profile-full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="full_name" placeholder="Enter your full name" defaultValue={profile.full_name} minLength={1} maxLength={255} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'profile-full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="profile-full-name-error" message={errors.full_name} />
           </label>
           <label className="block text-sm font-medium">
             Email
-            <input name="email" type="email" placeholder="name@example.com" defaultValue={profile.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'profile-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="email" type="email" placeholder="name@example.com" maxLength={255} defaultValue={profile.email ?? ''} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'profile-email-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="profile-email-error" message={errors.email} />
           </label>
           <label className="block text-sm font-medium">
             Mobile
-            <input name="mobile" placeholder="e.g. 01XXXXXXXXX" defaultValue={profile.mobile ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input name="mobile" type="tel" inputMode="numeric" pattern="01[3-9][0-9]{8}" maxLength={11} placeholder="e.g. 01712345678" defaultValue={profile.mobile ?? ''} aria-invalid={Boolean(errors.mobile)} aria-describedby={errors.mobile ? 'profile-mobile-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <FieldError id="profile-mobile-error" message={errors.mobile} />
           </label>
           <p className="text-sm text-slate-600">Roles: {profile.roles.join(', ') || 'None'}</p>
-          <button className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">Save profile</button>
+          <button className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">
+            <ActionIcon name="save" />
+            Save profile
+          </button>
         </form>
       )}
     </ProtectedPage>
