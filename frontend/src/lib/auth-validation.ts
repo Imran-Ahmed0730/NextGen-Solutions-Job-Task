@@ -239,3 +239,11 @@ export const companySettingSchema = z.object({
     .max(100, 'Use at most 100 characters'),
   value: z.string(),
 });
+
+export const documentNumberingSchema = z.object({
+  doc_type: z.string().trim().min(1, 'Document type is required').max(50, 'Use at most 50 characters'),
+  prefix: z.string().trim().min(1, 'Prefix is required').max(30, 'Use at most 30 characters'),
+  year: z.coerce.number().int().min(1900).max(9999),
+  last_number: z.coerce.number().int().min(0),
+  padding: z.coerce.number().int().min(1).max(10),
+});

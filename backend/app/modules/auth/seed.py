@@ -139,6 +139,18 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "master_data.company_settings.delete", "master_data", "Delete company settings"
     ),
+    PermissionDefinition(
+        "master_data.document_numbering.read", "master_data", "View document numbering"
+    ),
+    PermissionDefinition(
+        "master_data.document_numbering.create", "master_data", "Create document numbering"
+    ),
+    PermissionDefinition(
+        "master_data.document_numbering.update", "master_data", "Update document numbering"
+    ),
+    PermissionDefinition(
+        "master_data.document_numbering.delete", "master_data", "Delete document numbering"
+    ),
 )
 
 
