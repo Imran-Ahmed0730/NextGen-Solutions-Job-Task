@@ -12,13 +12,6 @@ const navigation = [
     label: 'Workspace',
     items: [
       { href: '/', label: 'Overview', icon: 'grid', permissions: ['auth.profile.read'] },
-      { href: '/profile', label: 'My Profile', icon: 'user', permissions: ['auth.profile.read'] },
-      {
-        href: '/change-password',
-        label: 'Change Password',
-        icon: 'key',
-        permissions: ['auth.password.change'],
-      },
     ],
   },
   {
@@ -378,17 +371,7 @@ export function SessionShell({ children }: { children: ReactNode }) {
             <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">
               {profile.full_name}
             </span>
-            {profile.permissions.includes('auth.session.logout') && (
-              <button
-                type="button"
-                title="Sign out"
-                aria-label="Sign out"
-                onClick={signOut}
-                className="rounded-md p-2 text-slate-500 hover:bg-white hover:text-rose-700"
-              >
-                <AppIcon name="logout" className="h-[18px] w-[18px]" />
-              </button>
-            )}
+
           </div>
         </div>
       </aside>
