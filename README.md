@@ -33,15 +33,25 @@ Start the database, apply migrations, and seed the initial administrator:
 docker compose up -d db
 docker compose run --build --rm --no-deps api alembic upgrade head
 docker compose run --rm --no-deps api python -m app.modules.auth.seed
+docker compose run --rm --no-deps api python -m app.modules.company_settings.seed
 ```
 
-The seed command creates `admin` with a randomly generated Argon2-hashed password and an
-Administrator role. The plaintext password is printed only when the account is first created;
-save it securely. Running the command again does not reset an existing password. Sign in at
-`/login`; the Administrator role is assigned the seeded auth and master-data permissions, including
+The initial-admin command creates `admin` with a randomly generated Argon2-hashed password and an
+Administrator role. The company-settings command seeds defaults for the Company Settings screen,
+using the `COMPANY_*`, `CURRENCY_CODE`, `TIMEZONE`, `INVOICE_FOOTER`, `CREDIT_LIMIT_MODE`, and
+`RECEIPT_TOLERANCE_PCT` environment variables from `.env.example`. Existing settings are preserved
+by default; run the company-settings command with `--overwrite` only when you intend to replace
+saved values with environment defaults.
+Uploaded logo and favicon images are saved under `backend/media` and persist through the Compose
+media mount; the default brand artwork remains available if no custom file is uploaded. The
+Company Settings screen previews current assets and provides a **Use default** action. Logo uploads
+accept PNG, JPEG, or WebP (up to 2 MB); favicon uploads accept PNG, WebP, or ICO (up to 512 KB).
+
+The admin plaintext password is printed only when the account is first created; save it securely.
+Running the command again does not reset an existing password. Sign in at `/login`; the
+Administrator role is assigned the seeded auth and master-data permissions, including
 `master_data.units.*` and `master_data.product_categories.*`. Run the seed again after upgrading
-the database to add newly introduced permissions to an existing Administrator role; this does not
-change the existing admin password.
+the database to add newly introduced permissions; this does not change the existing admin password.
 
 ## Run the web app locally
 

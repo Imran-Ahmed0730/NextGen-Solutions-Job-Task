@@ -56,9 +56,14 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 ## Phase 3 — Customers & Suppliers
 - [x] Customer + supplier models, contacts
 - [x] Opening dues
-- [x] Statement service (running balance foundation)
-- [x] Screens: lists, add/edit, statements (x2)
-- [x] Exit: statement math and permissions tested
+- [x] Opening-balance statement entry and running balance
+- [x] Screens: customer/supplier lists and add/edit
+- [x] Screens: customer/supplier statements
+- [x] Customer/supplier contact management screens
+- [x] Search, pagination, input validation, and permission denial coverage
+- [x] Exit: party/contact CRUD, audit, permissions, and opening-balance statement behavior tested
+- [ ] Extend customer statements with posted invoices, returns, and collections (Phase 6/8)
+- [ ] Extend supplier statements with posted purchases, returns, and payments (Phase 5/6)
 
 ## Phase 4 — Inventory Engine
 - [ ] `stock_transactions`, `stock_balances`, reservations

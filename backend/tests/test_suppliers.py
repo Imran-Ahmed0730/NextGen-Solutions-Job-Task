@@ -11,6 +11,8 @@ from app.core.security import hash_password
 from app.main import app
 from app.modules.auth.models import AuditLog, User
 from app.modules.auth.seed import seed_initial_admin
+from app.modules.parties.models import PartyContact
+from app.modules.suppliers.models import Supplier
 
 
 @pytest.fixture
@@ -74,7 +76,12 @@ def test_supplier_crud_contacts_statement_and_audit(client, db_session):
     contact = client.post(
         f"/api/v1/suppliers/{supplier_id}/contacts",
         headers=headers,
-        json={"name": "Jane", "phone": "017", "email": "jane@example.com", "designation": "Sales"},
+        json={
+            "name": "Jane",
+            "phone": "01912345678",
+            "email": "jane@example.com",
+            "designation": "Sales",
+        },
     )
     assert contact.status_code == 201
     contact_id = contact.json()["id"]
@@ -99,6 +106,27 @@ def test_supplier_crud_contacts_statement_and_audit(client, db_session):
     statement = client.get(f"/api/v1/suppliers/{supplier_id}/statement", headers=headers)
     assert statement.status_code == 200
     assert statement.json()["balance"] == "600.00"
+    assert statement.json()["entries"] == [
+        {
+            "date": created.json()["created_at"],
+            "type": "OPENING_BALANCE",
+            "description": "Opening balance",
+            "amount": "600.00",
+            "balance": "600.00",
+        }
+    ]
+    searched = client.get(
+        "/api/v1/suppliers?include_inactive=true&search=acme&offset=0&limit=10",
+        headers=headers,
+    )
+    assert [item["id"] for item in searched.json()] == [supplier_id]
+    assert (
+        client.get(
+            "/api/v1/suppliers?include_inactive=true&search=not-found&offset=0&limit=10",
+            headers=headers,
+        ).json()
+        == []
+    )
 
     deleted_contact = client.delete(
         f"/api/v1/suppliers/{supplier_id}/contacts/{contact_id}", headers=headers
@@ -126,6 +154,17 @@ def test_supplier_crud_contacts_statement_and_audit(client, db_session):
 
 
 def test_supplier_permission_denial(client, db_session):
+    supplier = Supplier(code="S-1", name="Supplier")
+    db_session.add(supplier)
+    db_session.flush()
+    contact = PartyContact(
+        party_type="SUPPLIER",
+        party_id=supplier.id,
+        name="Contact",
+    )
+    db_session.add(contact)
+    db_session.commit()
+
     user = User(
         username="readonly",
         full_name="Read Only",
@@ -141,6 +180,14 @@ def test_supplier_permission_denial(client, db_session):
 
     assert client.get("/api/v1/suppliers", headers=headers).status_code == 403
     assert (
+        client.get(f"/api/v1/suppliers/{supplier.id}/statement", headers=headers).status_code
+        == 403
+    )
+    assert (
+        client.get(f"/api/v1/suppliers/{supplier.id}/contacts", headers=headers).status_code
+        == 403
+    )
+    assert (
         client.post(
             "/api/v1/suppliers", headers=headers, json={"code": "S", "name": "N"}
         ).status_code
@@ -151,3 +198,53 @@ def test_supplier_permission_denial(client, db_session):
     )
     assert client.delete("/api/v1/suppliers/1", headers=headers).status_code == 403
     assert client.post("/api/v1/suppliers/1/activate", headers=headers).status_code == 403
+    assert (
+        client.post(
+            f"/api/v1/suppliers/{supplier.id}/contacts",
+            headers=headers,
+            json={"name": "Unauthorized"},
+        ).status_code
+        == 403
+    )
+    assert (
+        client.patch(
+            f"/api/v1/suppliers/{supplier.id}/contacts/{contact.id}",
+            headers=headers,
+            json={"name": "Unauthorized"},
+        ).status_code
+        == 403
+    )
+    assert (
+        client.delete(
+            f"/api/v1/suppliers/{supplier.id}/contacts/{contact.id}", headers=headers
+        ).status_code
+        == 403
+    )
+
+
+def test_supplier_rejects_invalid_contact_formats(client, db_session):
+    headers = _login_admin(client, db_session)
+    invalid = client.post(
+        "/api/v1/suppliers",
+        headers=headers,
+        json={
+            "code": "INVALID",
+            "name": "Invalid Supplier",
+            "mobile": "123",
+            "email": "not-an-email",
+        },
+    )
+    assert invalid.status_code == 422
+
+    supplier = client.post(
+        "/api/v1/suppliers",
+        headers=headers,
+        json={"code": "VALID", "name": "Valid Supplier"},
+    )
+    assert supplier.status_code == 201
+    bad_contact = client.post(
+        f"/api/v1/suppliers/{supplier.json()['id']}/contacts",
+        headers=headers,
+        json={"name": "Invalid Contact", "phone": "123"},
+    )
+    assert bad_contact.status_code == 422

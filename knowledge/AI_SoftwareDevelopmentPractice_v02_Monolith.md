@@ -527,4 +527,3 @@ as Business Requirements Specification.
 
 Address: Taruchaya, First floor, Plot – L/7, Block – L, Eastern Housing – Extension, Pallabi, Mirpur, Dhaka – 1216
 Contact No: +8801726621896 Email: info@nextgenitltd.com  Website: www.nextgenitltd.com
-

@@ -25,12 +25,21 @@ Inventory (4) comes before Purchase, Production and Sales. Money (6) comes befor
 **Screens:** Product List (+add/edit), Categories, Units, Price List, Expense Categories, Income Categories, Payment Methods, Warehouses, Money Accounts, Company Settings, Document Numbering.
 **Exit:** CRUD + validation + soft delete + permissions + audit; numbering gap-free in tests.
 
-**Progress:** Units and product categories have CRUD screens, permission checks, soft-delete/restore, audit logging, and tests. Remaining Phase 2 modules and the phase exit criteria are still pending.
+**Progress:** The Phase 2 modules currently present in the repository are implemented: units,
+categories, products, price lists, warehouses, expense/income categories, payment methods, money
+accounts, company settings, and document numbering. Their APIs, screens, permissions, validation,
+audit behavior, and focused tests are documented in `10_DEVELOPMENT_GUIDE.md`. Re-run the relevant
+suite before release; this status is based on the current implementation inventory.
 
 ## Phase 3 — Customers & Suppliers
-**Build:** customer/supplier masters, contacts, opening dues, statements (running balance).
-**Screens:** Customer List, Customer Add/Edit, Customer Statement, Supplier List, Supplier Add/Edit, Supplier Statement.
-**Exit:** statement balance = opening + documents − payments (test with manual entries).
+**Build:** customer/supplier masters, additional contacts, opening dues, and statements.
+**Screens:** Customer List/Add/Edit, Customer Contacts, Customer Statement, Supplier List/Add/Edit,
+Supplier Contacts, Supplier Statement.
+**Phase 3 exit:** customer/supplier CRUD and contact CRUD work with permissions, validation, soft
+delete/restore, and audit; the statement shows an opening-balance entry and its running balance.
+Sales/purchase/collection/payment statement entries are explicitly deferred until Phases 5, 6, and
+8 provide those posted transaction sources. Do not describe the current statement as a complete
+financial ledger before that integration is delivered and tested.
 
 ## Phase 4 — Inventory Engine (most critical)
 **Build:** `stock_transactions`, `stock_balances`, posting service (the only writer), average-cost calculator, reservations, transfer, adjustment, physical count, stock ledger, current stock view.

@@ -244,6 +244,16 @@ The implemented auth API is:
 | `PATCH /api/v1/product-categories/{id}` | `master_data.product_categories.update` | Update a category, parent, or active state |
 | `DELETE /api/v1/product-categories/{id}` | `master_data.product_categories.delete` | Soft-delete a category |
 | `POST /api/v1/product-categories/{id}/activate` | `master_data.product_categories.update` | Restore a soft-deleted category |
+| `GET /api/v1/customers?search=&offset=0&limit=50` | `master_data.customers.read` | Search and page through customers; `include_inactive=true` includes inactive/deleted records |
+| `POST /api/v1/customers` / `PATCH /api/v1/customers/{id}` | `master_data.customers.create/update` | Create or update customer details and opening due |
+| `GET /api/v1/customers/{id}/statement` | `master_data.customers.read` | Read the current opening-balance statement |
+| `GET/POST /api/v1/customers/{id}/contacts` | `master_data.customers.read/create` | List or add an additional contact |
+| `PATCH/DELETE /api/v1/customers/{id}/contacts/{contact_id}` | `master_data.customers.update/delete` | Update or remove an additional contact |
+| `GET /api/v1/suppliers?search=&offset=0&limit=50` | `master_data.suppliers.read` | Search and page through suppliers; `include_inactive=true` includes inactive/deleted records |
+| `POST /api/v1/suppliers` / `PATCH /api/v1/suppliers/{id}` | `master_data.suppliers.create/update` | Create or update supplier details and opening due |
+| `GET /api/v1/suppliers/{id}/statement` | `master_data.suppliers.read` | Read the current opening-balance statement |
+| `GET/POST /api/v1/suppliers/{id}/contacts` | `master_data.suppliers.read/create` | List or add an additional contact |
+| `PATCH/DELETE /api/v1/suppliers/{id}/contacts/{contact_id}` | `master_data.suppliers.update/delete` | Update or remove an additional contact |
 | `GET /api/v1/products` | `master_data.products.read` | List active products; `include_inactive=true` includes deleted products |
 | `POST /api/v1/products` | `master_data.products.create` | Create a product with SKU, type, category, unit, and pricing |
 | `PATCH /api/v1/products/{id}` | `master_data.products.update` | Update a product |
@@ -284,6 +294,8 @@ The implemented auth API is:
 | `PATCH /api/v1/price-lists/{id}/prices/{price_id}` | `master_data.price_lists.update` | Update a product price |
 | `DELETE /api/v1/price-lists/{id}/prices/{price_id}` | `master_data.price_lists.delete` | Remove a product price |
 | `GET /api/v1/company-settings` | `master_data.company_settings.read` | List company settings |
+| `GET /api/v1/company-settings/branding` | `auth.profile.read` | Read authenticated workspace brand defaults and saved assets |
+| `PUT /api/v1/company-settings/assets/{logo|favicon}` | `master_data.company_settings.update` | Upload validated company brand image |
 | `POST /api/v1/company-settings` | `master_data.company_settings.create` | Create a company setting |
 | `GET /api/v1/company-settings/{key}` | `master_data.company_settings.read` | Read a company setting |
 | `PATCH /api/v1/company-settings/{key}` | `master_data.company_settings.update` | Update a company setting |
@@ -378,7 +390,15 @@ migration to the configured database should be an intentional deployment operati
    docker compose run --rm --no-deps api python -m app.modules.auth.seed
    ```
 
-6. Open `http://localhost:3000/login`. API health is at `http://localhost:8000/health`.
+6. Seed company defaults from the environment if needed:
+
+   ```powershell
+   docker compose run --rm --no-deps api python -m app.modules.company_settings.seed
+   ```
+
+   Existing values are preserved; use `--overwrite` only when intentionally replacing them.
+
+7. Open `http://localhost:3000/login`. API health is at `http://localhost:8000/health`.
 
 Compose has `db`, `api`, and `web` services. The development web service runs `next dev`; the API
 uses Uvicorn reload. The local MySQL data persists in the Compose-managed `mysql_data` volume.
@@ -467,16 +487,33 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 - Price lists with default handling and validity dates at `/price-lists`, plus product-price
   management for each list.
 - Company settings as a flexible key/value store at `/company-settings`, with an environment-aware
-  seeder.
+  seeder. Initial defaults include company profile, logo/favicon brand assets, currency, timezone,
+  invoice footer, credit-limit mode, and receiving tolerance. Uploaded logo/favicon files are
+  validated, stored under `MEDIA_ROOT`, and persisted by the Compose `backend/media` mount. The
+  seeder preserves configured values unless run with `--overwrite`; invoice rendering and
+  transaction effects belong to the later sales/purchase phases.
 - Document numbering sequences at `/document-numbering`, with locking gap-free number generation.
 - Each module validates inputs, writes audit records, uses soft delete, and ships
   permission-controlled list/create/update/delete/restore endpoints.
 
+### Implemented Phase 3 — Customers and suppliers
+
+- Customer and supplier CRUD APIs with primary contact information, opening dues, status, audit,
+  soft delete/restore, and granular permissions.
+- Additional party contacts have API and UI create/read/update/delete flows.
+- Party lists support server-side search by code, name, mobile, or email, plus offset/limit paging.
+- Party contact data is validated on both frontend and backend, including email syntax and the
+  11-digit Bangladesh local mobile format.
+- Customer and supplier statements show the opening-balance entry and running opening balance.
+  Posted sales/purchase documents, returns, collections, and payments are not yet implemented;
+  statement integration with those transactions is deferred to their respective phases.
+- Focused API tests cover validation, statement opening entries, search, and permission denials for
+  statement and contact routes.
+
 ### Planned, not yet implemented
 
-The remaining roadmap is inventory, purchase, money, production, sales, assets, employees, approvals,
-reports/dashboard, and
-full-cycle hardening. Consult
+The remaining roadmap is inventory, purchase, money, production, sales, assets, employees,
+approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens
 are actually delivered.
@@ -494,5 +531,6 @@ are actually delivered.
 | `07_DESIGN.md` | UI/UX patterns and visual behavior |
 | `08_APP_FLOW.md` | Navigation and process flows |
 | `09_SCHEMA.md` | Planned database model |
+| `Project_Requirement.md` | Clean technical implementation blueprint and phase/screen overview |
 | `10_DEVELOPMENT_GUIDE.md` | This repository's architecture, current features, operations, and implementation status |
 | `CLAUDE.md` | Concise agent context that points to the source documents |

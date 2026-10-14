@@ -1,5 +1,9 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
+export function getApiUrl(path: string): string {
+  return `${API_URL}${path}`;
+}
+
 export type SessionTokens = {
   access_token: string;
   refresh_token: string;
@@ -43,7 +47,7 @@ function refreshSession(): Promise<SessionTokens | null> {
     const refreshToken = sessionStorage.getItem('refresh_token');
     if (!refreshToken) return Promise.resolve(null);
 
-    refreshInFlight = fetch(`${API_URL}/api/v1/auth/refresh`, {
+    refreshInFlight = fetch(getApiUrl('/api/v1/auth/refresh'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken }),
@@ -80,7 +84,7 @@ export async function apiRequest<T>(
     if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
-  let response = await fetch(`${API_URL}${path}`, { ...init, headers });
+  let response = await fetch(getApiUrl(path), { ...init, headers });
   if (
     response.status === 401 &&
     authenticated &&

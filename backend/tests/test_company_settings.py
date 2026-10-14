@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,6 +12,9 @@ from app.core.security import hash_password
 from app.main import app
 from app.modules.auth.models import AuditLog, User
 from app.modules.auth.seed import seed_initial_admin
+from app.modules.company_settings.models import CompanySetting
+from app.modules.company_settings.seed import seed_company_settings
+from app.modules.company_settings.storage import DEFAULT_BRAND_ASSETS
 
 
 @pytest.fixture
@@ -120,6 +124,7 @@ def test_company_setting_permission_denial(
     headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
 
     assert client.get("/api/v1/company-settings", headers=headers).status_code == 403
+    assert client.get("/api/v1/company-settings/branding", headers=headers).status_code == 403
     assert (
         client.post(
             "/api/v1/company-settings",
@@ -139,3 +144,131 @@ def test_company_setting_permission_denial(
     assert (
         client.delete("/api/v1/company-settings/company_name", headers=headers).status_code == 403
     )
+    assert (
+        client.put(
+            "/api/v1/company-settings/assets/logo",
+            content=b"\x89PNG\r\n\x1a\n",
+            headers={"Authorization": headers["Authorization"], "Content-Type": "image/png"},
+        ).status_code
+        == 403
+    )
+
+
+def test_company_setting_seed_is_idempotent_and_preserves_custom_values(
+    db_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("COMPANY_NAME", "Seeded Company")
+    monkeypatch.setenv("CURRENCY_CODE", "BDT")
+
+    inserted = seed_company_settings(db_session)
+    db_session.commit()
+
+    assert inserted == 11
+    assert db_session.get(CompanySetting, "company_name").value == "Seeded Company"
+    assert db_session.get(CompanySetting, "currency_code").value == "BDT"
+    assert db_session.get(CompanySetting, "timezone").value == "Asia/Dhaka"
+    assert (
+        db_session.get(CompanySetting, "company_logo_path").value
+        == DEFAULT_BRAND_ASSETS["logo"]
+    )
+    assert (
+        db_session.get(CompanySetting, "company_favicon_path").value
+        == DEFAULT_BRAND_ASSETS["favicon"]
+    )
+    assert db_session.get(CompanySetting, "invoice_footer") is not None
+
+    db_session.get(CompanySetting, "company_name").value = "Custom Company"
+    db_session.commit()
+
+    assert seed_company_settings(db_session) == 0
+    db_session.commit()
+    assert db_session.get(CompanySetting, "company_name").value == "Custom Company"
+
+    seed_company_settings(db_session, overwrite=True)
+    db_session.commit()
+    assert db_session.get(CompanySetting, "company_name").value == "Seeded Company"
+
+
+def test_company_logo_and_favicon_upload(
+    client: TestClient,
+    db_session: Session,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.modules.company_settings import router as settings_router
+
+    headers = _login_admin(client, db_session)
+    media_root = tmp_path / "company"
+    monkeypatch.setattr(settings_router, "COMPANY_MEDIA_ROOT", media_root)
+    png_data = b"\x89PNG\r\n\x1a\nvalid-test-image"
+
+    logo = client.put(
+        "/api/v1/company-settings/assets/logo",
+        headers={**headers, "Content-Type": "image/png"},
+        content=png_data,
+    )
+    assert logo.status_code == 200
+    assert logo.json()["key"] == "company_logo_path"
+    assert logo.json()["value"].startswith("/media/company/logo-")
+    assert logo.json()["value"].endswith(".png")
+    assert (media_root / logo.json()["value"].rsplit("/", maxsplit=1)[1]).read_bytes() == png_data
+
+    favicon = client.put(
+        "/api/v1/company-settings/assets/favicon",
+        headers={**headers, "Content-Type": "image/png"},
+        content=png_data,
+    )
+    assert favicon.status_code == 200
+    assert favicon.json()["key"] == "company_favicon_path"
+    assert favicon.json()["value"].startswith("/media/company/favicon-")
+
+    invalid = client.put(
+        "/api/v1/company-settings/assets/logo",
+        headers={**headers, "Content-Type": "image/png"},
+        content=b"not an image",
+    )
+    assert invalid.status_code == 415
+    monkeypatch.setitem(settings_router.MAX_ASSET_SIZES, "logo", len(png_data))
+    too_large = client.put(
+        "/api/v1/company-settings/assets/logo",
+        headers={**headers, "Content-Type": "image/png"},
+        content=png_data + b"x",
+    )
+    assert too_large.status_code == 413
+
+
+def test_authenticated_branding_endpoint_uses_seeded_defaults(
+    client: TestClient, db_session: Session
+) -> None:
+    headers = _login_admin(client, db_session)
+    response = client.get("/api/v1/company-settings/branding", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "company_name": "Sabuj Pran",
+        "company_logo_path": DEFAULT_BRAND_ASSETS["logo"],
+        "company_favicon_path": DEFAULT_BRAND_ASSETS["favicon"],
+    }
+
+
+def test_company_setting_validation(
+    client: TestClient, db_session: Session
+) -> None:
+    headers = _login_admin(client, db_session)
+
+    invalid_settings = [
+        ("company_name", " "),
+        ("company_email", "not-an-email"),
+        ("currency_code", "US"),
+        ("timezone", "not a timezone"),
+        ("credit_limit_mode", "ALLOW"),
+        ("receipt_tolerance_pct", "-1"),
+        ("receipt_tolerance_pct", "NaN"),
+    ]
+    for key, value in invalid_settings:
+        response = client.put(
+            f"/api/v1/company-settings/{key}",
+            headers=headers,
+            json={"value": value},
+        )
+        assert response.status_code == 422, key

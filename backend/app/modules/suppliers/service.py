@@ -14,10 +14,15 @@ from app.modules.suppliers.models import Supplier
 
 
 def list_suppliers(
-    db: Session, *, include_inactive: bool = False, offset: int = 0, limit: int = 50
+    db: Session,
+    *,
+    include_inactive: bool = False,
+    offset: int = 0,
+    limit: int = 50,
+    search: str | None = None,
 ) -> list[Supplier]:
     return repository.list_suppliers(
-        db, include_inactive=include_inactive, offset=offset, limit=limit
+        db, include_inactive=include_inactive, offset=offset, limit=limit, search=search
     )
 
 
@@ -271,7 +276,7 @@ def activate_supplier(
     return supplier
 
 
-def list_contacts(db: Session, supplier_id: int):
+def list_contacts(db: Session, supplier_id: int) -> list[PartyContact]:
     return party_repository.list_contacts(db, "SUPPLIER", supplier_id)
 
 
@@ -412,7 +417,15 @@ def get_supplier_statement(db: Session, supplier: Supplier) -> dict[str, object]
         "supplier_id": supplier.id,
         "supplier_name": supplier.name,
         "opening_due": str(supplier.opening_due),
-        "entries": [],
+        "entries": [
+            {
+                "date": supplier.created_at.isoformat(),
+                "type": "OPENING_BALANCE",
+                "description": "Opening balance",
+                "amount": str(supplier.opening_due),
+                "balance": str(balance),
+            }
+        ],
         "balance": str(balance),
     }
 

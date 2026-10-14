@@ -11,6 +11,8 @@ from app.core.security import hash_password
 from app.main import app
 from app.modules.auth.models import AuditLog, User
 from app.modules.auth.seed import seed_initial_admin
+from app.modules.customers.models import Customer
+from app.modules.parties.models import PartyContact
 from app.modules.price_lists.models import PriceList
 
 
@@ -86,7 +88,12 @@ def test_customer_crud_contacts_statement_and_audit(client, db_session):
     contact = client.post(
         f"/api/v1/customers/{customer_id}/contacts",
         headers=headers,
-        json={"name": "John", "phone": "017", "email": "john@example.com", "designation": "Buyer"},
+        json={
+            "name": "John",
+            "phone": "01812345678",
+            "email": "john@example.com",
+            "designation": "Buyer",
+        },
     )
     assert contact.status_code == 201
     contact_id = contact.json()["id"]
@@ -94,10 +101,10 @@ def test_customer_crud_contacts_statement_and_audit(client, db_session):
     contact_update = client.patch(
         f"/api/v1/customers/{customer_id}/contacts/{contact_id}",
         headers=headers,
-        json={"phone": "018"},
+        json={"phone": "01812345678"},
     )
     assert contact_update.status_code == 200
-    assert contact_update.json()["phone"] == "018"
+    assert contact_update.json()["phone"] == "01812345678"
 
     updated = client.patch(
         f"/api/v1/customers/{customer_id}",
@@ -111,6 +118,27 @@ def test_customer_crud_contacts_statement_and_audit(client, db_session):
     statement = client.get(f"/api/v1/customers/{customer_id}/statement", headers=headers)
     assert statement.status_code == 200
     assert statement.json()["balance"] == "250.00"
+    assert statement.json()["entries"] == [
+        {
+            "date": created.json()["created_at"],
+            "type": "OPENING_BALANCE",
+            "description": "Opening balance",
+            "amount": "250.00",
+            "balance": "250.00",
+        }
+    ]
+    searched = client.get(
+        "/api/v1/customers?include_inactive=true&search=acme&offset=0&limit=10",
+        headers=headers,
+    )
+    assert [item["id"] for item in searched.json()] == [customer_id]
+    assert (
+        client.get(
+            "/api/v1/customers?include_inactive=true&search=not-found&offset=0&limit=10",
+            headers=headers,
+        ).json()
+        == []
+    )
 
     contacts = client.get(f"/api/v1/customers/{customer_id}/contacts", headers=headers).json()
     assert len(contacts) == 1
@@ -142,6 +170,17 @@ def test_customer_crud_contacts_statement_and_audit(client, db_session):
 
 
 def test_customer_permission_denial(client, db_session):
+    customer = Customer(code="C-1", name="Customer")
+    db_session.add(customer)
+    db_session.flush()
+    contact = PartyContact(
+        party_type="CUSTOMER",
+        party_id=customer.id,
+        name="Contact",
+    )
+    db_session.add(contact)
+    db_session.commit()
+
     user = User(
         username="readonly",
         full_name="Read Only",
@@ -157,6 +196,14 @@ def test_customer_permission_denial(client, db_session):
 
     assert client.get("/api/v1/customers", headers=headers).status_code == 403
     assert (
+        client.get(f"/api/v1/customers/{customer.id}/statement", headers=headers).status_code
+        == 403
+    )
+    assert (
+        client.get(f"/api/v1/customers/{customer.id}/contacts", headers=headers).status_code
+        == 403
+    )
+    assert (
         client.post(
             "/api/v1/customers", headers=headers, json={"code": "C", "name": "N"}
         ).status_code
@@ -167,3 +214,53 @@ def test_customer_permission_denial(client, db_session):
     )
     assert client.delete("/api/v1/customers/1", headers=headers).status_code == 403
     assert client.post("/api/v1/customers/1/activate", headers=headers).status_code == 403
+    assert (
+        client.post(
+            f"/api/v1/customers/{customer.id}/contacts",
+            headers=headers,
+            json={"name": "Unauthorized"},
+        ).status_code
+        == 403
+    )
+    assert (
+        client.patch(
+            f"/api/v1/customers/{customer.id}/contacts/{contact.id}",
+            headers=headers,
+            json={"name": "Unauthorized"},
+        ).status_code
+        == 403
+    )
+    assert (
+        client.delete(
+            f"/api/v1/customers/{customer.id}/contacts/{contact.id}", headers=headers
+        ).status_code
+        == 403
+    )
+
+
+def test_customer_rejects_invalid_contact_formats(client, db_session):
+    headers = _login_admin(client, db_session)
+    invalid = client.post(
+        "/api/v1/customers",
+        headers=headers,
+        json={
+            "code": "INVALID",
+            "name": "Invalid Customer",
+            "mobile": "017",
+            "email": "not-an-email",
+        },
+    )
+    assert invalid.status_code == 422
+
+    customer = client.post(
+        "/api/v1/customers",
+        headers=headers,
+        json={"code": "VALID", "name": "Valid Customer"},
+    )
+    assert customer.status_code == 201
+    bad_contact = client.post(
+        f"/api/v1/customers/{customer.json()['id']}/contacts",
+        headers=headers,
+        json={"name": "Invalid Contact", "email": "invalid"},
+    )
+    assert bad_contact.status_code == 422

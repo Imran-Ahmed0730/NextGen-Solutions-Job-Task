@@ -3,7 +3,10 @@
 ## 1. Overview
 A web-based business management system (ERP-lite) for **Sabuj Pran**, a small manufacturing/trading company with 10–20 employees. It replaces manual records with one system that gives management reliable answers about stock, orders, sales, purchases, dues, cash/bank/mobile-banking balances, expenses and profit.
 
-Source: *Software Development Plan & Technical Implementation Blueprint* (NextGen IT Ltd, "AI_SoftwareDevelopmentPractice_v02_Monolith").
+Source blueprint: [Project_Requirement.md](./Project_Requirement.md), the cleaned technical
+implementation blueprint. Functional requirements are maintained in `03_PRD.md`; binding business
+rules are in `04_RULES.md`. Where sources conflict, follow the authority order recorded in
+`CLAUDE.md` and `04_RULES.md`.
 
 ## 2. Goals
 - Run the full business cycle reliably:

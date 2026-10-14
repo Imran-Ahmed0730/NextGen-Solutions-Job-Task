@@ -30,13 +30,14 @@ def _supplier_or_404(db: Session, supplier_id: int) -> Supplier:
 @router.get("", response_model=list[SupplierResponse])
 def list_suppliers(
     include_inactive: bool = False,
+    search: str | None = Query(default=None, max_length=100),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("master_data.suppliers.read")),
 ) -> list[Supplier]:
     return service.list_suppliers(
-        db, include_inactive=include_inactive, offset=offset, limit=limit
+        db, include_inactive=include_inactive, offset=offset, limit=limit, search=search
     )
 
 
@@ -102,7 +103,7 @@ def supplier_statement(
     supplier_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("master_data.suppliers.read")),
-):
+) -> dict[str, object]:
     supplier = _supplier_or_404(db, supplier_id)
     return service.get_supplier_statement(db, supplier)
 

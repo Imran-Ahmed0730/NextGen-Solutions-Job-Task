@@ -7,8 +7,8 @@
 | **Auth** | Login · Forgot Password · My Profile · Change Password |
 | **Dashboard** | Owner / Management Dashboard |
 | **Master Data** | Product List · Product Add/Edit · Categories · Units · Price List · Warehouses · Expense Categories · Income Categories · Payment Methods · Money Accounts · Company Settings |
-| **Customers** | Customer List · Customer Add/Edit · Customer Statement |
-| **Suppliers** | Supplier List · Supplier Add/Edit · Supplier Statement |
+| **Customers** | Searchable/Paginated Customer List · Customer Add/Edit · Contact Management · Customer Statement |
+| **Suppliers** | Searchable/Paginated Supplier List · Supplier Add/Edit · Contact Management · Supplier Statement |
 | **Purchase** | PO List · Create/Edit PO · PO Details · Goods Receive · Direct Purchase · Purchase Return |
 | **Inventory** | Current Stock · Product Stock Ledger · Stock Transfer · Stock Adjustment · Physical Count |
 | **Production** | BOM List · BOM Create/Edit · Production Order List · Create/Edit Production Order · Production Details & Costing |
@@ -63,6 +63,16 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 ```
 
 ## 5. Module flows
+
+### 5.0 Customers and suppliers (Phase 3)
+1. Create and maintain the party master, primary contact details, opening due, and (for customers)
+   credit limit and optional price list.
+2. Maintain additional named contacts from the Contacts action on the party list.
+3. Open the party statement to review its opening-balance entry and current opening balance.
+4. Search and page through party records; permissions are checked by the API for every operation.
+5. Purchase, sales, returns, collections, and supplier payments are added to these statements only
+   when their posting workflows are delivered in later phases. Until then, do not present the
+   opening-balance statement as a complete transaction ledger.
 
 ### 5.1 Purchase
 1. Create PO (supplier, warehouse, lines) → Save Draft → Submit.

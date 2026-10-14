@@ -15,10 +15,15 @@ from app.modules.price_lists.models import PriceList
 
 
 def list_customers(
-    db: Session, *, include_inactive: bool = False, offset: int = 0, limit: int = 50
+    db: Session,
+    *,
+    include_inactive: bool = False,
+    offset: int = 0,
+    limit: int = 50,
+    search: str | None = None,
 ) -> list[Customer]:
     return repository.list_customers(
-        db, include_inactive=include_inactive, offset=offset, limit=limit
+        db, include_inactive=include_inactive, offset=offset, limit=limit, search=search
     )
 
 
@@ -297,7 +302,7 @@ def activate_customer(
     return customer
 
 
-def list_contacts(db: Session, customer_id: int):
+def list_contacts(db: Session, customer_id: int) -> list[PartyContact]:
     return party_repository.list_contacts(db, "CUSTOMER", customer_id)
 
 
@@ -405,13 +410,20 @@ def delete_contact(
 
 
 def get_customer_statement(db: Session, customer: Customer) -> dict[str, object]:
-    # Sales documents and collections will extend this statement in Phase 8/6.
     balance = customer.opening_due
     return {
         "customer_id": customer.id,
         "customer_name": customer.name,
         "opening_due": str(customer.opening_due),
-        "entries": [],
+        "entries": [
+            {
+                "date": customer.created_at.isoformat(),
+                "type": "OPENING_BALANCE",
+                "description": "Opening balance",
+                "amount": str(customer.opening_due),
+                "balance": str(balance),
+            }
+        ],
         "balance": str(balance),
     }
 

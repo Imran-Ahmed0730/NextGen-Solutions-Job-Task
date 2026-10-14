@@ -12,7 +12,13 @@ type CustomerStatement = {
   customer_name: string;
   opening_due: string;
   balance: string;
-  entries: Array<Record<string, unknown>>;
+  entries: Array<{
+    date: string;
+    type: string;
+    description: string;
+    amount: string;
+    balance: string;
+  }>;
 };
 
 export default function CustomerStatementPage() {
@@ -38,9 +44,34 @@ export default function CustomerStatementPage() {
         {statement && (
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="font-medium text-slate-900">{statement.customer_name}</p>
-            <p className="mt-2 text-sm text-slate-600">Opening due: {statement.opening_due}</p>
-            <p className="text-sm font-semibold text-slate-900">Balance: {statement.balance}</p>
-            <p className="mt-4 text-sm text-slate-500">Entries will appear as sales, deliveries, invoices, and collections are implemented.</p>
+            <p className="mt-2 text-sm text-slate-600">Opening due: {Number(statement.opening_due).toFixed(2)}</p>
+            <p className="text-sm font-semibold text-slate-900">Current balance: {Number(statement.balance).toFixed(2)}</p>
+            <p className="mt-4 text-sm text-slate-600">
+              This Phase 3 statement currently includes the opening balance. Sales, returns, and
+              collections will be added when those transaction workflows are implemented.
+            </p>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-slate-600">
+                  <tr>
+                    <th className="px-3 py-2">Date</th>
+                    <th className="px-3 py-2">Entry</th>
+                    <th className="px-3 py-2 text-right">Amount</th>
+                    <th className="px-3 py-2 text-right">Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {statement.entries.map((entry, index) => (
+                    <tr key={`${entry.type}-${index}`} className="border-t border-slate-100">
+                      <td className="px-3 py-2">{new Date(entry.date).toLocaleDateString()}</td>
+                      <td className="px-3 py-2">{entry.description}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{Number(entry.amount).toFixed(2)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{Number(entry.balance).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

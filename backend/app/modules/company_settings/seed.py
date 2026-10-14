@@ -3,10 +3,13 @@
 import argparse
 import os
 
+from sqlalchemy.orm import Session
+
 from app.core.config import get_settings
 from app.core.database import SessionLocal
 from app.modules.company_settings import repository
 from app.modules.company_settings.models import CompanySetting
+from app.modules.company_settings.storage import DEFAULT_BRAND_ASSETS
 
 
 def _default_settings() -> dict[str, str]:
@@ -18,6 +21,8 @@ def _default_settings() -> dict[str, str]:
         "company_email": (
             os.getenv("COMPANY_EMAIL") or settings.smtp_from_email or ""
         ).strip(),
+        "company_logo_path": DEFAULT_BRAND_ASSETS["logo"],
+        "company_favicon_path": DEFAULT_BRAND_ASSETS["favicon"],
         "currency_code": os.getenv("CURRENCY_CODE", "BDT").strip() or "BDT",
         "timezone": os.getenv("TIMEZONE", "Asia/Dhaka").strip() or "Asia/Dhaka",
         "invoice_footer": os.getenv("INVOICE_FOOTER", "").strip(),
@@ -26,17 +31,15 @@ def _default_settings() -> dict[str, str]:
     }
 
 
-def seed_company_settings(*, overwrite: bool = False) -> int:
+def seed_company_settings(session: Session, *, overwrite: bool = False) -> int:
     inserted = 0
-    with SessionLocal() as session:
-        for key, value in _default_settings().items():
-            existing = repository.get_setting(session, key)
-            if existing is None:
-                session.add(CompanySetting(key=key, value=value))
-                inserted += 1
-            elif overwrite:
-                existing.value = value
-        session.commit()
+    for key, value in _default_settings().items():
+        existing = repository.get_setting(session, key)
+        if existing is None:
+            session.add(CompanySetting(key=key, value=value))
+            inserted += 1
+        elif overwrite:
+            existing.value = value
     return inserted
 
 
@@ -49,7 +52,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    inserted = seed_company_settings(overwrite=args.overwrite)
+    with SessionLocal.begin() as session:
+        inserted = seed_company_settings(session, overwrite=args.overwrite)
     print(f"Company settings seeded. Inserted {inserted} missing setting(s).")
 
 

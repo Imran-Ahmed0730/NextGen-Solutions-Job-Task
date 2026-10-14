@@ -1,16 +1,31 @@
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.modules.suppliers.models import Supplier
 
 
 def list_suppliers(
-    db: Session, *, include_inactive: bool = False, offset: int = 0, limit: int = 50
+    db: Session,
+    *,
+    include_inactive: bool = False,
+    offset: int = 0,
+    limit: int = 50,
+    search: str | None = None,
 ) -> list[Supplier]:
     statement = select(Supplier)
     if not include_inactive:
         statement = statement.where(
             Supplier.is_active.is_(True), Supplier.deleted_at.is_(None)
+        )
+    if search:
+        pattern = f"%{search.strip()}%"
+        statement = statement.where(
+            or_(
+                Supplier.code.ilike(pattern),
+                Supplier.name.ilike(pattern),
+                Supplier.mobile.ilike(pattern),
+                Supplier.email.ilike(pattern),
+            )
         )
     return list(
         db.scalars(

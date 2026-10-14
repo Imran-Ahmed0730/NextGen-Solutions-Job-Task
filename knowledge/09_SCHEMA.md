@@ -21,7 +21,11 @@
 **password_resets**: id, user_id(FK), token_hash, expires_at, used_at
 **audit_logs**: id, user_id(FK→users, null), entity_type, entity_id, action(CREATE/UPDATE/DELETE/STATUS/LOGIN), before_json, after_json, ip, created_at
 **document_sequences**: id, doc_type(U with year), prefix, year, last_number, padding
-**company_settings**: id, name, address, phone, email, logo_path, currency_code, timezone, invoice_footer, credit_limit_mode(WARN/BLOCK), receipt_tolerance_pct
+**company_settings**: key (PK), value. Seeded keys: `company_name`, `company_address`,
+`company_phone`, `company_email`, `currency_code`, `timezone`, `invoice_footer`,
+`credit_limit_mode` (`WARN`/`BLOCK`), and `receipt_tolerance_pct`. The key/value store permits
+additional settings; invoice rendering and purchase/sales policy enforcement are implemented with
+their respective transaction workflows.
 
 ## 2. Master Data
 **units**: id, name, code(U), allow_decimal

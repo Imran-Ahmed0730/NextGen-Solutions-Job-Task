@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True
     smtp_use_ssl: bool = False
     smtp_timeout_seconds: int = 10
+    media_root: str = "media"
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -10,3 +10,4 @@ __pycache__/
 .env.local
 coverage/
 .DS_Store
+backend/media/

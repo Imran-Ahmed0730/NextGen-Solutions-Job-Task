@@ -21,3 +21,9 @@ class CompanySettingResponse(BaseModel):
 
     key: str
     value: str
+
+
+class CompanyBrandingResponse(BaseModel):
+    company_name: str
+    company_logo_path: str
+    company_favicon_path: str

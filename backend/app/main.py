@@ -1,5 +1,6 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.health import router as health_router
 from app.core.config import get_settings
@@ -8,6 +9,7 @@ from app.core.security import require_permission
 from app.modules.auth.models import User
 from app.modules.auth.router import router as auth_router
 from app.modules.company_settings.router import router as company_settings_router
+from app.modules.company_settings.storage import MEDIA_ROOT
 from app.modules.customers.router import router as customers_router
 from app.modules.document_numbering.router import router as document_numbering_router
 from app.modules.expense_categories.router import router as expense_categories_router
@@ -22,6 +24,8 @@ from app.modules.units.router import router as units_router
 from app.modules.warehouses.router import router as warehouses_router
 
 app = FastAPI(title="Sabuj Pran API", version="0.1.0")
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=MEDIA_ROOT), name="media")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[get_settings().frontend_origin],

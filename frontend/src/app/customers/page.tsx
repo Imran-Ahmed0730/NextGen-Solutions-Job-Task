@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useState, type FormEvent } from 'react';
 import Swal from 'sweetalert2';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
@@ -13,6 +13,7 @@ import {
   type FieldErrors,
 } from '@/components/forms/field-error';
 import { StatusSwitch } from '@/components/forms/status-switch';
+import { PartyContacts } from '@/components/parties/party-contacts';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -41,11 +42,20 @@ function CustomersContent() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [includeInactive, setIncludeInactive] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [contactsCustomerId, setContactsCustomerId] = useState<number | null>(null);
+  const pageSize = 25;
 
   async function reload() {
-    const query = includeInactive ? '?include_inactive=true' : '';
+    const query = new URLSearchParams({
+      include_inactive: String(includeInactive),
+      search,
+      offset: String(page * pageSize),
+      limit: String(pageSize + 1),
+    });
     const [customerList, listList] = await Promise.all([
-      apiRequest<CustomerRecord[]>(`/api/v1/customers${query}`),
+      apiRequest<CustomerRecord[]>(`/api/v1/customers?${query}`),
       apiRequest<PriceListRecord[]>('/api/v1/price-lists?include_inactive=true'),
     ]);
     setCustomers(customerList);
@@ -57,7 +67,7 @@ function CustomersContent() {
       showErrorToast(cause instanceof Error ? cause.message : 'Could not load customers'),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [includeInactive]);
+  }, [includeInactive, page, search]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -147,28 +157,28 @@ function CustomersContent() {
         >
           <label className="block text-sm font-medium">
             Code<RequiredMark />
-            <input name="code" defaultValue={selected?.code ?? ''} maxLength={30} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.code)} />
-            <FieldError id="field-error" message={errors.code} />
+            <input name="code" defaultValue={selected?.code ?? ''} minLength={1} maxLength={30} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.code)} aria-describedby={errors.code ? 'customer-code-error' : undefined} />
+            <FieldError id="customer-code-error" message={errors.code} />
           </label>
           <label className="block text-sm font-medium">
             Name<RequiredMark />
-            <input name="name" defaultValue={selected?.name ?? ''} maxLength={255} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.name)} />
-            <FieldError id="field-error" message={errors.name} />
+            <input name="name" defaultValue={selected?.name ?? ''} minLength={1} maxLength={255} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'customer-name-error' : undefined} />
+            <FieldError id="customer-name-error" message={errors.name} />
           </label>
           <label className="block text-sm font-medium">
             Mobile
-            <input name="mobile" defaultValue={selected?.mobile ?? ''} maxLength={30} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.mobile} />
+            <input name="mobile" type="tel" inputMode="numeric" pattern="01[3-9][0-9]{8}" defaultValue={selected?.mobile ?? ''} maxLength={11} placeholder="e.g. 01712345678" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.mobile)} aria-describedby={errors.mobile ? 'customer-mobile-error' : undefined} />
+            <FieldError id="customer-mobile-error" message={errors.mobile} />
           </label>
           <label className="block text-sm font-medium">
             Email
-            <input name="email" defaultValue={selected?.email ?? ''} maxLength={255} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.email} />
+            <input name="email" type="email" defaultValue={selected?.email ?? ''} maxLength={255} placeholder="name@example.com" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'customer-email-error' : undefined} />
+            <FieldError id="customer-email-error" message={errors.email} />
           </label>
           <label className="block text-sm font-medium sm:col-span-2">
             Address
-            <textarea name="address" defaultValue={selected?.address ?? ''} rows={3} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.address} />
+            <textarea name="address" defaultValue={selected?.address ?? ''} rows={3} maxLength={1000} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.address)} aria-describedby={errors.address ? 'customer-address-error' : undefined} />
+            <FieldError id="customer-address-error" message={errors.address} />
           </label>
           <label className="block text-sm font-medium">
             Price list
@@ -178,17 +188,17 @@ function CustomersContent() {
                 <option key={item.id} value={item.id}>{item.name}</option>
               ))}
             </select>
-            <FieldError id="field-error" message={errors.price_list_id} />
+            <FieldError id="customer-price-list-error" message={errors.price_list_id} />
           </label>
           <label className="block text-sm font-medium">
             Credit limit
-            <input name="credit_limit" type="number" step="0.01" min="0" defaultValue={selected?.credit_limit ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.credit_limit} />
+            <input name="credit_limit" type="number" step="0.01" min="0" defaultValue={selected?.credit_limit ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.credit_limit)} aria-describedby={errors.credit_limit ? 'customer-credit-limit-error' : undefined} />
+            <FieldError id="customer-credit-limit-error" message={errors.credit_limit} />
           </label>
           <label className="block text-sm font-medium">
             Opening due
-            <input name="opening_due" type="number" step="0.01" defaultValue={selected?.opening_due ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.opening_due} />
+            <input name="opening_due" type="number" step="0.01" defaultValue={selected?.opening_due ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.opening_due)} aria-describedby={errors.opening_due ? 'customer-opening-due-error' : undefined} />
+            <FieldError id="customer-opening-due-error" message={errors.opening_due} />
           </label>
           <div className="sm:col-span-2">
             <StatusSwitch name="is_active" label="Active" defaultChecked={selected?.is_active ?? true} />
@@ -206,9 +216,30 @@ function CustomersContent() {
       )}
 
       <label className="mt-6 inline-flex items-center gap-2 text-sm text-slate-600">
-        <input type="checkbox" checked={includeInactive} onChange={(event) => setIncludeInactive(event.target.checked)} />
-        Show deleted customers
+        <input type="checkbox" checked={includeInactive} onChange={(event) => { setPage(0); setIncludeInactive(event.target.checked); }} />
+        Show inactive and deleted customers
       </label>
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+        <label className="block text-sm font-medium">
+          Search customers
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => {
+              setPage(0);
+              setSearch(event.target.value);
+            }}
+            placeholder="Code, name, phone, or email"
+            maxLength={100}
+            className="mt-1 block w-72 max-w-full rounded-md border border-slate-300 px-3 py-2"
+          />
+        </label>
+        <div className="flex items-center gap-3 text-sm">
+          <button type="button" disabled={page === 0} onClick={() => setPage((value) => value - 1)} className="rounded-md border px-3 py-2 disabled:opacity-50">Previous</button>
+          <span>Page {page + 1}</span>
+          <button type="button" disabled={customers.length <= pageSize} onClick={() => setPage((value) => value + 1)} className="rounded-md border px-3 py-2 disabled:opacity-50">Next</button>
+        </div>
+      </div>
 
       <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200">
         <table className="w-full text-left text-sm">
@@ -223,8 +254,9 @@ function CustomersContent() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {customers.map((customer) => (
-              <tr key={customer.id} className="hover:bg-slate-50/60">
+            {customers.slice(0, pageSize).map((customer) => (
+              <Fragment key={customer.id}>
+              <tr className="hover:bg-slate-50/60">
                 <td className="px-4 py-3 font-medium text-slate-900">{customer.code}</td>
                 <td className="px-4 py-3 text-slate-700">{customer.name}</td>
                 <td className="px-4 py-3 text-right tabular-nums text-slate-800">{Number(customer.credit_limit).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -239,6 +271,16 @@ function CustomersContent() {
                   {customer.deleted_at === null && profile?.permissions.includes('master_data.customers.delete') && (
                     <IconActionButton icon="delete" label={`Delete ${customer.name}`} onClick={() => void setDeleted(customer, true)} className="mr-1 p-2 text-rose-700 hover:bg-rose-50" />
                   )}
+                  {customer.deleted_at === null && (
+                    <button
+                      type="button"
+                      aria-expanded={contactsCustomerId === customer.id}
+                      onClick={() => setContactsCustomerId((current) => current === customer.id ? null : customer.id)}
+                      className="mr-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                    >
+                      Contacts
+                    </button>
+                  )}
                   <a href={`/customers/${customer.id}/statement`} className="mr-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50">
                     Statement
                   </a>
@@ -247,6 +289,22 @@ function CustomersContent() {
                   )}
                 </td>
               </tr>
+              {contactsCustomerId === customer.id && customer.deleted_at === null && (
+                <tr key={`${customer.id}-contacts`}>
+                  <td colSpan={6} className="bg-slate-50 p-3">
+                    <PartyContacts
+                      key={customer.id}
+                      partyType="customers"
+                      partyId={customer.id}
+                      partyName={customer.name}
+                      canCreate={Boolean(profile?.permissions.includes('master_data.customers.create'))}
+                      canUpdate={Boolean(profile?.permissions.includes('master_data.customers.update'))}
+                      canDelete={Boolean(profile?.permissions.includes('master_data.customers.delete'))}
+                    />
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
             {customers.length === 0 && (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">No customers found.</td></tr>

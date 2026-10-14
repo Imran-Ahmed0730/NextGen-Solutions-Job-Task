@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useState, type FormEvent } from 'react';
 import Swal from 'sweetalert2';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, getApiFieldErrors, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
 import { StatusSwitch } from '@/components/forms/status-switch';
+import { PartyContacts } from '@/components/parties/party-contacts';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -31,16 +32,25 @@ function SuppliersContent() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [includeInactive, setIncludeInactive] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [contactsSupplierId, setContactsSupplierId] = useState<number | null>(null);
+  const pageSize = 25;
 
   async function reload() {
-    const query = includeInactive ? '?include_inactive=true' : '';
-    setSuppliers(await apiRequest<SupplierRecord[]>(`/api/v1/suppliers${query}`));
+    const query = new URLSearchParams({
+      include_inactive: String(includeInactive),
+      search,
+      offset: String(page * pageSize),
+      limit: String(pageSize + 1),
+    });
+    setSuppliers(await apiRequest<SupplierRecord[]>(`/api/v1/suppliers?${query}`));
   }
 
   useEffect(() => {
     reload().catch((cause: unknown) => showErrorToast(cause instanceof Error ? cause.message : 'Could not load suppliers'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [includeInactive]);
+  }, [includeInactive, page, search]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -127,33 +137,33 @@ function SuppliersContent() {
         >
           <label className="block text-sm font-medium">
             Code<RequiredMark />
-            <input name="code" defaultValue={selected?.code ?? ''} maxLength={30} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.code} />
+            <input name="code" defaultValue={selected?.code ?? ''} minLength={1} maxLength={30} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.code)} aria-describedby={errors.code ? 'supplier-code-error' : undefined} />
+            <FieldError id="supplier-code-error" message={errors.code} />
           </label>
           <label className="block text-sm font-medium">
             Name<RequiredMark />
-            <input name="name" defaultValue={selected?.name ?? ''} maxLength={255} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.name} />
+            <input name="name" defaultValue={selected?.name ?? ''} minLength={1} maxLength={255} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'supplier-name-error' : undefined} />
+            <FieldError id="supplier-name-error" message={errors.name} />
           </label>
           <label className="block text-sm font-medium">
             Mobile
-            <input name="mobile" defaultValue={selected?.mobile ?? ''} maxLength={30} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.mobile} />
+            <input name="mobile" type="tel" inputMode="numeric" pattern="01[3-9][0-9]{8}" defaultValue={selected?.mobile ?? ''} maxLength={11} placeholder="e.g. 01712345678" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.mobile)} aria-describedby={errors.mobile ? 'supplier-mobile-error' : undefined} />
+            <FieldError id="supplier-mobile-error" message={errors.mobile} />
           </label>
           <label className="block text-sm font-medium">
             Email
-            <input name="email" defaultValue={selected?.email ?? ''} maxLength={255} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.email} />
+            <input name="email" type="email" defaultValue={selected?.email ?? ''} maxLength={255} placeholder="name@example.com" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'supplier-email-error' : undefined} />
+            <FieldError id="supplier-email-error" message={errors.email} />
           </label>
           <label className="block text-sm font-medium sm:col-span-2">
             Address
-            <textarea name="address" defaultValue={selected?.address ?? ''} rows={3} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.address} />
+            <textarea name="address" defaultValue={selected?.address ?? ''} rows={3} maxLength={1000} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.address)} aria-describedby={errors.address ? 'supplier-address-error' : undefined} />
+            <FieldError id="supplier-address-error" message={errors.address} />
           </label>
           <label className="block text-sm font-medium">
             Opening due
-            <input name="opening_due" type="number" step="0.01" defaultValue={selected?.opening_due ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-            <FieldError id="field-error" message={errors.opening_due} />
+            <input name="opening_due" type="number" step="0.01" defaultValue={selected?.opening_due ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.opening_due)} aria-describedby={errors.opening_due ? 'supplier-opening-due-error' : undefined} />
+            <FieldError id="supplier-opening-due-error" message={errors.opening_due} />
           </label>
           <div className="sm:col-span-2">
             <StatusSwitch name="is_active" label="Active" defaultChecked={selected?.is_active ?? true} />
@@ -171,9 +181,30 @@ function SuppliersContent() {
       )}
 
       <label className="mt-6 inline-flex items-center gap-2 text-sm text-slate-600">
-        <input type="checkbox" checked={includeInactive} onChange={(event) => setIncludeInactive(event.target.checked)} />
-        Show deleted suppliers
+        <input type="checkbox" checked={includeInactive} onChange={(event) => { setPage(0); setIncludeInactive(event.target.checked); }} />
+        Show inactive and deleted suppliers
       </label>
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+        <label className="block text-sm font-medium">
+          Search suppliers
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => {
+              setPage(0);
+              setSearch(event.target.value);
+            }}
+            placeholder="Code, name, phone, or email"
+            maxLength={100}
+            className="mt-1 block w-72 max-w-full rounded-md border border-slate-300 px-3 py-2"
+          />
+        </label>
+        <div className="flex items-center gap-3 text-sm">
+          <button type="button" disabled={page === 0} onClick={() => setPage((value) => value - 1)} className="rounded-md border px-3 py-2 disabled:opacity-50">Previous</button>
+          <span>Page {page + 1}</span>
+          <button type="button" disabled={suppliers.length <= pageSize} onClick={() => setPage((value) => value + 1)} className="rounded-md border px-3 py-2 disabled:opacity-50">Next</button>
+        </div>
+      </div>
 
       <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200">
         <table className="w-full text-left text-sm">
@@ -187,8 +218,9 @@ function SuppliersContent() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {suppliers.map((supplier) => (
-              <tr key={supplier.id} className="hover:bg-slate-50/60">
+            {suppliers.slice(0, pageSize).map((supplier) => (
+              <Fragment key={supplier.id}>
+              <tr className="hover:bg-slate-50/60">
                 <td className="px-4 py-3 font-medium text-slate-900">{supplier.code}</td>
                 <td className="px-4 py-3 text-slate-700">{supplier.name}</td>
                 <td className="px-4 py-3 text-right tabular-nums text-slate-800">{Number(supplier.opening_due).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -202,6 +234,16 @@ function SuppliersContent() {
                   {supplier.deleted_at === null && profile?.permissions.includes('master_data.suppliers.delete') && (
                     <IconActionButton icon="delete" label={`Delete ${supplier.name}`} onClick={() => void setDeleted(supplier, true)} className="mr-1 p-2 text-rose-700 hover:bg-rose-50" />
                   )}
+                  {supplier.deleted_at === null && (
+                    <button
+                      type="button"
+                      aria-expanded={contactsSupplierId === supplier.id}
+                      onClick={() => setContactsSupplierId((current) => current === supplier.id ? null : supplier.id)}
+                      className="mr-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                    >
+                      Contacts
+                    </button>
+                  )}
                   <a href={`/suppliers/${supplier.id}/statement`} className="mr-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50">
                     Statement
                   </a>
@@ -210,6 +252,22 @@ function SuppliersContent() {
                   )}
                 </td>
               </tr>
+              {contactsSupplierId === supplier.id && supplier.deleted_at === null && (
+                <tr>
+                  <td colSpan={5} className="bg-slate-50 p-3">
+                    <PartyContacts
+                      key={supplier.id}
+                      partyType="suppliers"
+                      partyId={supplier.id}
+                      partyName={supplier.name}
+                      canCreate={Boolean(profile?.permissions.includes('master_data.suppliers.create'))}
+                      canUpdate={Boolean(profile?.permissions.includes('master_data.suppliers.update'))}
+                      canDelete={Boolean(profile?.permissions.includes('master_data.suppliers.delete'))}
+                    />
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             ))}
             {suppliers.length === 0 && (
               <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No suppliers found.</td></tr>

@@ -25,7 +25,10 @@ Company info, currency, timezone, invoice settings, document numbering.
 Products (raw material / finished good / trading), categories, units (KG, Piece, Roll, Block…), price lists, search/filter.
 
 ### FR-4 Customers & FR-5 Suppliers
-Master data, contacts, opening dues, statements (running balance).
+Customer and supplier master data, multiple contact records, opening dues, searchable and
+paginated lists, and statements with running balances. Until purchase, sales, and money posting
+workflows exist, statements show the opening-balance entry only; later phases must add posted
+documents, returns, collections, and payments to the appropriate party statements.
 
 ### FR-6 Purchase
 Purchase Order (draft → approved → partially/fully received → closed), Goods Receive, Direct Purchase, Purchase Return. Each receive updates stock, average cost and supplier due.
@@ -60,7 +63,7 @@ Immutable audit log of create/update/delete/status changes (who, when, before/af
 ### FR-16 Dashboard (Owner/Management)
 Today's Sales, Collection, Expenses, Purchase; Cash, Bank, MFS balances; Customer Due, Supplier Due; Inventory Value; Pending Orders; Estimated Profit.
 
-## 3. Screens (~71)
+## 3. Screens (approximately 71)
 | Area | Count |
 |---|---|
 | Login & Profile | 4 |

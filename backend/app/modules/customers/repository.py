@@ -1,16 +1,31 @@
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.modules.customers.models import Customer
 
 
 def list_customers(
-    db: Session, *, include_inactive: bool = False, offset: int = 0, limit: int = 50
+    db: Session,
+    *,
+    include_inactive: bool = False,
+    offset: int = 0,
+    limit: int = 50,
+    search: str | None = None,
 ) -> list[Customer]:
     statement = select(Customer)
     if not include_inactive:
         statement = statement.where(
             Customer.is_active.is_(True), Customer.deleted_at.is_(None)
+        )
+    if search:
+        pattern = f"%{search.strip()}%"
+        statement = statement.where(
+            or_(
+                Customer.code.ilike(pattern),
+                Customer.name.ilike(pattern),
+                Customer.mobile.ilike(pattern),
+                Customer.email.ilike(pattern),
+            )
         )
     return list(
         db.scalars(

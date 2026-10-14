@@ -1,10 +1,17 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
-import { ApiError, apiRequest, clearSession, type Profile } from '@/lib/auth-api';
+import {
+  ApiError,
+  apiRequest,
+  clearSession,
+  getApiUrl,
+  type Profile,
+} from '@/lib/auth-api';
 import { showErrorToast } from '@/lib/notifications';
 
 const navigation = [
@@ -200,6 +207,22 @@ function getNavigationLabel(pathname: string): string {
 
 const SessionContext = createContext<Profile | null>(null);
 
+type WorkspaceBranding = {
+  company_name: string;
+  company_logo_path: string;
+  company_favicon_path: string;
+};
+
+const defaultBranding: WorkspaceBranding = {
+  company_name: 'Sabuj Pran',
+  company_logo_path: '/brand/company-logo.svg',
+  company_favicon_path: '/brand/favicon.svg',
+};
+
+function getBrandAssetUrl(path: string): string {
+  return path.startsWith('/media/') ? getApiUrl(path) : path;
+}
+
 export function useSessionProfile(): Profile | null {
   return useContext(SessionContext);
 }
@@ -208,6 +231,7 @@ export function SessionShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [branding, setBranding] = useState(defaultBranding);
   const [error, setError] = useState('');
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -229,6 +253,27 @@ export function SessionShell({ children }: { children: ReactNode }) {
         }
       });
   }, [router]);
+
+  useEffect(() => {
+    if (!profile) return;
+    apiRequest<WorkspaceBranding>('/api/v1/company-settings/branding')
+      .then(setBranding)
+      .catch((cause: unknown) =>
+        showErrorToast(
+          cause instanceof Error ? cause.message : 'Could not load company branding',
+        ),
+      );
+  }, [profile]);
+
+  useEffect(() => {
+    let icon = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
+    if (!icon) {
+      icon = document.createElement('link');
+      icon.rel = 'icon';
+      document.head.append(icon);
+    }
+    icon.href = getBrandAssetUrl(branding.company_favicon_path);
+  }, [branding.company_favicon_path]);
 
   useEffect(() => {
     if (!accountMenuOpen) return;
@@ -333,14 +378,15 @@ export function SessionShell({ children }: { children: ReactNode }) {
             onClick={() => setMobileNavigationOpen(false)}
             className="flex items-center gap-3"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-xs font-bold tracking-wide text-white">
-              SP
-            </span>
-            <span>
-              <span className="block text-sm font-bold tracking-[0.12em] text-emerald-950">
-                SABUJ PRAN
-              </span>
-              <span className="block text-xs text-slate-500">Business Suite</span>
+            <span className="flex h-12 min-w-0 items-center">
+              <Image
+                src={getBrandAssetUrl(branding.company_logo_path)}
+                alt={`${branding.company_name} logo`}
+                width={176}
+                height={44}
+                unoptimized
+                className="max-h-11 max-w-44 object-contain"
+              />
             </span>
           </Link>
           <button

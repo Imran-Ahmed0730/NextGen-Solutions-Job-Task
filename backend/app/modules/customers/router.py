@@ -30,13 +30,14 @@ def _customer_or_404(db: Session, customer_id: int) -> Customer:
 @router.get("", response_model=list[CustomerResponse])
 def list_customers(
     include_inactive: bool = False,
+    search: str | None = Query(default=None, max_length=100),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("master_data.customers.read")),
 ) -> list[Customer]:
     return service.list_customers(
-        db, include_inactive=include_inactive, offset=offset, limit=limit
+        db, include_inactive=include_inactive, offset=offset, limit=limit, search=search
     )
 
 
@@ -102,7 +103,7 @@ def customer_statement(
     customer_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("master_data.customers.read")),
-):
+) -> dict[str, object]:
     customer = _customer_or_404(db, customer_id)
     return service.get_customer_statement(db, customer)
 

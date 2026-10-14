@@ -5,6 +5,9 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Sabuj Pran Business Suite',
   description: 'Role-secured business management workspace',
+  icons: {
+    icon: '/brand/favicon.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

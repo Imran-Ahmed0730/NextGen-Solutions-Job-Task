@@ -262,6 +262,28 @@ export const supplierSchema = z.object({
   is_active: z.boolean(),
 });
 
+const optionalPartyBangladeshMobile = z
+  .string()
+  .trim()
+  .max(11, 'Use an 11-digit Bangladesh mobile number')
+  .regex(/^$|^01[3-9]\d{8}$/, 'Use a valid Bangladesh mobile number, e.g. 01712345678')
+  .nullable()
+  .optional();
+const optionalPartyEmail = z
+  .string()
+  .trim()
+  .max(255, 'Use at most 255 characters')
+  .email('Enter a valid email address')
+  .nullable()
+  .optional();
+
+export const partyContactSchema = z.object({
+  name: z.string().trim().min(1, 'Contact name is required').max(255),
+  phone: optionalPartyBangladeshMobile,
+  email: optionalPartyEmail,
+  designation: z.string().trim().max(100, 'Use at most 100 characters').nullable().optional(),
+});
+
 export const documentNumberingSchema = z.object({
   doc_type: z.string().trim().min(1, 'Document type is required').max(50, 'Use at most 50 characters'),
   prefix: z.string().trim().min(1, 'Prefix is required').max(30, 'Use at most 30 characters'),

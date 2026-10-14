@@ -1,4 +1,8 @@
+import uuid
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -7,9 +11,17 @@ from app.modules.auth.models import User
 from app.modules.company_settings import service
 from app.modules.company_settings.models import CompanySetting
 from app.modules.company_settings.schemas import (
+    CompanyBrandingResponse,
     CompanySettingCreate,
     CompanySettingResponse,
     CompanySettingUpdate,
+)
+from app.modules.company_settings.storage import (
+    ASSET_MIME_EXTENSIONS,
+    ASSET_SETTINGS_KEYS,
+    COMPANY_MEDIA_ROOT,
+    MAX_ASSET_SIZES,
+    get_asset_extension,
 )
 
 router = APIRouter(prefix="/api/v1/company-settings", tags=["company-settings"])
@@ -21,6 +33,55 @@ def list_settings(
     _: User = Depends(require_permission("master_data.company_settings.read")),
 ) -> list[CompanySetting]:
     return service.list_settings(db)
+
+
+@router.get("/branding", response_model=CompanyBrandingResponse)
+def get_branding(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("auth.profile.read")),
+) -> dict[str, str]:
+    return service.get_branding(db)
+
+
+@router.put("/assets/{asset_type}", response_model=CompanySettingResponse)
+async def upload_brand_asset(
+    asset_type: Literal["logo", "favicon"],
+    request: Request,
+    db: Session = Depends(get_db),
+    actor: User = Depends(require_permission("master_data.company_settings.update")),
+) -> CompanySetting:
+    content_type = request.headers.get("content-type", "").split(";", maxsplit=1)[0].strip()
+    if content_type not in ASSET_MIME_EXTENSIONS:
+        raise HTTPException(status_code=415, detail="Unsupported image type")
+
+    chunks: list[bytes] = []
+    size = 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > MAX_ASSET_SIZES[asset_type]:
+            raise HTTPException(
+                status_code=413,
+                detail=f"{asset_type.title()} file exceeds the size limit",
+            )
+        chunks.append(chunk)
+    data = b"".join(chunks)
+    extension = get_asset_extension(asset_type, content_type, data)
+    if extension is None:
+        raise HTTPException(status_code=415, detail="Image content does not match its file type")
+
+    COMPANY_MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+    filename = f"{asset_type}-{uuid.uuid4().hex}{extension}"
+    destination = COMPANY_MEDIA_ROOT / filename
+    destination.write_bytes(data)
+    setting_value = f"/media/company/{filename}"
+    try:
+        setting = service.save_setting(
+            db, ASSET_SETTINGS_KEYS[asset_type], setting_value, actor, _ip(request)
+        )
+    except (HTTPException, SQLAlchemyError):
+        destination.unlink(missing_ok=True)
+        raise
+    return setting
 
 
 @router.get("/{key}", response_model=CompanySettingResponse)
