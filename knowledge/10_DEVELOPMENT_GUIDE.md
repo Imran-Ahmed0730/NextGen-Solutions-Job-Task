@@ -565,8 +565,13 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   caller's transaction. A minimal sales-order and sales-order-line persistence foundation supplies
   the reservation FK, but Sales workflows,
   quotation linkage, and status transitions are not implemented yet.
-- Not complete: physical-count workflow and Phase 4 concurrency exit tests. Reservation operations
-  are service-level only until Phase 7 Sales endpoints integrate them with order lifecycle rules.
+- Physical counts snapshot all active stocked products for a warehouse, accept partial quantity
+  entry, calculate variances against the snapshot, and post signed `COUNT_ADJUSTMENT` movements
+  atomically. Posting refuses stale stock or a changed stocked-product scope. The count number is
+  allocated only when posted, so abandoned open sheets do not consume posted document numbers.
+- Not complete: Phase 4 inventory invariant, negative-stock, and concurrency exit tests. Reservation
+  operations are service-level only until Phase 7 Sales endpoints integrate them with order
+  lifecycle rules.
 
 ### Planned, not yet implemented
 

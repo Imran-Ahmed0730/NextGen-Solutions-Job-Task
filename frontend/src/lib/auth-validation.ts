@@ -227,6 +227,26 @@ export const stockAdjustmentSchema = z.object({
     ),
 });
 
+export const physicalCountLinesSchema = z.object({
+lines: z
+  .array(
+    z.object({
+      product_id: z.number().int().positive(),
+      counted_qty: z
+        .string()
+        .regex(
+          /^(?:0|[1-9]\d{0,14})(?:\.\d{1,3})?$/,
+          'Counted quantity must be nonnegative with at most 3 decimal places',
+        ),
+    }),
+  )
+  .min(1, 'Enter at least one counted quantity')
+  .refine(
+    (items) => new Set(items.map((item) => item.product_id)).size === items.length,
+    'A product may only be counted once',
+  ),
+});
+
 export const expenseCategorySchema = z.object({
   name: z
     .string()

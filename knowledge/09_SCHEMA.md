@@ -52,8 +52,8 @@ their respective transaction workflows.
 **stock_transfer_lines**: id, transfer_id(FK), product_id, qty
 **stock_adjustments**: id, doc_no, doc_date, warehouse_id, reason, status
 **stock_adjustment_lines**: id, adjustment_id(FK), product_id, qty_signed, unit_cost
-**physical_counts**: id, doc_no, count_date, warehouse_id, status(OPEN/COUNTED/POSTED)
-**physical_count_lines**: id, count_id(FK), product_id, system_qty, counted_qty, variance_qty
+**physical_counts**: id, doc_no(nullable until posted), count_date, warehouse_id, status(OPEN/COUNTED/POSTED), created_by, posted_by, posted_at
+**physical_count_lines**: id, count_id(FK), product_id, system_qty(snapshot), counted_qty(nullable until entered), variance_qty(nullable until entered). Each sheet snapshots every active stocked product in its warehouse, including zero-balance products; posting is rejected if stock or the stocked-product scope changed after the snapshot.
 
 ## 5. Purchase
 **purchase_orders**: id, doc_no, doc_date, supplier_id(FK), warehouse_id(FK), status, expected_date, subtotal, discount, total, note

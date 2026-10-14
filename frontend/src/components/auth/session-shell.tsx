@@ -149,6 +149,12 @@ const navigation = [
         icon: 'warehouse',
         permissions: ['inventory.adjustments.read'],
       },
+      {
+        href: '/physical-counts',
+        label: 'Physical Count',
+        icon: 'warehouse',
+        permissions: ['inventory.physical_counts.read'],
+      },
     ],
   },
 ] as const;

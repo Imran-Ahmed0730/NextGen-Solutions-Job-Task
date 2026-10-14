@@ -91,9 +91,7 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "master_data.income_categories.delete", "master_data", "Delete income categories"
     ),
-    PermissionDefinition(
-        "master_data.payment_methods.read", "master_data", "View payment methods"
-    ),
+    PermissionDefinition("master_data.payment_methods.read", "master_data", "View payment methods"),
     PermissionDefinition(
         "master_data.payment_methods.create", "master_data", "Create payment methods"
     ),
@@ -103,9 +101,7 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "master_data.payment_methods.delete", "master_data", "Delete payment methods"
     ),
-    PermissionDefinition(
-        "master_data.money_accounts.read", "master_data", "View money accounts"
-    ),
+    PermissionDefinition("master_data.money_accounts.read", "master_data", "View money accounts"),
     PermissionDefinition(
         "master_data.money_accounts.create", "master_data", "Create money accounts"
     ),
@@ -115,18 +111,10 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "master_data.money_accounts.delete", "master_data", "Delete money accounts"
     ),
-    PermissionDefinition(
-        "master_data.price_lists.read", "master_data", "View price lists"
-    ),
-    PermissionDefinition(
-        "master_data.price_lists.create", "master_data", "Create price lists"
-    ),
-    PermissionDefinition(
-        "master_data.price_lists.update", "master_data", "Update price lists"
-    ),
-    PermissionDefinition(
-        "master_data.price_lists.delete", "master_data", "Delete price lists"
-    ),
+    PermissionDefinition("master_data.price_lists.read", "master_data", "View price lists"),
+    PermissionDefinition("master_data.price_lists.create", "master_data", "Create price lists"),
+    PermissionDefinition("master_data.price_lists.update", "master_data", "Update price lists"),
+    PermissionDefinition("master_data.price_lists.delete", "master_data", "Delete price lists"),
     PermissionDefinition(
         "master_data.company_settings.read", "master_data", "View company settings"
     ),
@@ -166,6 +154,8 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("inventory.transfers.create", "inventory", "Post stock transfers"),
     PermissionDefinition("inventory.adjustments.read", "inventory", "View stock adjustments"),
     PermissionDefinition("inventory.adjustments.create", "inventory", "Post stock adjustments"),
+    PermissionDefinition("inventory.physical_counts.read", "inventory", "View physical counts"),
+    PermissionDefinition("inventory.physical_counts.create", "inventory", "Manage physical counts"),
 )
 
 

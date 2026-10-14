@@ -89,7 +89,7 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 ### 5.2 Inventory
 - **Transfer:** from-warehouse → to-warehouse, lines → Post → `TRANSFER_OUT` + `TRANSFER_IN` atomically.
 - **Adjustment:** reason + lines (+/−) → (approval if configured) → Post → `ADJUSTMENT_IN/OUT`.
-- **Physical Count:** start count sheet (snapshot) → enter counted qty → review variances → Post → `COUNT_ADJUSTMENT` rows.
+- **Physical Count:** start count sheet (snapshot of active stocked products, including zero balances) → enter counted qty → review variances → Post → `COUNT_ADJUSTMENT` rows. Posting is rejected if stock or the stocked-product scope changed after the snapshot; start a fresh count before posting.
 - **Stock Ledger:** product + warehouse + date filters → every movement with running balance and source document link.
 
 ### 5.3 Production

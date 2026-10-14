@@ -79,8 +79,8 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Phase 4 reservation balance service (reserve/release/consume) with partial quantity tracking
 - [x] Minimal sales-order/line persistence and reservation foreign-key target
 - [ ] Integrate reservations with Sales order workflow in Phase 7
-- [ ] Physical count
-- [ ] Screens: Physical Count
+- [x] Physical count snapshot, counted quantities, variance review, and atomic posting
+- [x] Physical Count screen with permission gating
 - [ ] Invariant, negative-stock and concurrency tests
 - [ ] Exit: all inventory invariants pass
 

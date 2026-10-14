@@ -65,7 +65,10 @@ date, with running balances and links to transfer/adjustment source documents. T
 reservation service now supports reserve, partial release, and partial consume while keeping
 reserved quantity separate from on-hand stock. A minimal sales-order/line persistence foundation
 provides the real foreign-key target; quotation linkage and Sales workflow remain Phase 7 work.
-Physical counts and the Phase 4 concurrency exit tests remain open.
+Physical count sheets now snapshot each active stocked product in a warehouse, accept counted
+quantities in partial updates, show variances, and post `COUNT_ADJUSTMENT` ledger movements
+atomically. Posting rejects stale snapshots when stock or the stocked-product scope has changed.
+The Phase 4 invariant and concurrency exit tests remain open.
 
 ## Phase 5 — Purchase
 **Build:** PO, goods receipt, direct purchase, purchase return, supplier due.
