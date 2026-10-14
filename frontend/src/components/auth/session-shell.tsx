@@ -172,6 +172,12 @@ const navigation = [
         icon: 'supplier',
         permissions: ['purchase.receipts.read'],
       },
+      {
+        href: '/direct-purchases',
+        label: 'Direct Purchases',
+        icon: 'supplier',
+        permissions: ['purchase.direct_purchases.read'],
+      },
     ],
   },
 ] as const;

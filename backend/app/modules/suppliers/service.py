@@ -387,9 +387,7 @@ def update_contact(
     return contact
 
 
-def delete_contact(
-    db: Session, contact: PartyContact, actor: User, ip: str | None = None
-) -> None:
+def delete_contact(db: Session, contact: PartyContact, actor: User, ip: str | None = None) -> None:
     record_audit(
         db,
         actor_id=actor.id,
@@ -422,9 +420,13 @@ def get_supplier_statement(db: Session, supplier: Supplier) -> dict[str, object]
             "balance": str(balance),
         }
     ]
+    from app.modules.direct_purchases import service as direct_purchase_service
     from app.modules.goods_receipts import service as goods_receipt_service
 
-    for purchase in goods_receipt_service.list_supplier_due_entries(db, supplier.id):
+    purchase_entries = goods_receipt_service.list_supplier_due_entries(db, supplier.id)
+    purchase_entries.extend(direct_purchase_service.list_supplier_due_entries(db, supplier.id))
+    purchase_entries.sort(key=lambda entry: (str(entry["date"]), str(entry["description"])))
+    for purchase in purchase_entries:
         amount = purchase["amount"]
         if not isinstance(amount, Decimal):
             raise TypeError("Goods receipt amount must be a Decimal")

@@ -7,6 +7,7 @@ from app.core.config import get_settings
 from app.modules.auth.models import User
 from app.modules.company_settings.models import CompanySetting  # noqa: F401
 from app.modules.customers.models import Customer  # noqa: F401
+from app.modules.direct_purchases.models import DirectPurchase, DirectPurchaseLine  # noqa: F401
 from app.modules.document_numbering.models import DocumentSequence  # noqa: F401
 from app.modules.expense_categories.models import ExpenseCategory  # noqa: F401
 from app.modules.goods_receipts.models import GoodsReceipt, GoodsReceiptLine  # noqa: F401

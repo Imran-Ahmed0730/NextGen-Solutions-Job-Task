@@ -607,11 +607,24 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   `receipt_tolerance_pct`, then atomically records the immutable receipt, `PURCHASE_RECEIPT` stock
   ledger entries and balances, weighted-average product costs, PO received quantities/status, and
   audit records. The `GOODS_RECEIPT` sequence must be configured before posting.
-- Supplier statements include posted Goods Receipts in the running due balance. Purchase returns
-  and supplier payments are not yet implemented, so statements do not yet reflect those offsets.
+- Supplier statements include posted Goods Receipts and Direct Purchases in the running due
+  balance. Purchase returns and supplier payments are not yet implemented, so statements do not
+  yet reflect those offsets.
 - The `/goods-receipts` screen supports choosing an eligible PO, entering received quantities and
   unit costs, posting, and viewing paginated receipt history. Access is gated by
   `purchase.receipts.read` and `purchase.receipts.create`.
+
+### Phase 5 in progress — Direct Purchases
+
+- A Direct Purchase posts without a purchase order. It validates an active supplier, warehouse, and
+  stocked products, then atomically records the immutable purchase, `PURCHASE_RECEIPT` stock ledger
+  entries and balances, weighted-average product costs, and audit records.
+- Direct Purchases are credit-only in this phase: `paid_amount` is zero and no money account is
+  recorded. Supplier statements include both posted Goods Receipts and Direct Purchases; supplier
+  payments and purchase returns remain unimplemented. Payments belong to the Phase 6 money
+  workflows.
+- Configure the `DIRECT_PURCHASE` sequence before posting. The `/direct-purchases` screen is gated
+  by `purchase.direct_purchases.read` and `purchase.direct_purchases.create`.
 
 ### Planned, not yet implemented
 

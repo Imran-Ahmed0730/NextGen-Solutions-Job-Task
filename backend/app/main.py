@@ -11,6 +11,7 @@ from app.modules.auth.router import router as auth_router
 from app.modules.company_settings.router import router as company_settings_router
 from app.modules.company_settings.storage import MEDIA_ROOT
 from app.modules.customers.router import router as customers_router
+from app.modules.direct_purchases.router import router as direct_purchases_router
 from app.modules.document_numbering.router import router as document_numbering_router
 from app.modules.expense_categories.router import router as expense_categories_router
 from app.modules.goods_receipts.router import router as goods_receipts_router
@@ -51,6 +52,7 @@ app.include_router(stock_transfers_router)
 app.include_router(physical_counts_router)
 app.include_router(purchase_orders_router)
 app.include_router(goods_receipts_router)
+app.include_router(direct_purchases_router)
 app.include_router(suppliers_router)
 app.include_router(units_router)
 app.include_router(product_categories_router)
