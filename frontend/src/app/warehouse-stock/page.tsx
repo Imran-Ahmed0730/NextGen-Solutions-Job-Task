@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast } from '@/lib/notifications';
@@ -128,19 +129,19 @@ function WarehouseStockContent() {
       <div className="grid gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[minmax(14rem,1fr)_minmax(18rem,2fr)_auto] md:items-end">
         <label className="block text-sm font-medium text-slate-700">
           Warehouse
-          <select
+          <SearchableSelect
+            aria-label="Warehouse"
             value={warehouseId}
-            onChange={(event) => changeWarehouse(event.target.value)}
+            placeholder="All warehouses or search"
+            onChange={changeWarehouse}
+            options={warehouses.map((warehouse) => ({
+              value: String(warehouse.id),
+              label: `${warehouse.name} (${warehouse.code})`,
+              searchText: `${warehouse.name} ${warehouse.code}`,
+            }))}
             disabled={loadingWarehouses}
             className="mt-1.5 block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 disabled:bg-slate-100"
-          >
-            <option value="">All warehouses</option>
-            {warehouses.map((warehouse) => (
-              <option key={warehouse.id} value={warehouse.id}>
-                {warehouse.name} ({warehouse.code})
-              </option>
-            ))}
-          </select>
+          />
         </label>
 
         <form onSubmit={submitSearch} className="flex items-end gap-2">

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { RequiredMark } from '@/components/forms/field-error';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -236,24 +238,23 @@ function PurchaseReturnsContent() {
             <>
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="text-sm font-medium text-slate-700">
-                  Goods Receipt
-                  <select
+                  Goods Receipt<RequiredMark />
+                  <SearchableSelect
                     aria-label="Goods Receipt"
                     required
+                    placeholder="Search receipt by number or supplier"
                     value={selectedReceiptId}
-                    onChange={(event) => chooseReceipt(event.target.value)}
+                    onChange={chooseReceipt}
+                    options={options.receipts.map((receipt) => ({
+                      value: String(receipt.id),
+                      label: `${receipt.doc_no} — ${receipt.supplier_name} (${receipt.doc_date})`,
+                      searchText: `${receipt.doc_no} ${receipt.supplier_name} ${receipt.doc_date}`,
+                    }))}
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-                  >
-                    <option value="">Select Goods Receipt</option>
-                    {options.receipts.map((receipt) => (
-                      <option key={receipt.id} value={receipt.id}>
-                        {receipt.doc_no} — {receipt.supplier_name} ({receipt.doc_date})
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Return date
+                  Return date<RequiredMark />
                   <input
                     aria-label="Return date"
                     type="date"

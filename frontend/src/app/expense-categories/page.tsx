@@ -13,6 +13,7 @@ import {
   type FieldErrors,
 } from '@/components/forms/field-error';
 import { StatusSwitch } from '@/components/forms/status-switch';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -177,22 +178,22 @@ function ExpenseCategoriesContent() {
 
           <label className="block text-sm font-medium sm:col-span-2">
             Parent category
-            <select
+            <SearchableSelect
               name="parent_id"
-              defaultValue={selected?.parent_id ?? ''}
+              defaultValue={String(selected?.parent_id ?? '')}
+              aria-label="Parent category"
+              placeholder="No parent or search categories"
+              options={categories
+                .filter((category) => category.id !== selected?.id && category.deleted_at === null)
+                .map((category) => ({
+                  value: String(category.id),
+                  label: category.name,
+                  searchText: category.name,
+                }))}
               aria-invalid={Boolean(errors.parent_id)}
               aria-describedby={errors.parent_id ? 'expense-category-parent-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
-            >
-              <option value="">No parent (top-level)</option>
-              {categories
-                .filter((c) => c.id !== selected?.id && c.deleted_at === null)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-            </select>
+            />
             <FieldError id="expense-category-parent-error" message={errors.parent_id} />
           </label>
 

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -95,10 +95,6 @@ describe('StockTransfersPage', () => {
     render(<StockTransfersPage />);
 
     await screen.findByRole('heading', { name: 'New transfer' });
-    await waitFor(() => {
-      expect(screen.getAllByRole('option', { name: /Main Warehouse/ })).toHaveLength(2);
-    });
-    await screen.findByRole('option', { name: /Raw Material/ });
     fireEvent.change(screen.getByRole('combobox', { name: 'From warehouse' }), {
       target: { value: '1' },
     });
@@ -111,9 +107,15 @@ describe('StockTransfersPage', () => {
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Quantity 1' }), {
       target: { value: '2.500' },
     });
-    expect(screen.getByRole('combobox', { name: 'From warehouse' })).toHaveValue('1');
-    expect(screen.getByRole('combobox', { name: 'To warehouse' })).toHaveValue('2');
-    expect(screen.getByRole('combobox', { name: 'Product 1' })).toHaveValue('7');
+    expect(screen.getByRole('combobox', { name: 'From warehouse' })).toHaveValue(
+      'Main Warehouse (MAIN)',
+    );
+    expect(screen.getByRole('combobox', { name: 'To warehouse' })).toHaveValue(
+      'Remote Warehouse (REMOTE)',
+    );
+    expect(screen.getByRole('combobox', { name: 'Product 1' })).toHaveValue(
+      'Raw Material (RAW-001)',
+    );
     expect(screen.getByRole('spinbutton', { name: 'Quantity 1' })).toHaveValue(2.5);
     const form = screen.getByRole('heading', { name: 'New transfer' }).closest('form');
     expect(form).not.toBeNull();
@@ -137,18 +139,12 @@ describe('StockTransfersPage', () => {
   it('excludes the source warehouse from the destination options', async () => {
     render(<StockTransfersPage />);
     await screen.findByRole('heading', { name: 'New transfer' });
-    await waitFor(() => {
-      expect(screen.getAllByRole('option', { name: /Main Warehouse/ })).toHaveLength(2);
-    });
     fireEvent.change(screen.getByRole('combobox', { name: 'From warehouse' }), {
       target: { value: '1' },
     });
+    fireEvent.focus(screen.getByRole('combobox', { name: 'To warehouse' }));
     await waitFor(() => {
-      expect(
-        within(screen.getByRole('combobox', { name: 'To warehouse' })).queryByRole('option', {
-          name: /Main Warehouse/,
-        }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: /Main Warehouse/ })).not.toBeInTheDocument();
     });
   });
 

@@ -153,6 +153,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Exit: dashboard = report totals
 
 ## Phase 13 — Hardening
+- [x] Shared searchable entity selectors and visible required-field markers across existing screens
 - [ ] Full-cycle E2E test
 - [ ] Seed/demo data script
 - [ ] Indexes + performance check

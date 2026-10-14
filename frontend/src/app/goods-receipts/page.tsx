@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { RequiredMark } from '@/components/forms/field-error';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -275,24 +277,23 @@ function GoodsReceiptsContent() {
             <>
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="text-sm font-medium text-slate-700">
-                  Purchase order
-                  <select
+                  Purchase order<RequiredMark />
+                  <SearchableSelect
                     aria-label="Purchase order"
                     required
+                    placeholder="Search by document number or supplier"
                     value={selectedOrderId}
-                    onChange={(event) => chooseOrder(event.target.value)}
+                    onChange={chooseOrder}
+                    options={options.orders.map((order) => ({
+                      value: String(order.id),
+                      label: `${order.doc_no} — ${order.supplier_name} (${order.status})`,
+                      searchText: `${order.doc_no} ${order.supplier_name} ${order.status}`,
+                    }))}
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-                  >
-                    <option value="">Select approved purchase order</option>
-                    {options.orders.map((order) => (
-                      <option key={order.id} value={order.id}>
-                        {order.doc_no} — {order.supplier_name} ({order.status})
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                  Receipt date
+                  Receipt date<RequiredMark />
                   <input
                     aria-label="Receipt date"
                     type="date"

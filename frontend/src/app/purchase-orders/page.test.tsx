@@ -97,7 +97,6 @@ describe('PurchaseOrdersPage', () => {
     render(<PurchaseOrdersPage />);
 
     await screen.findByRole('heading', { name: 'New purchase order draft' });
-    await screen.findByRole('option', { name: /Supplier One/ });
     fireEvent.change(screen.getByRole('combobox', { name: 'Supplier' }), {
       target: { value: '2' },
     });

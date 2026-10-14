@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { RequiredMark } from '@/components/forms/field-error';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -272,7 +274,7 @@ function PhysicalCountsContent() {
           <h2 className="text-lg font-semibold text-slate-900">Start a count sheet</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-medium text-slate-700">
-              Count date
+              Count date<RequiredMark />
               <input
                 aria-label="Count date"
                 required
@@ -283,21 +285,20 @@ function PhysicalCountsContent() {
               />
             </label>
             <label className="text-sm font-medium text-slate-700">
-              Warehouse
-              <select
+              Warehouse<RequiredMark />
+              <SearchableSelect
                 aria-label="Warehouse"
                 required
+                placeholder="Search warehouse by name or code"
                 value={warehouseId}
-                onChange={(event) => setWarehouseId(event.target.value)}
+                onChange={setWarehouseId}
+                options={warehouses.map((warehouse) => ({
+                  value: String(warehouse.id),
+                  label: `${warehouse.name} (${warehouse.code})`,
+                  searchText: `${warehouse.name} ${warehouse.code}`,
+                }))}
                 className="mt-1.5 block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
-              >
-                <option value="">Select warehouse</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name} ({warehouse.code})
-                  </option>
-                ))}
-              </select>
+              />
             </label>
           </div>
           <button

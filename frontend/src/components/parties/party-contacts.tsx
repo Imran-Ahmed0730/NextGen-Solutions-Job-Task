@@ -3,7 +3,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import Swal from 'sweetalert2';
 
-import { FieldError, getApiFieldErrors, getFieldErrors, type FieldErrors } from '@/components/forms/field-error';
+import {
+  FieldError,
+  getApiFieldErrors,
+  getFieldErrors,
+  RequiredMark,
+  type FieldErrors,
+} from '@/components/forms/field-error';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { partyContactSchema } from '@/lib/auth-validation';
@@ -145,7 +151,7 @@ export function PartyContacts({
           className="mt-4 grid gap-3 sm:grid-cols-2"
         >
           <label className="text-sm font-medium">
-            Name *
+            Name<RequiredMark />
             <input
               name="name"
               required

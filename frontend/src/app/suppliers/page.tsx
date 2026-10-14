@@ -161,7 +161,7 @@ function SuppliersContent() {
             <FieldError id="supplier-address-error" message={errors.address} />
           </label>
           <label className="block text-sm font-medium">
-            Opening due
+            Opening due<RequiredMark />
             <input name="opening_due" type="number" step="0.01" defaultValue={selected?.opening_due ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.opening_due)} aria-describedby={errors.opening_due ? 'supplier-opening-due-error' : undefined} />
             <FieldError id="supplier-opening-due-error" message={errors.opening_due} />
           </label>

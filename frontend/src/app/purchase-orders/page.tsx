@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { RequiredMark } from '@/components/forms/field-error';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -251,7 +253,7 @@ function PurchaseOrdersContent() {
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <label className="text-sm font-medium text-slate-700">
-              Document date
+              Document date<RequiredMark />
               <input
                 aria-label="Document date"
                 type="date"
@@ -262,38 +264,36 @@ function PurchaseOrdersContent() {
               />
             </label>
             <label className="text-sm font-medium text-slate-700">
-              Supplier
-              <select
+              Supplier<RequiredMark />
+              <SearchableSelect
                 aria-label="Supplier"
                 required
+                placeholder="Search supplier by code or name"
                 value={supplierId}
-                onChange={(event) => setSupplierId(event.target.value)}
+                onChange={setSupplierId}
+                options={options.suppliers.map((supplier) => ({
+                  value: String(supplier.id),
+                  label: `${supplier.code} — ${supplier.name}`,
+                  searchText: `${supplier.code} ${supplier.name}`,
+                }))}
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-              >
-                <option value="">Select supplier</option>
-                {options.suppliers.map((supplier) => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.code} — {supplier.name}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
             <label className="text-sm font-medium text-slate-700">
-              Warehouse
-              <select
+              Warehouse<RequiredMark />
+              <SearchableSelect
                 aria-label="Warehouse"
                 required
+                placeholder="Search warehouse by code or name"
                 value={warehouseId}
-                onChange={(event) => setWarehouseId(event.target.value)}
+                onChange={setWarehouseId}
+                options={options.warehouses.map((warehouse) => ({
+                  value: String(warehouse.id),
+                  label: `${warehouse.code} — ${warehouse.name}`,
+                  searchText: `${warehouse.code} ${warehouse.name}`,
+                }))}
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-              >
-                <option value="">Select warehouse</option>
-                {options.warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.code} — {warehouse.name}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
             <label className="text-sm font-medium text-slate-700">
               Expected date
@@ -351,24 +351,24 @@ function PurchaseOrdersContent() {
                   className="grid gap-3 rounded-lg border border-slate-200 p-3 md:grid-cols-[2fr_1fr_1fr_auto]"
                 >
                   <label className="text-sm font-medium text-slate-700">
-                    Product {index + 1}
-                    <select
+                    Product {index + 1}<RequiredMark />
+                    <SearchableSelect
                       aria-label={`Product ${index + 1}`}
                       required
+                      placeholder="Search product by SKU or name"
                       value={line.product_id}
-                      onChange={(event) => updateLine(index, 'product_id', event.target.value)}
+                      onChange={(value) => updateLine(index, 'product_id', value)}
+                      options={options.products.map((product) => ({
+                        value: String(product.id),
+                        label: `${product.sku} — ${product.name}`,
+                        searchText: `${product.sku} ${product.name}`,
+                      }))}
                       className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-                    >
-                      <option value="">Select stocked product</option>
-                      {options.products.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.sku} — {product.name}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </label>
                   <label className="text-sm font-medium text-slate-700">
                     Quantity {selectedProduct ? `(${selectedProduct.unit_code})` : ''}
+                    <RequiredMark />
                     <input
                       aria-label={`Quantity ${index + 1}`}
                       type="number"
@@ -381,7 +381,7 @@ function PurchaseOrdersContent() {
                     />
                   </label>
                   <label className="text-sm font-medium text-slate-700">
-                    Unit price
+                    Unit price<RequiredMark />
                     <input
                       aria-label={`Unit price ${index + 1}`}
                       type="number"

@@ -183,7 +183,7 @@ function DocumentNumberingContent() {
           </label>
 
           <label className="block text-sm font-medium">
-            Last number
+            Last number<RequiredMark />
             <input
               name="last_number"
               type="number"
@@ -198,7 +198,7 @@ function DocumentNumberingContent() {
           </label>
 
           <label className="block text-sm font-medium">
-            Padding
+            Padding<RequiredMark />
             <input
               name="padding"
               type="number"

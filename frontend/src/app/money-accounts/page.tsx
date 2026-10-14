@@ -13,6 +13,7 @@ import {
   type FieldErrors,
 } from '@/components/forms/field-error';
 import { StatusSwitch } from '@/components/forms/status-switch';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -224,22 +225,22 @@ function MoneyAccountsContent() {
 
           <label className="block text-sm font-medium">
             Payment method
-            <select
+            <SearchableSelect
               name="payment_method_id"
-              defaultValue={selected?.payment_method_id ?? ''}
+              defaultValue={String(selected?.payment_method_id ?? '')}
+              aria-label="Payment method"
+              placeholder="Not linked or search payment methods"
+              options={methods.map((method) => ({
+                value: String(method.id),
+                label: method.name,
+                searchText: method.name,
+              }))}
               aria-invalid={Boolean(errors.payment_method_id)}
               aria-describedby={
                 errors.payment_method_id ? 'money-account-method-error' : undefined
               }
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-            >
-              <option value="">Not linked</option>
-              {methods.map((method) => (
-                <option key={method.id} value={method.id}>
-                  {method.name}
-                </option>
-              ))}
-            </select>
+            />
             <FieldError id="money-account-method-error" message={errors.payment_method_id} />
           </label>
 

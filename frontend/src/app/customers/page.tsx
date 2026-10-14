@@ -14,6 +14,7 @@ import {
 } from '@/components/forms/field-error';
 import { StatusSwitch } from '@/components/forms/status-switch';
 import { PartyContacts } from '@/components/parties/party-contacts';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -135,7 +136,7 @@ function CustomersContent() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Customers</h1>
-          <p className="mt-1 text-sm text-slate-600">Manage customer master data, credit limits, and opening dues.</p>
+          <p className="mt-1 text-sm text-slate-600">Manage customer master data,           Credit limit<RequiredMark />s, and opening dues.</p>
         </div>
         {profile?.permissions.includes('master_data.customers.create') && !isFormOpen && (
           <button
@@ -182,21 +183,25 @@ function CustomersContent() {
           </label>
           <label className="block text-sm font-medium">
             Price list
-            <select name="price_list_id" defaultValue={selected?.price_list_id ?? ''} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2">
-              <option value="">Default</option>
-              {priceLists.filter((item) => item.deleted_at === null).map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </select>
+            <SearchableSelect
+              name="price_list_id"
+              aria-label="Price list"
+              defaultValue={String(selected?.price_list_id ?? '')}
+              placeholder="Default or search price lists"
+              options={priceLists
+                .filter((item) => item.deleted_at === null)
+                .map((item) => ({ value: String(item.id), label: item.name }))}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
+            />
             <FieldError id="customer-price-list-error" message={errors.price_list_id} />
           </label>
           <label className="block text-sm font-medium">
-            Credit limit
+            Credit limit<RequiredMark />
             <input name="credit_limit" type="number" step="0.01" min="0" defaultValue={selected?.credit_limit ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.credit_limit)} aria-describedby={errors.credit_limit ? 'customer-credit-limit-error' : undefined} />
             <FieldError id="customer-credit-limit-error" message={errors.credit_limit} />
           </label>
           <label className="block text-sm font-medium">
-            Opening due
+            Opening due<RequiredMark />
             <input name="opening_due" type="number" step="0.01" defaultValue={selected?.opening_due ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.opening_due)} aria-describedby={errors.opening_due ? 'customer-opening-due-error' : undefined} />
             <FieldError id="customer-opening-due-error" message={errors.opening_due} />
           </label>

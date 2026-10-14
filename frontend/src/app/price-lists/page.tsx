@@ -13,6 +13,7 @@ import {
   type FieldErrors,
 } from '@/components/forms/field-error';
 import { StatusSwitch } from '@/components/forms/status-switch';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -481,23 +482,23 @@ function PriceListsContent() {
             >
               <label className="block text-sm font-medium">
                 Product<RequiredMark />
-                <select
+                <SearchableSelect
                   name="product_id"
-                  defaultValue={priceSelected?.product_id ?? ''}
+                  defaultValue={String(priceSelected?.product_id ?? '')}
+                  aria-label="Product"
+                  placeholder="Search product by SKU or name"
                   required
+                  options={products
+                    .filter((product) => product.deleted_at === null)
+                    .map((product) => ({
+                      value: String(product.id),
+                      label: `${product.name} (${product.sku})`,
+                      searchText: `${product.name} ${product.sku}`,
+                    }))}
                   aria-invalid={Boolean(priceErrors.product_id)}
                   aria-describedby={priceErrors.product_id ? 'price-product-error' : undefined}
                   className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
-                >
-                  <option value="">Select a product</option>
-                  {products
-                    .filter((product) => product.deleted_at === null)
-                    .map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name} ({product.sku})
-                      </option>
-                    ))}
-                </select>
+                />
                 <FieldError id="price-product-error" message={priceErrors.product_id} />
               </label>
 

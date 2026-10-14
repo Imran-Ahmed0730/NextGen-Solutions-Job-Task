@@ -3,6 +3,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { RequiredMark } from '@/components/forms/field-error';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast } from '@/lib/notifications';
@@ -173,39 +175,37 @@ function StockLedgerContent() {
         className="grid gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-5"
       >
         <label className="block text-sm font-medium text-slate-700">
-          Product
-          <select
+          Product<RequiredMark />
+          <SearchableSelect
             aria-label="Product"
             required
             value={productId}
-            onChange={(event) => setProductId(event.target.value)}
+            placeholder="Search product by SKU or name"
+            onChange={setProductId}
+            options={products.map((product) => ({
+              value: String(product.id),
+              label: `${product.name} (${product.sku})`,
+              searchText: `${product.name} ${product.sku}`,
+            }))}
             disabled={loadingOptions}
             className="mt-1.5 block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
-          >
-            <option value="">Select product</option>
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name} ({product.sku})
-              </option>
-            ))}
-          </select>
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           Warehouse
-          <select
+          <SearchableSelect
             aria-label="Warehouse"
             value={warehouseId}
-            onChange={(event) => setWarehouseId(event.target.value)}
+            placeholder="All warehouses or search"
+            onChange={setWarehouseId}
+            options={warehouses.map((warehouse) => ({
+              value: String(warehouse.id),
+              label: `${warehouse.name} (${warehouse.code})`,
+              searchText: `${warehouse.name} ${warehouse.code}`,
+            }))}
             disabled={loadingOptions}
             className="mt-1.5 block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
-          >
-            <option value="">All warehouses</option>
-            {warehouses.map((warehouse) => (
-              <option key={warehouse.id} value={warehouse.id}>
-                {warehouse.name} ({warehouse.code})
-              </option>
-            ))}
-          </select>
+          />
         </label>
         <label className="block text-sm font-medium text-slate-700">
           From date

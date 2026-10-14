@@ -96,6 +96,8 @@ describe('StockAdjustmentsPage', () => {
     render(<StockAdjustmentsPage />);
 
     await screen.findByRole('heading', { name: 'New adjustment' });
+    const product = screen.getByRole('combobox', { name: 'Product 1' });
+    fireEvent.focus(product);
     await screen.findByRole('option', { name: /Raw Material/ });
     expect(screen.queryByRole('option', { name: /Non-stocked Product/ })).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole('combobox', { name: 'Warehouse' }), {
@@ -137,7 +139,6 @@ describe('StockAdjustmentsPage', () => {
   it('does not allow zero quantities to be posted', async () => {
     render(<StockAdjustmentsPage />);
     await screen.findByRole('heading', { name: 'New adjustment' });
-    await screen.findByRole('option', { name: /Raw Material/ });
     fireEvent.change(screen.getByRole('combobox', { name: 'Warehouse' }), {
       target: { value: '1' },
     });

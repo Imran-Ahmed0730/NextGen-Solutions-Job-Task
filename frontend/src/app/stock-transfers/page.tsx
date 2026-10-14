@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { RequiredMark } from '@/components/forms/field-error';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -236,7 +238,7 @@ function StockTransfersContent() {
           <h2 className="text-lg font-semibold text-slate-900">New transfer</h2>
           <div className="grid gap-4 md:grid-cols-3">
             <label className="text-sm font-medium text-slate-700">
-              Transfer date
+              Transfer date<RequiredMark />
               <input
                 aria-label="Transfer date"
                 required
@@ -247,47 +249,45 @@ function StockTransfersContent() {
               />
             </label>
             <label className="text-sm font-medium text-slate-700">
-              From warehouse
-              <select
+              From warehouse<RequiredMark />
+              <SearchableSelect
                 aria-label="From warehouse"
                 required
+                placeholder="Search source warehouse"
                 value={fromWarehouseId}
-                onChange={(event) => setFromWarehouseId(event.target.value)}
+                onChange={setFromWarehouseId}
+                options={warehouses.map((warehouse) => ({
+                  value: String(warehouse.id),
+                  label: `${warehouse.name} (${warehouse.code})`,
+                  searchText: `${warehouse.name} ${warehouse.code}`,
+                }))}
                 className="mt-1.5 block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
-              >
-                <option value="">Select source</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name} ({warehouse.code})
-                  </option>
-                ))}
-              </select>
+              />
             </label>
             <label className="text-sm font-medium text-slate-700">
-              To warehouse
-              <select
+              To warehouse<RequiredMark />
+              <SearchableSelect
                 aria-label="To warehouse"
                 required
+                placeholder="Search destination warehouse"
                 value={toWarehouseId}
-                onChange={(event) => setToWarehouseId(event.target.value)}
-                className="mt-1.5 block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
-              >
-                <option value="">Select destination</option>
-                {warehouses
+                onChange={setToWarehouseId}
+                options={warehouses
                   .filter((warehouse) => String(warehouse.id) !== fromWarehouseId)
-                  .map((warehouse) => (
-                    <option key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name} ({warehouse.code})
-                    </option>
-                  ))}
-              </select>
+                  .map((warehouse) => ({
+                    value: String(warehouse.id),
+                    label: `${warehouse.name} (${warehouse.code})`,
+                    searchText: `${warehouse.name} ${warehouse.code}`,
+                  }))}
+                className="mt-1.5 block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm"
+              />
             </label>
           </div>
 
           <div className="space-y-3">
             <div className="grid grid-cols-[minmax(0,2fr)_minmax(8rem,1fr)_auto] gap-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <span>Product</span>
-              <span>Quantity</span>
+              <span>Product<RequiredMark /></span>
+              <span>Quantity<RequiredMark /></span>
               <span className="sr-only">Actions</span>
             </div>
             {lines.map((line, index) => {
@@ -301,26 +301,25 @@ function StockTransfersContent() {
                   className="grid grid-cols-[minmax(0,2fr)_minmax(8rem,1fr)_auto] gap-3"
                   key={`transfer-line-${index}`}
                 >
-                  <select
+                  <SearchableSelect
                     aria-label={`Product ${index + 1}`}
                     required
+                    placeholder="Search product by SKU or name"
                     value={line.product_id}
-                    onChange={(event) => updateLine(index, 'product_id', event.target.value)}
-                    className="min-h-10 min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm"
-                  >
-                    <option value="">Select stocked product</option>
-                    {products
+                    onChange={(value) => updateLine(index, 'product_id', value)}
+                    options={products
                       .filter(
                         (product) =>
                           !selectedIds.has(String(product.id)) ||
                           String(product.id) === line.product_id,
                       )
-                      .map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.name} ({product.sku})
-                        </option>
-                      ))}
-                  </select>
+                      .map((product) => ({
+                        value: String(product.id),
+                        label: `${product.name} (${product.sku})`,
+                        searchText: `${product.name} ${product.sku}`,
+                      }))}
+                    className="min-h-10 min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm"
+                  />
                   <input
                     aria-label={`Quantity ${index + 1}`}
                     required

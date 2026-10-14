@@ -13,6 +13,7 @@ import {
   type FieldErrors,
 } from '@/components/forms/field-error';
 import { StatusSwitch } from '@/components/forms/status-switch';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { productCategorySchema } from '@/lib/auth-validation';
@@ -217,28 +218,33 @@ function CategoriesContent() {
           </label>
           <label className="block text-sm font-medium">
             Parent category
-            <select
+            <SearchableSelect
               name="parent_id"
-              defaultValue={selected?.parent_id ?? ''}
+              defaultValue={String(selected?.parent_id ?? '')}
+              aria-label="Parent category"
+              placeholder="No parent or search categories"
+              options={[
+                ...(selectedParent &&
+                (!selectedParent.is_active || selectedParent.deleted_at !== null) &&
+                !possibleParents.some((category) => category.id === selectedParent.id)
+                  ? [
+                      {
+                        value: String(selectedParent.id),
+                        label: `${selectedParent.name} (inactive parent)`,
+                        searchText: selectedParent.name,
+                      },
+                    ]
+                  : []),
+                ...possibleParents.map((category) => ({
+                  value: String(category.id),
+                  label: `${'— '.repeat(categoryDepth(category, categories))}${category.name}`,
+                  searchText: category.name,
+                })),
+              ]}
               aria-invalid={Boolean(errors.parent_id)}
               aria-describedby={errors.parent_id ? 'category-parent-error' : undefined}
               className="mt-1 w-full rounded-md border bg-white px-3 py-2"
-            >
-              <option value="">No parent (top-level)</option>
-              {selectedParent &&
-                (!selectedParent.is_active || selectedParent.deleted_at !== null) &&
-                !possibleParents.some((category) => category.id === selectedParent.id) && (
-                  <option value={selectedParent.id}>
-                    {selectedParent.name} (inactive parent)
-                  </option>
-                )}
-              {possibleParents.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {'— '.repeat(categoryDepth(category, categories))}
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            />
             <FieldError id="category-parent-error" message={errors.parent_id} />
           </label>
           <div className="sm:col-span-2">

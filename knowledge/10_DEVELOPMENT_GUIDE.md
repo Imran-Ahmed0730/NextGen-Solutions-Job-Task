@@ -31,7 +31,7 @@ implemented; see [Section 10](#10-implementation-status).
 |---|---|
 | Web | Next.js 14 App Router, React 18, TypeScript, Tailwind CSS |
 | Form validation | Zod in the frontend, Pydantic with strict constraints (usernames, BD mobiles, positive IDs) in backend; inline API error mapping |
-| UI components | Accessible StatusSwitch toggle, standardized ActionIcon and IconActionButton controls |
+| UI components | Accessible StatusSwitch toggle, standardized ActionIcon and IconActionButton controls, searchable Select2-style entity selectors, and a shared required-field marker |
 | Notifications | SweetAlert2 toast helper |
 | API | FastAPI, Pydantic, SQLAlchemy 2 |
 | Database | MySQL 8.4, InnoDB, `utf8mb4` |
@@ -128,6 +128,10 @@ The frontend route tree currently includes:
 
 Routes are implemented under `frontend/src/app/`. Protected routes use the shared authentication
 shell and permission-aware navigation.
+Entity selectors with searchable option lists use the shared accessible `SearchableSelect` component
+so users can filter products, suppliers, warehouses, categories, units, and documents by their
+names/codes. Fixed short enumerations remain native selects. Required form fields show the shared
+red asterisk marker next to their visible label; keep it in sync with HTML/schema validation.
 
 ## 4. Backend request and data flow
 

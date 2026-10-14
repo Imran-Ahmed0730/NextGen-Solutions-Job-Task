@@ -13,6 +13,7 @@ import {
   type FieldErrors,
 } from '@/components/forms/field-error';
 import { StatusSwitch } from '@/components/forms/status-switch';
+import { SearchableSelect } from '@/components/forms/searchable-select';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { productSchema } from '@/lib/auth-validation';
@@ -270,41 +271,41 @@ function ProductsContent() {
 
           <label className="block text-sm font-medium">
             Category<RequiredMark />
-            <select
+            <SearchableSelect
               name="category_id"
-              defaultValue={selected?.category_id ?? ''}
+              defaultValue={String(selected?.category_id ?? '')}
+              aria-label="Category"
+              placeholder="Search categories"
               required
+              options={activeCategories.map((category) => ({
+                value: String(category.id),
+                label: category.name,
+                searchText: category.name,
+              }))}
               aria-invalid={Boolean(errors.category_id)}
               aria-describedby={errors.category_id ? 'product-category-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
-            >
-              <option value="">Select a category</option>
-              {activeCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            />
             <FieldError id="product-category-error" message={errors.category_id} />
           </label>
 
           <label className="block text-sm font-medium">
             Unit of measure<RequiredMark />
-            <select
+            <SearchableSelect
               name="unit_id"
-              defaultValue={selected?.unit_id ?? ''}
+              defaultValue={String(selected?.unit_id ?? '')}
+              aria-label="Unit of measure"
+              placeholder="Search units"
               required
+              options={activeUnits.map((unit) => ({
+                value: String(unit.id),
+                label: `${unit.name} (${unit.code})`,
+                searchText: `${unit.name} ${unit.code}`,
+              }))}
               aria-invalid={Boolean(errors.unit_id)}
               aria-describedby={errors.unit_id ? 'product-unit-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
-            >
-              <option value="">Select a unit</option>
-              {activeUnits.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.code})
-                </option>
-              ))}
-            </select>
+            />
             <FieldError id="product-unit-error" message={errors.unit_id} />
           </label>
 
@@ -397,18 +398,18 @@ function ProductsContent() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full max-w-xs rounded-md border border-slate-300 px-3 py-1.5 text-sm"
         />
-        <select
+        <SearchableSelect
+          aria-label="Category filter"
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
+          onChange={setCategoryFilter}
+          placeholder="All categories or search"
+          options={activeCategories.map((category) => ({
+            value: String(category.id),
+            label: category.name,
+            searchText: category.name,
+          }))}
           className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm"
-        >
-          <option value="">All categories</option>
-          {activeCategories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        />
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}

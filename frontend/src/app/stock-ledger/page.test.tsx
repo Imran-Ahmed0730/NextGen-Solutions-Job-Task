@@ -55,6 +55,9 @@ describe('StockLedgerPage', () => {
 
   it('filters movements and shows running balance and linked source document', async () => {
     render(<StockLedgerPage />);
+    const product = screen.getByRole('combobox', { name: 'Product' });
+    await waitFor(() => expect(product).not.toBeDisabled());
+    fireEvent.focus(product);
     await screen.findByRole('option', { name: /Raw Material/ });
 
     fireEvent.change(screen.getByRole('combobox', { name: 'Product' }), {
@@ -87,7 +90,6 @@ describe('StockLedgerPage', () => {
 
   it('requires a product before requesting ledger history', async () => {
     render(<StockLedgerPage />);
-    await screen.findByRole('option', { name: /Raw Material/ });
     const form = screen.getByRole('button', { name: 'Search' }).closest('form');
     expect(form).not.toBeNull();
     fireEvent.submit(form!);
