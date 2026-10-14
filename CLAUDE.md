@@ -72,7 +72,7 @@ Three groups: **Business rules** (the requirement wins), **Engineering rules**, 
 - E-4: One DB transaction per posting operation; roll back everything on failure.
 - E-5: `DECIMAL` for money (18,2) and quantity (18,3). No floats.
 - E-6: Type hints everywhere; mypy and ruff must pass.
-- E-7: All input validated by Pydantic (backend) and Zod (frontend). Frontend validation is for UX, backend is authoritative.
+- E-7: Validate all input independently in both the frontend (Zod) and backend (Pydantic). Frontend validation improves UX; backend validation is mandatory and authoritative. Keep rules consistent, but never rely on frontend validation for security or data integrity.
 - E-8: Migrations only via Alembic; never edit the DB by hand; never edit an applied migration.
 - E-9: Naming: tables `snake_case` plural; columns `snake_case`; Python `snake_case`; React components `PascalCase`; files in frontend `kebab-case`.
 - E-10: Standard error codes (e.g. `STOCK_INSUFFICIENT`, `PERMISSION_DENIED`, `DOCUMENT_POSTED`, `VALIDATION_ERROR`).
@@ -84,6 +84,7 @@ Three groups: **Business rules** (the requirement wins), **Engineering rules**, 
 - E-16: Always write code in an optimized, reusable way and avoid duplicate logic.
 - E-17: Create/update documentation for every part
 - E-18: Commit after completing a part or module so that it can be rolled back easily to a certain module.
+- E-19: Show a visible asterisk (`*`) beside every required field's visible label, including fields in dynamic rows and table/grid headers. Keep the marker consistent with frontend and backend validation; never mark optional fields as required.
 
 ## C. AI usage rules
 
