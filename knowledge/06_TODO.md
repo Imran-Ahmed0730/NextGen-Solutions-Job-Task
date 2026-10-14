@@ -81,9 +81,9 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Integrate reservations with Sales order workflow in Phase 7
 - [x] Physical count snapshot, counted quantities, variance review, and atomic posting
 - [x] Physical Count screen with permission gating
-- [ ] Invariant, negative-stock and concurrency tests
-- [ ] Run `backend/tests/test_inventory_concurrency.py` against a separately migrated MySQL database ending in `_test`; it is skipped unless `INVENTORY_CONCURRENCY_DATABASE_URL` is configured
-- [ ] Exit: all inventory invariants pass
+- [x] Invariant, negative-stock and concurrency tests
+- [x] Run `backend/tests/test_inventory_concurrency.py` against a separately migrated MySQL database ending in `_test`; passed on 2026-10-15 using a disposable MySQL 8.4 Docker container and `sabuj_pran_test`
+- [x] Exit: all inventory invariants pass
 
 ## Phase 5 — Purchase
 - [x] Purchase Order header/lines, DRAFT create/edit/list/details, validation, audit, and permissions

@@ -575,7 +575,10 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   migrated MySQL database whose name ends in `_test`, then run
   `pytest tests/test_inventory_concurrency.py`. The test refuses non-MySQL URLs and databases
   without the `_test` suffix, uses uniquely named records, and removes only those records afterward;
-  it never falls back to the application or shared development database.
+  it never falls back to the application or shared development database. On 2026-10-15 this test
+  passed against `sabuj_pran_test` on MySQL 8.4 in a disposable Docker container after upgrading it
+  to the current Alembic head. The container was removed after the run; no test database volume was
+  retained.
 - Reservation operations are service-level only until Phase 7 Sales endpoints integrate them with
   order lifecycle rules.
 

@@ -68,7 +68,9 @@ provides the real foreign-key target; quotation linkage and Sales workflow remai
 Physical count sheets now snapshot each active stocked product in a warehouse, accept counted
 quantities in partial updates, show variances, and post `COUNT_ADJUSTMENT` ledger movements
 atomically. Posting rejects stale snapshots when stock or the stocked-product scope has changed.
-The Phase 4 invariant and concurrency exit tests remain open.
+The Phase 4 invariant and negative-stock tests pass. The concurrent-posting test also passed
+against a separately migrated `sabuj_pran_test` database in a disposable MySQL 8.4 Docker
+container on 2026-10-15; the shared application database was not used.
 
 ## Phase 5 — Purchase
 **Build:** PO, goods receipt, direct purchase, purchase return, supplier due.
