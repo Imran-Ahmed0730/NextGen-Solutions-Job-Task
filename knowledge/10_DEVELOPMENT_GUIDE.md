@@ -596,14 +596,27 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   products. The `/purchase-orders` screen supports draft creation/editing and list/details, gated by
   `purchase.orders.read`, `purchase.orders.create`, and `purchase.orders.update`.
 - The UI/API currently implement draft workflows only. Submit/approve/reject transitions are
-  deferred to Phase 11; goods receipt, direct purchase, returns, inventory/cost updates, and
-  supplier due posting remain unimplemented. Configure a `PURCHASE_ORDER` sequence before creating
-  drafts.
+  deferred to Phase 11. Configure a `PURCHASE_ORDER` sequence before creating drafts.
+
+### Phase 5 in progress — Goods Receipts
+
+- Goods Receipt documents can be posted only against an `APPROVED` or `PARTIALLY_RECEIVED` purchase
+  order. Purchase-order submission and approval are deferred to Phase 11, so this screen will have
+  no eligible orders until an order is approved.
+- Posting validates each receipt line against its PO line and the configured
+  `receipt_tolerance_pct`, then atomically records the immutable receipt, `PURCHASE_RECEIPT` stock
+  ledger entries and balances, weighted-average product costs, PO received quantities/status, and
+  audit records. The `GOODS_RECEIPT` sequence must be configured before posting.
+- Supplier statements include posted Goods Receipts in the running due balance. Purchase returns
+  and supplier payments are not yet implemented, so statements do not yet reflect those offsets.
+- The `/goods-receipts` screen supports choosing an eligible PO, entering received quantities and
+  unit costs, posting, and viewing paginated receipt history. Access is gated by
+  `purchase.receipts.read` and `purchase.receipts.create`.
 
 ### Planned, not yet implemented
 
-The remaining roadmap includes the Phase 4 live concurrency check, the rest of purchase, money,
-sales, production, assets, employees, approvals, reports/dashboard, and full-cycle hardening. Consult
+The remaining roadmap includes the rest of purchase, money, sales, production, assets, employees,
+approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens
 are actually delivered.

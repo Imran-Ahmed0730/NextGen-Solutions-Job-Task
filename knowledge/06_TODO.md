@@ -63,7 +63,8 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Search, pagination, input validation, and permission denial coverage
 - [x] Exit: party/contact CRUD, audit, permissions, and opening-balance statement behavior tested
 - [ ] Extend customer statements with posted invoices, returns, and collections (Phase 6/7)
-- [ ] Extend supplier statements with posted purchases, returns, and payments (Phase 5/6)
+- [ ] Extend supplier statements with purchase returns and payments (Phase 5/6)
+- [x] Extend supplier statements with posted Goods Receipts (Phase 5)
 
 ## Phase 4 — Inventory Engine
 - [x] `stock_transactions` and `stock_balances` schema and migration
@@ -88,11 +89,12 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 ## Phase 5 — Purchase
 - [x] Purchase Order header/lines, DRAFT create/edit/list/details, validation, audit, and permissions
 - [ ] PO submission/approval/status transitions (approval actions deferred to Phase 11)
-- [ ] Goods receipt (post → stock + cost + due)
+- [x] Goods receipt linked to approved PO (post → stock + weighted-average cost + supplier due)
 - [ ] Direct purchase
 - [ ] Purchase return
 - [x] Screens: PO List, Create/Edit PO, PO Details
-- [ ] Screens: Goods Receive, Direct Purchase, Purchase Return
+- [x] Screen: Goods Receive
+- [ ] Screens: Direct Purchase, Purchase Return
 - [ ] Exit: receive/return atomicity tested
 
 ## Phase 6 — Money

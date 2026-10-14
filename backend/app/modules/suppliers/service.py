@@ -413,19 +413,36 @@ def delete_contact(
 
 def get_supplier_statement(db: Session, supplier: Supplier) -> dict[str, object]:
     balance = supplier.opening_due
+    entries: list[dict[str, object]] = [
+        {
+            "date": supplier.created_at.isoformat(),
+            "type": "OPENING_BALANCE",
+            "description": "Opening balance",
+            "amount": str(supplier.opening_due),
+            "balance": str(balance),
+        }
+    ]
+    from app.modules.goods_receipts import service as goods_receipt_service
+
+    for purchase in goods_receipt_service.list_supplier_due_entries(db, supplier.id):
+        amount = purchase["amount"]
+        if not isinstance(amount, Decimal):
+            raise TypeError("Goods receipt amount must be a Decimal")
+        balance += amount
+        entries.append(
+            {
+                "date": purchase["date"],
+                "type": purchase["type"],
+                "description": purchase["description"],
+                "amount": str(amount),
+                "balance": str(balance),
+            }
+        )
     return {
         "supplier_id": supplier.id,
         "supplier_name": supplier.name,
         "opening_due": str(supplier.opening_due),
-        "entries": [
-            {
-                "date": supplier.created_at.isoformat(),
-                "type": "OPENING_BALANCE",
-                "description": "Opening balance",
-                "amount": str(supplier.opening_due),
-                "balance": str(balance),
-            }
-        ],
+        "entries": entries,
         "balance": str(balance),
     }
 

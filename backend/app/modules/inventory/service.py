@@ -61,6 +61,10 @@ def weighted_average_cost(
     return (old_qty * old_avg_cost + received_qty * unit_cost) / total_qty
 
 
+def get_product_total_on_hand(db: Session, product_id: int) -> Decimal:
+    return repository.get_total_on_hand(db, product_id)
+
+
 def post_stock_movement(
     db: Session,
     *,

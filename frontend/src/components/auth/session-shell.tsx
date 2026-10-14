@@ -166,6 +166,12 @@ const navigation = [
         icon: 'supplier',
         permissions: ['purchase.orders.read'],
       },
+      {
+        href: '/goods-receipts',
+        label: 'Goods Receipts',
+        icon: 'supplier',
+        permissions: ['purchase.receipts.read'],
+      },
     ],
   },
 ] as const;

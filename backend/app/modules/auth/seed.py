@@ -159,6 +159,8 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("purchase.orders.read", "purchase", "View purchase orders"),
     PermissionDefinition("purchase.orders.create", "purchase", "Create purchase orders"),
     PermissionDefinition("purchase.orders.update", "purchase", "Update purchase order drafts"),
+    PermissionDefinition("purchase.receipts.read", "purchase", "View goods receipts"),
+    PermissionDefinition("purchase.receipts.create", "purchase", "Post goods receipts"),
 )
 
 

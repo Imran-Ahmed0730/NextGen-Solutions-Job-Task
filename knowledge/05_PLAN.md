@@ -77,6 +77,12 @@ container on 2026-10-15; the shared application database was not used.
 **Screens:** PO List, Create/Edit PO, PO Details, Goods Receive, Direct Purchase, Purchase Return.
 **Exit:** receive raises stock, average cost and supplier due atomically; return reverses; PO status transitions tested.
 
+**Progress:** Purchase Order drafts and Goods Receipt are implemented. Goods Receipt posting
+requires an approved or partially received PO, enforces the configured receiving tolerance, and
+atomically updates stock ledger/balances, weighted-average cost, PO received quantities/status,
+audit logs, document numbering, and supplier statements. PO approval remains deferred to Phase 11;
+direct purchase and purchase returns are not implemented.
+
 ## Phase 6 — Money & Simple Accounting
 **Build:** money ledger, accounts balances, customer collection, supplier payment, expense, income, fund transfer, opening balances, cash book.
 **Screens:** Account Balances, Customer Collection, Supplier Payment, Expense Entry, Income Entry, Fund Transfer, Opening Balances, Account Ledger / Cash Book.

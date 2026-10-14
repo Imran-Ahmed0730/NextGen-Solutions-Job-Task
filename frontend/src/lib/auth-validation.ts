@@ -370,6 +370,24 @@ export const purchaseOrderSchema = z.object({
     .max(500, 'A purchase order can have at most 500 lines'),
 });
 
+export const goodsReceiptSchema = z.object({
+  doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid receipt date'),
+  po_id: z.number().int().positive('Select an approved purchase order'),
+  note: z.string().max(2000, 'Use at most 2000 characters'),
+  lines: z
+    .array(
+      z.object({
+        po_line_id: z.number().int().positive(),
+        qty: purchaseOrderQuantity,
+        unit_cost: z
+          .string()
+          .regex(/^\d{1,14}(?:\.\d{1,4})?$/, 'Enter a unit cost with up to 4 decimal places'),
+      }),
+    )
+    .min(1, 'Enter quantities for at least one purchase order line')
+    .max(500, 'A receipt can have at most 500 lines'),
+});
+
 const optionalPartyBangladeshMobile = z
   .string()
   .trim()

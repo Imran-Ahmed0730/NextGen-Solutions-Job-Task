@@ -25,6 +25,17 @@ def get_balance(
     return db.scalar(statement)
 
 
+def get_total_on_hand(db: Session, product_id: int) -> Decimal:
+    total = db.scalar(
+        select(func.coalesce(func.sum(StockBalance.qty_on_hand), 0)).where(
+            StockBalance.product_id == product_id
+        )
+    )
+    if total is None:
+        return Decimal("0.000")
+    return total
+
+
 def list_balances(
     db: Session,
     *,
