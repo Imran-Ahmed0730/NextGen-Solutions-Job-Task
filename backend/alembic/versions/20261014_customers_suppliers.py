@@ -25,14 +25,33 @@ def upgrade() -> None:
         sa.Column("mobile", sa.String(length=30), nullable=True),
         sa.Column("email", sa.String(length=255), nullable=True),
         sa.Column("address", sa.Text(), nullable=True),
-        sa.Column("credit_limit", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False),
-        sa.Column("opening_due", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False),
+        sa.Column(
+            "credit_limit", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False
+        ),
+        sa.Column(
+            "opening_due", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False
+        ),
         sa.Column("price_list_id", BIGINT(unsigned=True), nullable=True),
         sa.Column("is_active", sa.Boolean(), server_default=sa.text("1"), nullable=False),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.ForeignKeyConstraint(["price_list_id"], ["price_lists.id"], name="fk_customers_price_list_id", ondelete="RESTRICT"),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["price_list_id"],
+            ["price_lists.id"],
+            name="fk_customers_price_list_id",
+            ondelete="RESTRICT",
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("code", name="uq_customers_code"),
         mysql_engine="InnoDB",
@@ -52,8 +71,18 @@ def upgrade() -> None:
         sa.Column("opening_due", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False),
         sa.Column("is_active", sa.Boolean(), server_default=sa.text("1"), nullable=False),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("code", name="uq_suppliers_code"),
         mysql_engine="InnoDB",
@@ -70,13 +99,25 @@ def upgrade() -> None:
         sa.Column("phone", sa.String(length=30), nullable=True),
         sa.Column("email", sa.String(length=255), nullable=True),
         sa.Column("designation", sa.String(length=100), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         mysql_engine="InnoDB",
         mysql_charset="utf8mb4",
     )
-    op.create_index("ix_party_contacts_party", "party_contacts", ["party_type", "party_id"], unique=False)
+    op.create_index(
+        "ix_party_contacts_party", "party_contacts", ["party_type", "party_id"], unique=False
+    )
 
 
 def downgrade() -> None:

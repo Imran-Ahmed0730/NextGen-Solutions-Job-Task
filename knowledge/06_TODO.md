@@ -66,10 +66,12 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Extend supplier statements with posted purchases, returns, and payments (Phase 5/6)
 
 ## Phase 4 — Inventory Engine
-- [ ] `stock_transactions`, `stock_balances`, reservations
-- [ ] Posting service (single writer) + average-cost calculator
+- [x] `stock_transactions` and `stock_balances` schema and migration
+- [x] Single stock-posting service writes the ledger and updates balances atomically
+- [x] Weighted-average cost calculation helper
+- [x] Current stock and stock ledger read APIs with permission checks
+- [ ] Reservations and reservation lifecycle service
 - [ ] Transfer, adjustment, physical count
-- [ ] Stock ledger + current stock endpoints/views
 - [ ] Screens: Current Stock, Stock Ledger, Transfer, Adjustment, Physical Count
 - [ ] Invariant, negative-stock and concurrency tests
 - [ ] Exit: all inventory invariants pass

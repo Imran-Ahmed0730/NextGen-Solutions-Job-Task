@@ -159,6 +159,9 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("master_data.suppliers.create", "master_data", "Create suppliers"),
     PermissionDefinition("master_data.suppliers.update", "master_data", "Update suppliers"),
     PermissionDefinition("master_data.suppliers.delete", "master_data", "Delete suppliers"),
+    PermissionDefinition(
+        "inventory.stock.read", "inventory", "View current stock and stock ledger"
+    ),
 )
 
 

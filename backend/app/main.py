@@ -14,6 +14,7 @@ from app.modules.customers.router import router as customers_router
 from app.modules.document_numbering.router import router as document_numbering_router
 from app.modules.expense_categories.router import router as expense_categories_router
 from app.modules.income_categories.router import router as income_categories_router
+from app.modules.inventory.router import router as inventory_router
 from app.modules.money_accounts.router import router as money_accounts_router
 from app.modules.payment_methods.router import router as payment_methods_router
 from app.modules.price_lists.router import router as price_lists_router
@@ -39,6 +40,7 @@ app.include_router(auth_router)
 app.include_router(company_settings_router)
 app.include_router(customers_router)
 app.include_router(document_numbering_router)
+app.include_router(inventory_router)
 app.include_router(suppliers_router)
 app.include_router(units_router)
 app.include_router(product_categories_router)

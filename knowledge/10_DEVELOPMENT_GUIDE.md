@@ -54,6 +54,7 @@ is protected.
 │   │   ├── api/                 # Health endpoint
 │   │   ├── core/                # Configuration, DB, security, exceptions, email
 │   │   ├── modules/auth/        # Authentication and user/role administration
+│   │   ├── modules/inventory/   # Stock ledger, balances, posting service, read APIs
 │   │   ├── modules/units/       # Measurement-unit master-data reference module
 │   │   ├── modules/product_categories/ # Hierarchical product categories
 │   │   ├── modules/products/    # Products (stocked/trading) with category and unit
@@ -86,6 +87,10 @@ that structure for hierarchical categories. The `products`, `warehouses`, `expen
 `income_categories`, `payment_methods`, `money_accounts`, `price_lists`, and `company_settings` modules follow the same
 router/schema/model/service/repository split. `backend/app/core/` contains shared facilities such as
 JWT/session validation, configuration, database access, and SMTP delivery.
+The Phase 4 `inventory` module currently provides the append-only stock transaction ledger,
+product/warehouse balance projection, the sole stock-posting service, and authenticated stock and
+ledger read APIs. Reservation, transfer, adjustment, physical-count, and frontend workflows remain
+planned.
 
 The protected app shell uses a permission-filtered, grouped sidebar on desktop and a toggleable
 drawer on smaller screens. The top bar shows the current route and signed-in account.
@@ -509,6 +514,21 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   statement integration with those transactions is deferred to their respective phases.
 - Focused API tests cover validation, statement opening entries, search, and permission denials for
   statement and contact routes.
+
+### Phase 4 in progress — Inventory ledger foundation
+
+- Alembic creates `stock_transactions` and composite-key `stock_balances` with product, warehouse,
+  and actor references, quantity precision, and ledger query indexes.
+- `post_stock_movement()` is the only stock-balance writer. It locks the product row, validates
+  movement direction and unit precision, prevents stocked products from going below zero or below
+  reserved stock, appends the signed ledger row, updates the balance, and records the audit event
+  without committing so the caller can include it in a larger transaction.
+- Authenticated `GET /api/v1/inventory/stock` and `GET /api/v1/inventory/ledger` routes use the
+  `inventory.stock.read` permission. The administrator seed catalog includes this permission.
+- A weighted-average-cost helper follows the PRD formula; transaction-specific costing integration
+  remains for purchase and production posting workflows.
+- Not complete: reservation lifecycle, transfer/adjustment/count workflows, frontend screens, and
+  Phase 4 concurrency/transfer atomicity exit tests.
 
 ### Planned, not yet implemented
 

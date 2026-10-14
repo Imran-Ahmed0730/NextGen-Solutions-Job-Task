@@ -38,6 +38,10 @@ def get_product(db: Session, product_id: int) -> Product | None:
     return repository.get_product(db, product_id)
 
 
+def lock_product_for_stock_posting(db: Session, product_id: int) -> Product | None:
+    return repository.lock_product_for_stock_posting(db, product_id)
+
+
 def create_product(
     db: Session, data: dict[str, object], actor: User, ip: str | None = None
 ) -> Product:

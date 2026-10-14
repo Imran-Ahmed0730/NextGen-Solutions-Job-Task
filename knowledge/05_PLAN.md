@@ -46,6 +46,11 @@ financial ledger before that integration is delivered and tested.
 **Screens:** Current Stock, Product Stock Ledger, Stock Transfer, Stock Adjustment, Physical Count.
 **Exit:** invariant tests (balance = ledger sum), negative stock blocked, concurrent posting test, transfer atomicity.
 
+**Progress:** The first Phase 4 slice establishes the append-only stock transaction ledger, the
+posting service and its maintained product/warehouse balance projection, plus authenticated
+current-stock and ledger read APIs. Reservations, transfer/adjustment/count workflows, screens,
+and the Phase 4 concurrency/transfer exit tests remain open.
+
 ## Phase 5 — Purchase
 **Build:** PO, goods receipt, direct purchase, purchase return, supplier due.
 **Screens:** PO List, Create/Edit PO, PO Details, Goods Receive, Direct Purchase, Purchase Return.

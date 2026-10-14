@@ -1,5 +1,5 @@
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, lazyload
 
 from app.modules.products.models import Product, ProductType
 
@@ -39,6 +39,16 @@ def get_product(db: Session, product_id: int) -> Product | None:
         select(Product)
         .options(joinedload(Product.category), joinedload(Product.unit))
         .where(Product.id == product_id)
+    )
+    return db.scalar(statement)
+
+
+def lock_product_for_stock_posting(db: Session, product_id: int) -> Product | None:
+    statement = (
+        select(Product)
+        .options(lazyload(Product.category), lazyload(Product.unit))
+        .where(Product.id == product_id)
+        .with_for_update()
     )
     return db.scalar(statement)
 
