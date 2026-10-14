@@ -122,6 +122,17 @@ const navigation = [
       },
     ],
   },
+  {
+    label: 'Inventory',
+    items: [
+      {
+        href: '/warehouse-stock',
+        label: 'Warehouse Stock',
+        icon: 'warehouse',
+        permissions: ['inventory.stock.read'],
+      },
+    ],
+  },
 ] as const;
 
 const iconPaths = {

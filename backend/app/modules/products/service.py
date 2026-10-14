@@ -19,6 +19,7 @@ def list_products(
     search: str | None = None,
     category_id: int | None = None,
     product_type: ProductType | None = None,
+    is_stocked: bool | None = None,
     include_inactive: bool = False,
     offset: int = 0,
     limit: int = 50,
@@ -28,10 +29,15 @@ def list_products(
         search=search,
         category_id=category_id,
         product_type=product_type,
+        is_stocked=is_stocked,
         include_inactive=include_inactive,
         offset=offset,
         limit=limit,
     )
+
+
+def count_stocked_products(db: Session, *, search: str | None = None) -> int:
+    return repository.count_stocked_products(db, search=search)
 
 
 def get_product(db: Session, product_id: int) -> Product | None:

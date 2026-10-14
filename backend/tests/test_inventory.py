@@ -290,6 +290,7 @@ def test_stock_read_endpoints_require_inventory_permission(
     db_session.commit()
 
     assert client.get("/api/v1/inventory/stock").status_code == 401
+    assert client.get("/api/v1/inventory/warehouse-stock").status_code == 401
     login = client.post(
         "/api/v1/auth/login",
         json={"username": actor.username, "password": password},
@@ -323,3 +324,69 @@ def test_stock_read_endpoints_require_inventory_permission(
         "Authorization": f"Bearer {readonly_login.json()['access_token']}"
     }
     assert client.get("/api/v1/inventory/stock", headers=readonly_headers).status_code == 403
+    assert (
+        client.get("/api/v1/inventory/warehouse-stock", headers=readonly_headers).status_code
+        == 403
+    )
+
+
+def test_warehouse_stock_view_includes_named_zero_balances_and_filters(
+    client: TestClient, db_session: Session
+) -> None:
+    actor, password, product, warehouse = _create_inventory_records(db_session)
+    second_warehouse = Warehouse(name="Remote Warehouse", code="REMOTE")
+    db_session.add(second_warehouse)
+    db_session.commit()
+    db_session.refresh(second_warehouse)
+    _post(
+        db_session,
+        actor,
+        product,
+        warehouse,
+        MovementType.OPENING,
+        Decimal("4.000"),
+    )
+    db_session.commit()
+
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"username": actor.username, "password": password},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    all_stock = client.get("/api/v1/inventory/warehouse-stock", headers=headers)
+    assert all_stock.status_code == 200
+    rows = all_stock.json()
+    assert len(rows) == 2
+    assert rows[0]["product_sku"] == product.sku
+    assert rows[0]["product_name"] == product.name
+    assert rows[0]["unit_code"] == "kg"
+    assert rows[0]["warehouse_code"] == warehouse.code
+    assert rows[0]["qty_on_hand"] == "4.000"
+    assert rows[0]["available"] == "4.000"
+    assert rows[1]["warehouse_id"] == second_warehouse.id
+    assert rows[1]["qty_on_hand"] == "0.000"
+
+    first_page = client.get(
+        "/api/v1/inventory/warehouse-stock?limit=1", headers=headers
+    )
+    second_page = client.get(
+        "/api/v1/inventory/warehouse-stock?offset=1&limit=1", headers=headers
+    )
+    assert first_page.json()[0]["warehouse_id"] == warehouse.id
+    assert second_page.json()[0]["warehouse_id"] == second_warehouse.id
+
+    filtered = client.get(
+        f"/api/v1/inventory/warehouse-stock?warehouse_id={second_warehouse.id}"
+        "&search=Raw%20Material",
+        headers=headers,
+    )
+    assert filtered.status_code == 200
+    assert len(filtered.json()) == 1
+    assert filtered.json()[0]["warehouse_id"] == second_warehouse.id
+
+    empty_search = client.get(
+        "/api/v1/inventory/warehouse-stock?search=missing", headers=headers
+    )
+    assert empty_search.status_code == 200
+    assert empty_search.json() == []

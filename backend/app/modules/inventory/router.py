@@ -6,7 +6,11 @@ from app.core.security import require_permission
 from app.modules.auth.models import User
 from app.modules.inventory import service
 from app.modules.inventory.models import StockBalance, StockTransaction
-from app.modules.inventory.schemas import StockBalanceResponse, StockTransactionResponse
+from app.modules.inventory.schemas import (
+    StockBalanceResponse,
+    StockTransactionResponse,
+    WarehouseStockResponse,
+)
 
 router = APIRouter(prefix="/api/v1/inventory", tags=["inventory"])
 
@@ -23,6 +27,24 @@ def list_stock(
     return service.list_stock(
         db,
         product_id=product_id,
+        warehouse_id=warehouse_id,
+        offset=offset,
+        limit=limit,
+    )
+
+
+@router.get("/warehouse-stock", response_model=list[WarehouseStockResponse])
+def list_warehouse_stock(
+    search: str | None = Query(default=None, max_length=255),
+    warehouse_id: int | None = Query(default=None, ge=1),
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory.stock.read")),
+) -> list[WarehouseStockResponse]:
+    return service.list_warehouse_stock(
+        db,
+        search=search,
         warehouse_id=warehouse_id,
         offset=offset,
         limit=limit,

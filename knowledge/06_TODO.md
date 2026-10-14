@@ -70,9 +70,10 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Single stock-posting service writes the ledger and updates balances atomically
 - [x] Weighted-average cost calculation helper
 - [x] Current stock and stock ledger read APIs with permission checks
+- [x] Warehouse Stock screen with product search, warehouse filtering, pagination, and permission gating
 - [ ] Reservations and reservation lifecycle service
 - [ ] Transfer, adjustment, physical count
-- [ ] Screens: Current Stock, Stock Ledger, Transfer, Adjustment, Physical Count
+- [ ] Screens: Product Stock Ledger, Transfer, Adjustment, Physical Count
 - [ ] Invariant, negative-stock and concurrency tests
 - [ ] Exit: all inventory invariants pass
 

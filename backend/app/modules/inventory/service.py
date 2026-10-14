@@ -8,6 +8,7 @@ from app.modules.auth.audit import record_audit
 from app.modules.auth.models import User
 from app.modules.inventory import repository
 from app.modules.inventory.models import MovementType, StockBalance, StockTransaction
+from app.modules.inventory.schemas import WarehouseStockResponse
 from app.modules.products import service as product_service
 from app.modules.warehouses import service as warehouse_service
 
@@ -150,6 +151,83 @@ def list_stock(
         offset=offset,
         limit=limit,
     )
+
+
+def list_warehouse_stock(
+    db: Session,
+    *,
+    search: str | None = None,
+    warehouse_id: int | None = None,
+    offset: int = 0,
+    limit: int = 50,
+) -> list[WarehouseStockResponse]:
+    normalized_search = (search or "").strip() or None
+    warehouses = []
+    warehouse_offset = 0
+    while True:
+        warehouse_page = warehouse_service.list_warehouses(
+            db, offset=warehouse_offset, limit=200
+        )
+        warehouses.extend(warehouse_page)
+        if len(warehouse_page) < 200:
+            break
+        warehouse_offset += 200
+    if warehouse_id is not None:
+        warehouses = [warehouse for warehouse in warehouses if warehouse.id == warehouse_id]
+    if not warehouses:
+        return []
+
+    product_count = product_service.count_stocked_products(db, search=normalized_search)
+    if product_count == 0 or offset >= product_count * len(warehouses):
+        return []
+
+    warehouse_count = len(warehouses)
+    first_product = offset // warehouse_count
+    first_warehouse = offset % warehouse_count
+    product_limit = min(
+        product_count - first_product,
+        (first_warehouse + limit + warehouse_count - 1) // warehouse_count,
+    )
+    products = product_service.list_products(
+        db,
+        search=normalized_search,
+        is_stocked=True,
+        offset=first_product,
+        limit=product_limit,
+    )
+    balances = repository.list_balances_for_products(
+        db,
+        product_ids=[product.id for product in products],
+        warehouse_ids=[warehouse.id for warehouse in warehouses],
+    )
+    balance_by_pair = {
+        (balance.product_id, balance.warehouse_id): balance for balance in balances
+    }
+
+    result: list[WarehouseStockResponse] = []
+    for product_index, product in enumerate(products, start=first_product):
+        for warehouse_index, warehouse in enumerate(warehouses):
+            row_offset = product_index * warehouse_count + warehouse_index
+            if row_offset < offset or row_offset >= offset + limit:
+                continue
+            balance = balance_by_pair.get((product.id, warehouse.id))
+            qty_on_hand = balance.qty_on_hand if balance is not None else Decimal("0.000")
+            qty_reserved = balance.qty_reserved if balance is not None else Decimal("0.000")
+            result.append(
+                WarehouseStockResponse(
+                    product_id=product.id,
+                    product_sku=product.sku,
+                    product_name=product.name,
+                    unit_code=product.unit.code,
+                    warehouse_id=warehouse.id,
+                    warehouse_code=warehouse.code,
+                    warehouse_name=warehouse.name,
+                    qty_on_hand=qty_on_hand,
+                    qty_reserved=qty_reserved,
+                    available=qty_on_hand - qty_reserved,
+                )
+            )
+    return result
 
 
 def list_stock_ledger(

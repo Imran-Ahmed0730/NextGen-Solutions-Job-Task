@@ -10,6 +10,7 @@ def list_products(
     search: str | None = None,
     category_id: int | None = None,
     product_type: ProductType | None = None,
+    is_stocked: bool | None = None,
     include_inactive: bool = False,
     offset: int = 0,
     limit: int = 50,
@@ -21,6 +22,8 @@ def list_products(
         statement = statement.where(Product.category_id == category_id)
     if product_type is not None:
         statement = statement.where(Product.type == product_type)
+    if is_stocked is not None:
+        statement = statement.where(Product.is_stocked.is_(is_stocked))
     if search:
         search_term = f"%{search.strip().lower()}%"
         statement = statement.where(
@@ -32,6 +35,23 @@ def list_products(
     return list(
         db.scalars(statement.order_by(Product.name, Product.id).offset(offset).limit(limit))
     )
+
+
+def count_stocked_products(db: Session, *, search: str | None = None) -> int:
+    statement = select(func.count(Product.id)).where(
+        Product.is_stocked.is_(True),
+        Product.is_active.is_(True),
+        Product.deleted_at.is_(None),
+    )
+    if search:
+        search_term = f"%{search.strip().lower()}%"
+        statement = statement.where(
+            or_(
+                func.lower(Product.name).like(search_term),
+                func.lower(Product.sku).like(search_term),
+            )
+        )
+    return db.scalar(statement) or 0
 
 
 def get_product(db: Session, product_id: int) -> Product | None:

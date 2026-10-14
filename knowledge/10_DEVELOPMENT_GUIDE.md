@@ -114,6 +114,7 @@ The frontend route tree currently includes:
 | `/categories` | List, create, update, soft-delete, and restore product categories |
 | `/products` | List, create, update, soft-delete, and restore products |
 | `/warehouses` | List, create, update, soft-delete, and restore warehouses |
+| `/warehouse-stock` | View on-hand, reserved, and available quantities by warehouse |
 | `/expense-categories` | List, create, update, soft-delete, and restore expense categories |
 | `/income-categories` | List, create, update, soft-delete, and restore income categories |
 | `/payment-methods` | List, create, update, soft-delete, and restore payment methods |
@@ -515,7 +516,7 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 - Focused API tests cover validation, statement opening entries, search, and permission denials for
   statement and contact routes.
 
-### Phase 4 in progress — Inventory ledger foundation
+### Phase 4 in progress — Inventory ledger and warehouse stock
 
 - Alembic creates `stock_transactions` and composite-key `stock_balances` with product, warehouse,
   and actor references, quantity precision, and ledger query indexes.
@@ -525,10 +526,14 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   without committing so the caller can include it in a larger transaction.
 - Authenticated `GET /api/v1/inventory/stock` and `GET /api/v1/inventory/ledger` routes use the
   `inventory.stock.read` permission. The administrator seed catalog includes this permission.
+- Authenticated `GET /api/v1/inventory/warehouse-stock` returns named product/warehouse rows,
+  including zero balances for active stocked products, with warehouse and product search filters
+  and pagination. The `/warehouse-stock` screen displays on-hand, reserved, and available amounts
+  and is permission-gated in the navigation.
 - A weighted-average-cost helper follows the PRD formula; transaction-specific costing integration
   remains for purchase and production posting workflows.
-- Not complete: reservation lifecycle, transfer/adjustment/count workflows, frontend screens, and
-  Phase 4 concurrency/transfer atomicity exit tests.
+- Not complete: reservation lifecycle, transfer/adjustment/count workflows, the Product Stock Ledger
+  screen, and Phase 4 concurrency/transfer atomicity exit tests.
 
 ### Planned, not yet implemented
 

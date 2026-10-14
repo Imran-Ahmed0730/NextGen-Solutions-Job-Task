@@ -48,8 +48,10 @@ financial ledger before that integration is delivered and tested.
 
 **Progress:** The first Phase 4 slice establishes the append-only stock transaction ledger, the
 posting service and its maintained product/warehouse balance projection, plus authenticated
-current-stock and ledger read APIs. Reservations, transfer/adjustment/count workflows, screens,
-and the Phase 4 concurrency/transfer exit tests remain open.
+current-stock and ledger read APIs. The Warehouse Stock screen now displays named product/warehouse
+rows with search, filtering, pagination, and permission gating. Reservations,
+transfer/adjustment/count workflows, the Product Stock Ledger screen, and the Phase 4
+concurrency/transfer exit tests remain open.
 
 ## Phase 5 — Purchase
 **Build:** PO, goods receipt, direct purchase, purchase return, supplier due.

@@ -17,6 +17,19 @@ class StockBalanceResponse(BaseModel):
     updated_at: datetime
 
 
+class WarehouseStockResponse(BaseModel):
+    product_id: int
+    product_sku: str
+    product_name: str
+    unit_code: str
+    warehouse_id: int
+    warehouse_code: str
+    warehouse_name: str
+    qty_on_hand: Decimal
+    qty_reserved: Decimal
+    available: Decimal
+
+
 class StockTransactionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -38,6 +38,21 @@ def list_balances(
     )
 
 
+def list_balances_for_products(
+    db: Session,
+    *,
+    product_ids: list[int],
+    warehouse_ids: list[int],
+) -> list[StockBalance]:
+    if not product_ids or not warehouse_ids:
+        return []
+    statement = select(StockBalance).where(
+        StockBalance.product_id.in_(product_ids),
+        StockBalance.warehouse_id.in_(warehouse_ids),
+    )
+    return list(db.scalars(statement))
+
+
 def list_transactions(
     db: Session,
     *,
