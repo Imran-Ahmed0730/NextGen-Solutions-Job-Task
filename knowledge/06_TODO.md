@@ -75,9 +75,10 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Stock Transfer screen with multi-line posting and paginated transfer history
 - [x] Stock adjustments with reasons, captured average cost, and atomic signed stock postings
 - [x] Stock Adjustment screen with multi-line posting and paginated adjustment history
-- [ ] Reservations and reservation lifecycle service
+- [x] Product Stock Ledger screen with filters, running balances, and source-document links
+- [ ] Reservations and reservation lifecycle service (deferred until sales order lines exist)
 - [ ] Physical count
-- [ ] Screens: Product Stock Ledger, Physical Count
+- [ ] Screens: Physical Count
 - [ ] Invariant, negative-stock and concurrency tests
 - [ ] Exit: all inventory invariants pass
 

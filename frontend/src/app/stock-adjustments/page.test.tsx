@@ -29,6 +29,7 @@ import StockAdjustmentsPage from './page';
 
 describe('StockAdjustmentsPage', () => {
   beforeEach(() => {
+    window.history.replaceState({}, '', '/');
     mocks.apiRequest.mockReset();
     let storedAdjustment: {
       id: number;
@@ -72,6 +73,17 @@ describe('StockAdjustmentsPage', () => {
           lines: [{ id: 3, product_id: 7, qty_signed: '-2.500', unit_cost: '4.0000' }],
         };
         return Promise.resolve(storedAdjustment);
+      }
+      if (path === '/api/v1/inventory/adjustments/9') {
+        return Promise.resolve({
+          id: 9,
+          doc_no: 'ADJ-20260001',
+          doc_date: '2026-10-14',
+          warehouse_id: 1,
+          reason: 'Count correction',
+          status: 'POSTED',
+          lines: [{ id: 3, product_id: 7, qty_signed: '-2.500', unit_cost: '4.0000' }],
+        });
       }
       if (path.startsWith('/api/v1/inventory/adjustments')) {
         return Promise.resolve(storedAdjustment ? [storedAdjustment] : []);
@@ -146,5 +158,13 @@ describe('StockAdjustmentsPage', () => {
     expect(
       mocks.apiRequest.mock.calls.some(([, init]) => init?.method === 'POST'),
     ).toBe(false);
+  });
+
+  it('loads an adjustment linked from the stock ledger', async () => {
+    window.history.replaceState({}, '', '/stock-adjustments?document_id=9');
+    render(<StockAdjustmentsPage />);
+
+    expect(await screen.findByText('Linked adjustment: ADJ-20260001')).toBeInTheDocument();
+    expect(mocks.apiRequest).toHaveBeenCalledWith('/api/v1/inventory/adjustments/9');
   });
 });

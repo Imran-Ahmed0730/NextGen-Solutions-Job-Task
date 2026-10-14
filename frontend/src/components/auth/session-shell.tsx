@@ -132,6 +132,12 @@ const navigation = [
         permissions: ['inventory.stock.read'],
       },
       {
+        href: '/stock-ledger',
+        label: 'Product Stock Ledger',
+        icon: 'warehouse',
+        permissions: ['inventory.stock.read'],
+      },
+      {
         href: '/stock-transfers',
         label: 'Stock Transfers',
         icon: 'warehouse',

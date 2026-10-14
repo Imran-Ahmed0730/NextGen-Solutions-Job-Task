@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 
 from fastapi import HTTPException
@@ -8,7 +8,13 @@ from app.modules.auth.audit import record_audit
 from app.modules.auth.models import User
 from app.modules.inventory import repository
 from app.modules.inventory.models import MovementType, StockBalance, StockTransaction
-from app.modules.inventory.schemas import WarehouseStockResponse
+from app.modules.inventory.schemas import (
+    StockLedgerEntryResponse,
+    StockLedgerOptionsResponse,
+    StockLedgerProductOption,
+    StockLedgerWarehouseOption,
+    WarehouseStockResponse,
+)
 from app.modules.products import service as product_service
 from app.modules.warehouses import service as warehouse_service
 
@@ -73,9 +79,7 @@ def post_stock_movement(
         raise HTTPException(status_code=422, detail="Source type must be 1 to 50 characters")
     if source_id is not None and (isinstance(source_id, bool) or source_id <= 0):
         raise HTTPException(status_code=422, detail="Source ID must be a positive integer")
-    if source_line_id is not None and (
-        isinstance(source_line_id, bool) or source_line_id <= 0
-    ):
+    if source_line_id is not None and (isinstance(source_line_id, bool) or source_line_id <= 0):
         raise HTTPException(status_code=422, detail="Source line ID must be a positive integer")
     if txn_date is not None and txn_date.tzinfo is None:
         raise HTTPException(status_code=422, detail="Transaction date must include a timezone")
@@ -100,9 +104,7 @@ def post_stock_movement(
         db.add(balance)
 
     resulting_qty = balance.qty_on_hand + qty_signed
-    if product.is_stocked and (
-        resulting_qty < 0 or resulting_qty < balance.qty_reserved
-    ):
+    if product.is_stocked and (resulting_qty < 0 or resulting_qty < balance.qty_reserved):
         raise HTTPException(status_code=409, detail="STOCK_INSUFFICIENT")
 
     posted_at = txn_date or datetime.now(UTC)
@@ -165,9 +167,7 @@ def list_warehouse_stock(
     warehouses = []
     warehouse_offset = 0
     while True:
-        warehouse_page = warehouse_service.list_warehouses(
-            db, offset=warehouse_offset, limit=200
-        )
+        warehouse_page = warehouse_service.list_warehouses(db, offset=warehouse_offset, limit=200)
         warehouses.extend(warehouse_page)
         if len(warehouse_page) < 200:
             break
@@ -200,9 +200,7 @@ def list_warehouse_stock(
         product_ids=[product.id for product in products],
         warehouse_ids=[warehouse.id for warehouse in warehouses],
     )
-    balance_by_pair = {
-        (balance.product_id, balance.warehouse_id): balance for balance in balances
-    }
+    balance_by_pair = {(balance.product_id, balance.warehouse_id): balance for balance in balances}
 
     result: list[WarehouseStockResponse] = []
     for product_index, product in enumerate(products, start=first_product):
@@ -235,15 +233,62 @@ def list_stock_ledger(
     *,
     product_id: int,
     warehouse_id: int | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
     offset: int = 0,
     limit: int = 100,
-) -> list[StockTransaction]:
-    return repository.list_transactions(
+) -> list[StockLedgerEntryResponse]:
+    if date_from is not None and date_to is not None and date_from > date_to:
+        raise HTTPException(status_code=422, detail="Start date cannot be after end date")
+    date_from_bound = datetime.combine(date_from, time.min) if date_from else None
+    date_to_bound = datetime.combine(date_to + timedelta(days=1), time.min) if date_to else None
+    entries = repository.list_ledger_entries(
         db,
         product_id=product_id,
         warehouse_id=warehouse_id,
+        date_from=date_from_bound,
+        date_to_exclusive=date_to_bound,
         offset=offset,
         limit=limit,
+    )
+    return [
+        StockLedgerEntryResponse(
+            id=transaction.id,
+            txn_date=transaction.txn_date,
+            product_id=transaction.product_id,
+            warehouse_id=transaction.warehouse_id,
+            movement_type=transaction.movement_type,
+            qty_signed=transaction.qty_signed,
+            unit_cost=transaction.unit_cost,
+            source_type=transaction.source_type,
+            source_id=transaction.source_id,
+            source_line_id=transaction.source_line_id,
+            note=transaction.note,
+            created_by=transaction.created_by,
+            created_at=transaction.created_at,
+            running_qty=running_qty,
+        )
+        for transaction, running_qty in entries
+    ]
+
+
+def get_stock_ledger_options(db: Session) -> StockLedgerOptionsResponse:
+    warehouses = warehouse_service.list_warehouses(db, limit=200)
+    products = product_service.list_products(db, is_stocked=True, limit=200)
+    return StockLedgerOptionsResponse(
+        products=[
+            StockLedgerProductOption(
+                id=product.id,
+                sku=product.sku,
+                name=product.name,
+                unit_code=product.unit.code,
+            )
+            for product in products
+        ],
+        warehouses=[
+            StockLedgerWarehouseOption(id=warehouse.id, code=warehouse.code, name=warehouse.name)
+            for warehouse in warehouses
+        ],
     )
 
 

@@ -116,6 +116,7 @@ The frontend route tree currently includes:
 | `/products` | List, create, update, soft-delete, and restore products |
 | `/warehouses` | List, create, update, soft-delete, and restore warehouses |
 | `/warehouse-stock` | View on-hand, reserved, and available quantities by warehouse |
+| `/stock-ledger` | Review product movements with date filters, running balance, and source links |
 | `/stock-transfers` | Post inter-warehouse stock transfers and browse transfer history |
 | `/stock-adjustments` | Post reasoned stock increases/decreases and browse adjustment history |
 | `/expense-categories` | List, create, update, soft-delete, and restore expense categories |
@@ -277,6 +278,8 @@ The implemented auth API is:
 | `GET /api/v1/inventory/transfers?offset=0&limit=50` | `inventory.transfers.read` | List posted stock transfers |
 | `GET /api/v1/inventory/transfers/{id}` | `inventory.transfers.read` | Read one posted stock transfer |
 | `POST /api/v1/inventory/transfers` | `inventory.transfers.create` | Atomically post a transfer and paired stock-ledger movements |
+| `GET /api/v1/inventory/ledger/options` | `inventory.stock.read` | Read stocked-product and warehouse filter options |
+| `GET /api/v1/inventory/ledger?product_id=&warehouse_id=&date_from=&date_to=&offset=0&limit=100` | `inventory.stock.read` | Read paginated product movements with running on-hand balance; running balances include movements before `date_from` |
 | `GET /api/v1/inventory/adjustments/options` | `inventory.adjustments.read` | Read adjustment warehouse and stocked-product choices |
 | `GET /api/v1/inventory/adjustments?offset=0&limit=50` | `inventory.adjustments.read` | List posted stock adjustments |
 | `GET /api/v1/inventory/adjustments/{id}` | `inventory.adjustments.read` | Read one posted stock adjustment |
@@ -556,8 +559,9 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   hooks remain part of the later Approvals phase.
 - A weighted-average-cost helper follows the PRD formula; transaction-specific costing integration
   remains for purchase and production posting workflows.
-- Not complete: reservation lifecycle, physical-count workflow, the Product Stock Ledger screen,
-  and Phase 4 concurrency tests.
+- Not complete: reservation lifecycle, physical-count workflow, and Phase 4 concurrency tests.
+  Reservations are deferred until Sales implements the required `sales_order_line_id`; the current
+  schema does not include sales-order lines.
 
 ### Planned, not yet implemented
 

@@ -61,6 +61,7 @@ function StockAdjustmentsContent() {
   const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [adjustments, setAdjustments] = useState<StockAdjustment[]>([]);
+  const [linkedAdjustment, setLinkedAdjustment] = useState<StockAdjustment | null>(null);
   const [warehouseId, setWarehouseId] = useState('');
   const [docDate, setDocDate] = useState(today);
   const [reason, setReason] = useState('');
@@ -95,11 +96,18 @@ function StockAdjustmentsContent() {
       }>('/api/v1/inventory/adjustments/options'),
       apiRequest<StockAdjustment[]>(`/api/v1/inventory/adjustments?limit=${PAGE_SIZE}`),
     ])
-      .then(([options, adjustmentList]) => {
+      .then(async ([options, adjustmentList]) => {
         if (!active) return;
         setWarehouses(options.warehouses);
         setProducts(options.products.filter((product) => product.is_stocked));
         setAdjustments(adjustmentList);
+        const documentId = new URLSearchParams(window.location.search).get('document_id');
+        if (documentId) {
+          const detail = await apiRequest<StockAdjustment>(
+            `/api/v1/inventory/adjustments/${encodeURIComponent(documentId)}`,
+          );
+          if (active) setLinkedAdjustment(detail);
+        }
       })
       .catch((cause: unknown) => {
         if (!active) return;
@@ -201,6 +209,28 @@ function StockAdjustmentsContent() {
           Record stock increases or decreases with a reason. Posted adjustments cannot be edited.
         </p>
       </header>
+
+      {linkedAdjustment && (
+        <aside className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+          <h2 className="font-semibold text-emerald-950">
+            Linked adjustment: {linkedAdjustment.doc_no}
+          </h2>
+          <p className="mt-1 text-sm text-emerald-900">
+            {linkedAdjustment.doc_date} · {warehouseName(linkedAdjustment.warehouse_id)} ·{' '}
+            {linkedAdjustment.reason}
+          </p>
+          <ul className="mt-2 list-inside list-disc text-sm text-emerald-900">
+            {linkedAdjustment.lines.map((line) => (
+              <li key={line.id}>
+                {products.find((product) => product.id === line.product_id)?.name ??
+                  `Product ${line.product_id}`}{' '}
+                {Number(line.qty_signed) > 0 ? '+' : ''}
+                {line.qty_signed}
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
 
       {canCreate && (
         <form
@@ -376,7 +406,7 @@ function StockAdjustmentsContent() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {adjustments.map((adjustment) => (
-                <tr key={adjustment.id}>
+                <tr id={`stock-adjustment-${adjustment.id}`} key={adjustment.id}>
                   <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
                     {adjustment.doc_no}
                   </td>

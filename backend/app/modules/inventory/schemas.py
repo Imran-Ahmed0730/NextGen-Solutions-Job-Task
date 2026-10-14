@@ -46,3 +46,25 @@ class StockTransactionResponse(BaseModel):
     note: str | None
     created_by: int | None
     created_at: datetime
+
+
+class StockLedgerEntryResponse(StockTransactionResponse):
+    running_qty: Decimal
+
+
+class StockLedgerProductOption(BaseModel):
+    id: int
+    sku: str
+    name: str
+    unit_code: str
+
+
+class StockLedgerWarehouseOption(BaseModel):
+    id: int
+    code: str
+    name: str
+
+
+class StockLedgerOptionsResponse(BaseModel):
+    products: list[StockLedgerProductOption]
+    warehouses: list[StockLedgerWarehouseOption]

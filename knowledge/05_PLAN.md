@@ -53,8 +53,10 @@ rows with search, filtering, pagination, and permission gating. Stock transfers 
 `TRANSFER_OUT`/`TRANSFER_IN` ledger entries atomically, with central document numbering, audit, and
 a permission-gated screen. Stock adjustments now post signed quantity lines atomically through the
 inventory posting service, capture average cost, and have a permission-gated screen. Reservations,
-physical counts, the Product Stock Ledger screen, and the Phase 4 concurrency exit tests remain
-open.
+physical counts, and the Phase 4 concurrency exit tests remain open. The Product Stock Ledger screen
+now filters by product, warehouse, and date, with running balances and links to transfer/adjustment
+source documents. Reservation work is deferred until the Sales phase supplies its required
+sales-order-line linkage; do not invent an unlinked reservation flow.
 
 ## Phase 5 — Purchase
 **Build:** PO, goods receipt, direct purchase, purchase return, supplier due.

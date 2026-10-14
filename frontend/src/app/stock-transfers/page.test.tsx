@@ -29,6 +29,7 @@ import StockTransfersPage from './page';
 
 describe('StockTransfersPage', () => {
   beforeEach(() => {
+    window.history.replaceState({}, '', '/');
     mocks.apiRequest.mockReset();
     let storedTransfer: {
       id: number;
@@ -70,6 +71,18 @@ describe('StockTransfersPage', () => {
           lines: [{ id: 3, product_id: 7, qty: '2.500' }],
         };
         return Promise.resolve(storedTransfer);
+      }
+      if (path === '/api/v1/inventory/transfers/9') {
+        return Promise.resolve({
+          id: 9,
+          doc_no: 'TR-20260001',
+          doc_date: '2026-10-14',
+          from_warehouse_id: 1,
+          to_warehouse_id: 2,
+          status: 'POSTED',
+          note: null,
+          lines: [{ id: 3, product_id: 7, qty: '2.500' }],
+        });
       }
       if (path.startsWith('/api/v1/inventory/transfers')) {
         return Promise.resolve(storedTransfer ? [storedTransfer] : []);
@@ -137,5 +150,13 @@ describe('StockTransfersPage', () => {
         }),
       ).not.toBeInTheDocument();
     });
+  });
+
+  it('loads a transfer linked from the stock ledger', async () => {
+    window.history.replaceState({}, '', '/stock-transfers?document_id=9');
+    render(<StockTransfersPage />);
+
+    expect(await screen.findByText('Linked transfer: TR-20260001')).toBeInTheDocument();
+    expect(mocks.apiRequest).toHaveBeenCalledWith('/api/v1/inventory/transfers/9');
   });
 });

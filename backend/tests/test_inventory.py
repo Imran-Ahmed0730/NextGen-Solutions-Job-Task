@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -136,9 +137,7 @@ def test_stock_posting_updates_append_only_ledger_and_balance(db_session: Sessio
     )
     assert (
         db_session.scalar(
-            select(func.count(AuditLog.id)).where(
-                AuditLog.entity_type == "stock_transaction"
-            )
+            select(func.count(AuditLog.id)).where(AuditLog.entity_type == "stock_transaction")
         )
         == 2
     )
@@ -223,9 +222,7 @@ def test_stock_movement_rejects_invalid_quantity_signs(
 
 
 def test_stock_posting_rejects_fractional_quantity_for_whole_unit(db_session: Session) -> None:
-    actor, _, product, warehouse = _create_inventory_records(
-        db_session, allow_decimal=False
-    )
+    actor, _, product, warehouse = _create_inventory_records(db_session, allow_decimal=False)
 
     with pytest.raises(HTTPException) as error:
         _post(
@@ -258,9 +255,7 @@ def test_stock_posting_can_be_rolled_back_as_part_of_callers_transaction(
     assert db_session.scalar(select(func.count(StockTransaction.id))) == 0
     assert (
         db_session.scalar(
-            select(func.count(AuditLog.id)).where(
-                AuditLog.entity_type == "stock_transaction"
-            )
+            select(func.count(AuditLog.id)).where(AuditLog.entity_type == "stock_transaction")
         )
         == 0
     )
@@ -303,10 +298,15 @@ def test_stock_read_endpoints_require_inventory_permission(
         f"/api/v1/inventory/ledger?product_id={product.id}&warehouse_id={warehouse.id}",
         headers=headers,
     )
+    ledger_options = client.get("/api/v1/inventory/ledger/options", headers=headers)
     assert stock.status_code == 200
     assert stock.json()[0]["available"] == "4.000"
     assert ledger.status_code == 200
     assert len(ledger.json()) == 1
+    assert ledger.json()[0]["running_qty"] == "4.000"
+    assert ledger_options.status_code == 200
+    assert ledger_options.json()["products"][0]["sku"] == product.sku
+    assert ledger_options.json()["warehouses"][0]["code"] == warehouse.code
 
     readonly = User(
         username="inventory_readonly",
@@ -320,14 +320,96 @@ def test_stock_read_endpoints_require_inventory_permission(
         json={"username": readonly.username, "password": "ReadOnly-Password-123"},
     )
     assert readonly_login.status_code == 200
-    readonly_headers = {
-        "Authorization": f"Bearer {readonly_login.json()['access_token']}"
-    }
+    readonly_headers = {"Authorization": f"Bearer {readonly_login.json()['access_token']}"}
     assert client.get("/api/v1/inventory/stock", headers=readonly_headers).status_code == 403
     assert (
-        client.get("/api/v1/inventory/warehouse-stock", headers=readonly_headers).status_code
-        == 403
+        client.get("/api/v1/inventory/warehouse-stock", headers=readonly_headers).status_code == 403
     )
+    assert (
+        client.get("/api/v1/inventory/ledger/options", headers=readonly_headers).status_code == 403
+    )
+
+
+def test_stock_ledger_running_balance_and_date_filters(
+    client: TestClient, db_session: Session
+) -> None:
+    actor, password, product, warehouse = _create_inventory_records(db_session)
+    second_warehouse = Warehouse(name="Remote Warehouse", code="REMOTE")
+    db_session.add(second_warehouse)
+    db_session.commit()
+    db_session.refresh(second_warehouse)
+
+    dated_movements = [
+        (
+            warehouse,
+            MovementType.OPENING,
+            Decimal("10.000"),
+            datetime(2026, 10, 12, tzinfo=UTC),
+        ),
+        (
+            warehouse,
+            MovementType.SALE_DELIVERY,
+            Decimal("-2.000"),
+            datetime(2026, 10, 13, tzinfo=UTC),
+        ),
+        (
+            warehouse,
+            MovementType.ADJUSTMENT_IN,
+            Decimal("3.000"),
+            datetime(2026, 10, 14, tzinfo=UTC),
+        ),
+        (
+            second_warehouse,
+            MovementType.OPENING,
+            Decimal("5.000"),
+            datetime(2026, 10, 13, 12, tzinfo=UTC),
+        ),
+    ]
+    for movement_warehouse, movement_type, quantity, transaction_date in dated_movements:
+        post_stock_movement(
+            db_session,
+            product_id=product.id,
+            warehouse_id=movement_warehouse.id,
+            movement_type=movement_type,
+            qty_signed=quantity,
+            actor=actor,
+            txn_date=transaction_date,
+        )
+    db_session.commit()
+
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"username": actor.username, "password": password},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    date_filtered = client.get(
+        f"/api/v1/inventory/ledger?product_id={product.id}&warehouse_id={warehouse.id}"
+        "&date_from=2026-10-13&date_to=2026-10-13",
+        headers=headers,
+    )
+    first_page = client.get(
+        f"/api/v1/inventory/ledger?product_id={product.id}&warehouse_id={warehouse.id}" "&limit=2",
+        headers=headers,
+    )
+    all_warehouses = client.get(
+        f"/api/v1/inventory/ledger?product_id={product.id}&limit=4",
+        headers=headers,
+    )
+    invalid_range = client.get(
+        f"/api/v1/inventory/ledger?product_id={product.id}"
+        "&date_from=2026-10-14&date_to=2026-10-13",
+        headers=headers,
+    )
+
+    assert date_filtered.status_code == 200
+    assert len(date_filtered.json()) == 1
+    assert date_filtered.json()[0]["qty_signed"] == "-2.000"
+    assert date_filtered.json()[0]["running_qty"] == "8.000"
+    assert first_page.status_code == 200
+    assert [row["running_qty"] for row in first_page.json()] == ["11.000", "8.000"]
+    assert all_warehouses.status_code == 200
+    assert all_warehouses.json()[1]["running_qty"] == "5.000"
+    assert invalid_range.status_code == 422
 
 
 def test_warehouse_stock_view_includes_named_zero_balances_and_filters(
@@ -367,12 +449,8 @@ def test_warehouse_stock_view_includes_named_zero_balances_and_filters(
     assert rows[1]["warehouse_id"] == second_warehouse.id
     assert rows[1]["qty_on_hand"] == "0.000"
 
-    first_page = client.get(
-        "/api/v1/inventory/warehouse-stock?limit=1", headers=headers
-    )
-    second_page = client.get(
-        "/api/v1/inventory/warehouse-stock?offset=1&limit=1", headers=headers
-    )
+    first_page = client.get("/api/v1/inventory/warehouse-stock?limit=1", headers=headers)
+    second_page = client.get("/api/v1/inventory/warehouse-stock?offset=1&limit=1", headers=headers)
     assert first_page.json()[0]["warehouse_id"] == warehouse.id
     assert second_page.json()[0]["warehouse_id"] == second_warehouse.id
 
@@ -385,8 +463,6 @@ def test_warehouse_stock_view_includes_named_zero_balances_and_filters(
     assert len(filtered.json()) == 1
     assert filtered.json()[0]["warehouse_id"] == second_warehouse.id
 
-    empty_search = client.get(
-        "/api/v1/inventory/warehouse-stock?search=missing", headers=headers
-    )
+    empty_search = client.get("/api/v1/inventory/warehouse-stock?search=missing", headers=headers)
     assert empty_search.status_code == 200
     assert empty_search.json() == []

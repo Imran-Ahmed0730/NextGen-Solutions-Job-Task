@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -5,10 +7,11 @@ from app.core.database import get_db
 from app.core.security import require_permission
 from app.modules.auth.models import User
 from app.modules.inventory import service
-from app.modules.inventory.models import StockBalance, StockTransaction
+from app.modules.inventory.models import StockBalance
 from app.modules.inventory.schemas import (
     StockBalanceResponse,
-    StockTransactionResponse,
+    StockLedgerEntryResponse,
+    StockLedgerOptionsResponse,
     WarehouseStockResponse,
 )
 
@@ -51,19 +54,31 @@ def list_warehouse_stock(
     )
 
 
-@router.get("/ledger", response_model=list[StockTransactionResponse])
+@router.get("/ledger/options", response_model=StockLedgerOptionsResponse)
+def get_stock_ledger_options(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("inventory.stock.read")),
+) -> StockLedgerOptionsResponse:
+    return service.get_stock_ledger_options(db)
+
+
+@router.get("/ledger", response_model=list[StockLedgerEntryResponse])
 def list_stock_ledger(
     product_id: int = Query(ge=1),
     warehouse_id: int | None = Query(default=None, ge=1),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=500),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("inventory.stock.read")),
-) -> list[StockTransaction]:
+) -> list[StockLedgerEntryResponse]:
     return service.list_stock_ledger(
         db,
         product_id=product_id,
         warehouse_id=warehouse_id,
+        date_from=date_from,
+        date_to=date_to,
         offset=offset,
         limit=limit,
     )
