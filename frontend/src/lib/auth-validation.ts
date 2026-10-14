@@ -202,6 +202,31 @@ export const stockTransferSchema = z
     path: ['to_warehouse_id'],
   });
 
+export const stockAdjustmentSchema = z.object({
+  doc_date: z.string().date('Enter a valid adjustment date'),
+  warehouse_id: z.number().int().positive('Choose a warehouse'),
+  reason: z.string().trim().min(1, 'Enter an adjustment reason').max(500),
+  lines: z
+    .array(
+      z.object({
+        product_id: z.number().int().positive('Choose a product'),
+        qty_signed: z
+          .string()
+          .regex(
+            /^-?(?:0|[1-9]\d{0,14})(?:\.\d{1,3})?$/,
+            'Quantity must be nonzero with at most 3 decimal places',
+          )
+          .refine((value) => Number(value) !== 0, 'Quantity must not be zero'),
+      }),
+    )
+    .min(1, 'Add at least one product')
+    .max(500, 'An adjustment may contain at most 500 products')
+    .refine(
+      (items) => new Set(items.map((item) => item.product_id)).size === items.length,
+      'A product may only be selected once',
+    ),
+});
+
 export const expenseCategorySchema = z.object({
   name: z
     .string()

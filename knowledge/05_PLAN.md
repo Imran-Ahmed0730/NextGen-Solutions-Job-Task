@@ -51,8 +51,10 @@ posting service and its maintained product/warehouse balance projection, plus au
 current-stock and ledger read APIs. The Warehouse Stock screen displays named product/warehouse
 rows with search, filtering, pagination, and permission gating. Stock transfers now post paired
 `TRANSFER_OUT`/`TRANSFER_IN` ledger entries atomically, with central document numbering, audit, and
-a permission-gated screen. Reservations, adjustments, physical counts, the Product Stock Ledger
-screen, and the Phase 4 concurrency exit tests remain open.
+a permission-gated screen. Stock adjustments now post signed quantity lines atomically through the
+inventory posting service, capture average cost, and have a permission-gated screen. Reservations,
+physical counts, the Product Stock Ledger screen, and the Phase 4 concurrency exit tests remain
+open.
 
 ## Phase 5 — Purchase
 **Build:** PO, goods receipt, direct purchase, purchase return, supplier due.

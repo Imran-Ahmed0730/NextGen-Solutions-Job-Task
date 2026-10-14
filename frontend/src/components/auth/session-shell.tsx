@@ -137,6 +137,12 @@ const navigation = [
         icon: 'warehouse',
         permissions: ['inventory.transfers.read'],
       },
+      {
+        href: '/stock-adjustments',
+        label: 'Stock Adjustments',
+        icon: 'warehouse',
+        permissions: ['inventory.adjustments.read'],
+      },
     ],
   },
 ] as const;

@@ -8,6 +8,7 @@ from app.modules.auth.models import User
 from app.modules.inventory.models import StockBalance, StockTransaction  # noqa: F401
 from app.modules.product_categories.models import ProductCategory  # noqa: F401
 from app.modules.products.models import Product  # noqa: F401
+from app.modules.stock_adjustments.models import StockAdjustment, StockAdjustmentLine  # noqa: F401
 from app.modules.stock_transfers.models import StockTransfer, StockTransferLine  # noqa: F401
 from app.modules.units.models import Unit  # noqa: F401
 from app.modules.warehouses.models import Warehouse  # noqa: F401

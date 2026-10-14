@@ -164,6 +164,8 @@ ADMIN_PERMISSION_CATALOG = (
     ),
     PermissionDefinition("inventory.transfers.read", "inventory", "View stock transfers"),
     PermissionDefinition("inventory.transfers.create", "inventory", "Post stock transfers"),
+    PermissionDefinition("inventory.adjustments.read", "inventory", "View stock adjustments"),
+    PermissionDefinition("inventory.adjustments.create", "inventory", "Post stock adjustments"),
 )
 
 

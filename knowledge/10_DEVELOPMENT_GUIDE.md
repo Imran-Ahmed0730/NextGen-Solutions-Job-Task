@@ -117,6 +117,7 @@ The frontend route tree currently includes:
 | `/warehouses` | List, create, update, soft-delete, and restore warehouses |
 | `/warehouse-stock` | View on-hand, reserved, and available quantities by warehouse |
 | `/stock-transfers` | Post inter-warehouse stock transfers and browse transfer history |
+| `/stock-adjustments` | Post reasoned stock increases/decreases and browse adjustment history |
 | `/expense-categories` | List, create, update, soft-delete, and restore expense categories |
 | `/income-categories` | List, create, update, soft-delete, and restore income categories |
 | `/payment-methods` | List, create, update, soft-delete, and restore payment methods |
@@ -276,6 +277,10 @@ The implemented auth API is:
 | `GET /api/v1/inventory/transfers?offset=0&limit=50` | `inventory.transfers.read` | List posted stock transfers |
 | `GET /api/v1/inventory/transfers/{id}` | `inventory.transfers.read` | Read one posted stock transfer |
 | `POST /api/v1/inventory/transfers` | `inventory.transfers.create` | Atomically post a transfer and paired stock-ledger movements |
+| `GET /api/v1/inventory/adjustments/options` | `inventory.adjustments.read` | Read adjustment warehouse and stocked-product choices |
+| `GET /api/v1/inventory/adjustments?offset=0&limit=50` | `inventory.adjustments.read` | List posted stock adjustments |
+| `GET /api/v1/inventory/adjustments/{id}` | `inventory.adjustments.read` | Read one posted stock adjustment |
+| `POST /api/v1/inventory/adjustments` | `inventory.adjustments.create` | Atomically post signed adjustment lines and stock-ledger movements |
 | `GET /api/v1/expense-categories` | `master_data.expense_categories.read` | List expense categories; `include_inactive=true` includes deleted categories |
 | `POST /api/v1/expense-categories` | `master_data.expense_categories.create` | Create an expense category with an optional parent |
 | `PATCH /api/v1/expense-categories/{id}` | `master_data.expense_categories.update` | Update an expense category |
@@ -542,10 +547,17 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   `STOCK_TRANSFER` sequence in Document Numbering before posting transfers. The `/stock-transfers`
   screen supports multiple products and displays paginated posted-transfer history; access uses
   `inventory.transfers.read` and `inventory.transfers.create`.
+- The `stock_adjustments` module posts a reasoned document with positive or negative quantity lines
+  as `ADJUSTMENT_IN` or `ADJUSTMENT_OUT`. It captures current product average cost on each line,
+  routes every stock change through the shared posting service, and rolls back the document,
+  sequence, audits, ledger, and balances together on failure. Configure a `STOCK_ADJUSTMENT`
+  sequence before posting. The `/stock-adjustments` screen supports multiple lines and paginated
+  history; access uses `inventory.adjustments.read` and `inventory.adjustments.create`. Approval
+  hooks remain part of the later Approvals phase.
 - A weighted-average-cost helper follows the PRD formula; transaction-specific costing integration
   remains for purchase and production posting workflows.
-- Not complete: reservation lifecycle, adjustment/count workflows, the Product Stock Ledger
-  screen, and Phase 4 concurrency tests.
+- Not complete: reservation lifecycle, physical-count workflow, the Product Stock Ledger screen,
+  and Phase 4 concurrency tests.
 
 ### Planned, not yet implemented
 

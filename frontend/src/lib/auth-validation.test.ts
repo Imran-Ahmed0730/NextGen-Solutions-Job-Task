@@ -13,6 +13,7 @@ import {
   profileSchema,
   resetPasswordSchema,
   roleSchema,
+  stockAdjustmentSchema,
   unitSchema,
   userSchema,
   warehouseSchema,
@@ -262,6 +263,40 @@ describe('auth-validation schemas', () => {
     ).toBe(false);
   });
 
+  it('validates signed stock adjustment quantities and required reason', () => {
+    const validAdjustment = {
+      doc_date: '2026-10-14',
+      warehouse_id: 1,
+      reason: 'Physical review',
+      lines: [
+        { product_id: 1, qty_signed: '2.500' },
+        { product_id: 2, qty_signed: '-1.250' },
+      ],
+    };
+    expect(stockAdjustmentSchema.safeParse(validAdjustment).success).toBe(true);
+    expect(
+      stockAdjustmentSchema.safeParse({
+        ...validAdjustment,
+        reason: '   ',
+      }).success,
+    ).toBe(false);
+    expect(
+      stockAdjustmentSchema.safeParse({
+        ...validAdjustment,
+        lines: [{ product_id: 1, qty_signed: '0.000' }],
+      }).success,
+    ).toBe(false);
+    expect(
+      stockAdjustmentSchema.safeParse({
+        ...validAdjustment,
+        lines: [
+          { product_id: 1, qty_signed: '1.000' },
+          { product_id: 1, qty_signed: '-1.000' },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
   it('validates expense and income category schemas', () => {
     expect(
       expenseCategorySchema.safeParse({
@@ -376,4 +411,3 @@ describe('auth-validation schemas', () => {
     ).toBe(false);
   });
 });
-
