@@ -5,11 +5,22 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.core.config import get_settings
 from app.modules.auth.models import User
+from app.modules.company_settings.models import CompanySetting  # noqa: F401
+from app.modules.customers.models import Customer  # noqa: F401
+from app.modules.document_numbering.models import DocumentSequence  # noqa: F401
+from app.modules.expense_categories.models import ExpenseCategory  # noqa: F401
+from app.modules.income_categories.models import IncomeCategory  # noqa: F401
 from app.modules.inventory.models import StockBalance, StockTransaction  # noqa: F401
+from app.modules.money_accounts.models import MoneyAccount  # noqa: F401
+from app.modules.parties.models import PartyContact  # noqa: F401
+from app.modules.payment_methods.models import PaymentMethod  # noqa: F401
+from app.modules.price_lists.models import PriceList, ProductPrice  # noqa: F401
 from app.modules.product_categories.models import ProductCategory  # noqa: F401
 from app.modules.products.models import Product  # noqa: F401
+from app.modules.sales.models import SalesOrder, SalesOrderLine  # noqa: F401
 from app.modules.stock_adjustments.models import StockAdjustment, StockAdjustmentLine  # noqa: F401
 from app.modules.stock_transfers.models import StockTransfer, StockTransferLine  # noqa: F401
+from app.modules.suppliers.models import Supplier  # noqa: F401
 from app.modules.units.models import Unit  # noqa: F401
 from app.modules.warehouses.models import Warehouse  # noqa: F401
 

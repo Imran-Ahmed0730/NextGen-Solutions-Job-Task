@@ -44,6 +44,10 @@ POSTED ──return/reversal/adjustment──▶ new document (never edit the or
 ```
 
 ## 4. Master business cycle
+This is the target business workflow. For implementation sequencing, Phase 7 Sales initially
+fulfills orders from available/reserved stock; Production-backed shortage fulfillment is added in
+the supplemental Phase 8 described in `05_PLAN.md`.
+
 ```
 Supplier ─▶ Purchase Order ─▶ Goods Receive ─▶ [Stock ↑, Avg Cost, Supplier Due ↑]
                                    │

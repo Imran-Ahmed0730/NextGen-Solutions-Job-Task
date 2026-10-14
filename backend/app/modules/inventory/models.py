@@ -119,3 +119,54 @@ class StockBalance(Base):
     @property
     def available(self) -> Decimal:
         return self.qty_on_hand - self.qty_reserved
+
+
+class StockReservation(Base):
+    __tablename__ = "stock_reservations"
+    __table_args__ = (
+        CheckConstraint("qty > 0", name="ck_stock_reservations_positive_qty"),
+        CheckConstraint(
+            "qty_consumed >= 0 AND qty_released >= 0 AND qty_consumed + qty_released <= qty",
+            name="ck_stock_reservations_quantities_within_total",
+        ),
+        CheckConstraint(
+            "status IN ('ACTIVE', 'RELEASED', 'CONSUMED')",
+            name="ck_stock_reservations_status",
+        ),
+        Index("ix_stock_reservations_sales_order_line_id", "sales_order_line_id"),
+    )
+
+    id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)
+    sales_order_line_id: Mapped[int] = mapped_column(
+        ID_TYPE,
+        ForeignKey("sales_order_lines.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    product_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("products.id", ondelete="RESTRICT"), nullable=False
+    )
+    warehouse_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=False
+    )
+    qty: Mapped[Decimal] = mapped_column(Numeric(18, 3), nullable=False)
+    qty_consumed: Mapped[Decimal] = mapped_column(
+        Numeric(18, 3), nullable=False, default=Decimal("0.000"), server_default=text("0.000")
+    )
+    qty_released: Mapped[Decimal] = mapped_column(
+        Numeric(18, 3), nullable=False, default=Decimal("0.000"), server_default=text("0.000")
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="ACTIVE", server_default="ACTIVE"
+    )
+    created_by: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP"),
+    )

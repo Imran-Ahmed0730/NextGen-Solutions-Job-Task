@@ -5,10 +5,18 @@ Timeline is ignored; phases are ordered by dependency. A phase is complete only 
 ## Dependency order
 ```
 0 Foundation → 1 Auth → 2 Master Data → 3 Parties → 4 Inventory Engine
-→ 5 Purchase → 6 Money → 7 Production → 8 Sales → 9 Assets → 10 Employees
+→ 5 Purchase → 6 Money → 7 Sales → 8 Production → 9 Assets → 10 Employees
 → 11 Approvals → 12 Reports & Dashboard → 13 Hardening
 ```
-Inventory (4) comes before Purchase, Production and Sales. Money (6) comes before Sales so collections and dues can be tested. Approvals (11) are built as a generic engine; earlier phases leave hook points (`requires_approval` flag, status `PENDING_APPROVAL`).
+Inventory (4) comes before Purchase, Sales and Production. Money (6) comes before Sales so
+collections and dues can be tested. Sales orders and reservations (7) provide the source for
+production-order links and shortage fulfillment in Production (8). Approvals (11) are built as a
+generic engine; earlier phases leave hook points (`requires_approval` flag, status
+`PENDING_APPROVAL`).
+
+The AI software-development practice roadmap explicitly numbers phases through Phase 7 (Sales) but
+does not assign Production a phase. Production remains required by `03_PRD.md` and `09_SCHEMA.md`;
+Phase 8 below is this project's supplemental implementation phase for that required scope.
 
 ---
 ## Phase 0 — Foundation
@@ -38,11 +46,11 @@ Supplier Contacts, Supplier Statement.
 **Phase 3 exit:** customer/supplier CRUD and contact CRUD work with permissions, validation, soft
 delete/restore, and audit; the statement shows an opening-balance entry and its running balance.
 Sales/purchase/collection/payment statement entries are explicitly deferred until Phases 5, 6, and
-8 provide those posted transaction sources. Do not describe the current statement as a complete
+7 provide those posted transaction sources. Do not describe the current statement as a complete
 financial ledger before that integration is delivered and tested.
 
 ## Phase 4 — Inventory Engine (most critical)
-**Build:** `stock_transactions`, `stock_balances`, posting service (the only writer), average-cost calculator, reservations, transfer, adjustment, physical count, stock ledger, current stock view.
+**Build:** `stock_transactions`, `stock_balances`, posting service (the only writer), average-cost calculator, reservation lifecycle service, transfer, adjustment, physical count, stock ledger, current stock view.
 **Screens:** Current Stock, Product Stock Ledger, Stock Transfer, Stock Adjustment, Physical Count.
 **Exit:** invariant tests (balance = ledger sum), negative stock blocked, concurrent posting test, transfer atomicity.
 
@@ -52,11 +60,12 @@ current-stock and ledger read APIs. The Warehouse Stock screen displays named pr
 rows with search, filtering, pagination, and permission gating. Stock transfers now post paired
 `TRANSFER_OUT`/`TRANSFER_IN` ledger entries atomically, with central document numbering, audit, and
 a permission-gated screen. Stock adjustments now post signed quantity lines atomically through the
-inventory posting service, capture average cost, and have a permission-gated screen. Reservations,
-physical counts, and the Phase 4 concurrency exit tests remain open. The Product Stock Ledger screen
-now filters by product, warehouse, and date, with running balances and links to transfer/adjustment
-source documents. Reservation work is deferred until the Sales phase supplies its required
-sales-order-line linkage; do not invent an unlinked reservation flow.
+inventory posting service, capture average cost, and have a permission-gated screen. The Product Stock Ledger screen now filters by product, warehouse, and
+date, with running balances and links to transfer/adjustment source documents. The inventory-side
+reservation service now supports reserve, partial release, and partial consume while keeping
+reserved quantity separate from on-hand stock. A minimal sales-order/line persistence foundation
+provides the real foreign-key target; quotation linkage and Sales workflow remain Phase 7 work.
+Physical counts and the Phase 4 concurrency exit tests remain open.
 
 ## Phase 5 — Purchase
 **Build:** PO, goods receipt, direct purchase, purchase return, supplier due.
@@ -68,15 +77,15 @@ sales-order-line linkage; do not invent an unlinked reservation flow.
 **Screens:** Account Balances, Customer Collection, Supplier Payment, Expense Entry, Income Entry, Fund Transfer, Opening Balances, Account Ledger / Cash Book.
 **Exit:** account balance invariant; collections reduce customer due; payments reduce supplier due; transfer writes two linked rows.
 
-## Phase 7 — Production & Costing
-**Build:** BOM, production order, consumption, output, cost calculation (materials at avg cost + labor + overhead).
-**Screens:** BOM List, BOM Create/Edit, Production Order List, Create/Edit Production Order, Production Details & Costing.
-**Exit:** raw stock falls, finished stock rises, finished-good average cost correct, shortage blocked.
-
-## Phase 8 — Sales
-**Build:** quotation, sales order, reservation, delivery (COGS), invoice, sales return, customer due, order tracking quantities, credit-limit check, link to production orders.
+## Phase 7 — Sales
+**Build:** quotation, sales order, integrate the Phase 4 reservation service with order lines, delivery (COGS), invoice, sales return, customer due, order tracking quantities, credit-limit check.
 **Screens:** Quotation List, Create/Edit Quotation, Sales Order List, Create/Edit Sales Order, Sales Order Details, Delivery, Invoice List, Invoice Details/Print, Sales Return.
-**Exit:** delivery cuts stock + records COGS; invoice raises due; collection clears it; tracking numbers correct.
+**Exit:** delivery from reserved/available stock cuts stock and records COGS; invoice raises due; collection clears it; tracking numbers correct. Shortage fulfillment through production orders is completed in Phase 8.
+
+## Phase 8 — Production & Costing
+**Build:** BOM, production order, consumption, output, cost calculation (materials at avg cost + labor + overhead), and sales-order shortage fulfillment.
+**Screens:** BOM List, BOM Create/Edit, Production Order List, Create/Edit Production Order, Production Details & Costing.
+**Exit:** raw stock falls, finished stock rises, finished-good average cost is correct, shortages are blocked, and eligible sales-order shortages can be linked to production orders.
 
 ## Phase 9 — Assets
 **Build:** asset register, assignment, maintenance.

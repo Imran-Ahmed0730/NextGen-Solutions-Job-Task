@@ -10,7 +10,7 @@ rules are in `04_RULES.md`. Where sources conflict, follow the authority order r
 
 ## 2. Goals
 - Run the full business cycle reliably:
-  `Supplier → Raw Material Purchase → Stock → Production → Sale → Customer Due → Collection → Cash/Bank/MFS → Expense → Management Dashboard`
+  `Supplier → Raw Material Purchase → Stock → Sales Order → Production (if needed) → Delivery/Sale → Customer Due → Collection → Cash/Bank/MFS → Expense → Management Dashboard`
 - Provide one source of truth for stock and money (ledger-based, auditable).
 - Give management a real-time role-based dashboard and reports.
 - Be maintainable by a small team, built with AI assistance under strict, documented rules.

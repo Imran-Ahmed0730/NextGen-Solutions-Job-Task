@@ -62,7 +62,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Customer/supplier contact management screens
 - [x] Search, pagination, input validation, and permission denial coverage
 - [x] Exit: party/contact CRUD, audit, permissions, and opening-balance statement behavior tested
-- [ ] Extend customer statements with posted invoices, returns, and collections (Phase 6/8)
+- [ ] Extend customer statements with posted invoices, returns, and collections (Phase 6/7)
 - [ ] Extend supplier statements with posted purchases, returns, and payments (Phase 5/6)
 
 ## Phase 4 — Inventory Engine
@@ -76,7 +76,9 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Stock adjustments with reasons, captured average cost, and atomic signed stock postings
 - [x] Stock Adjustment screen with multi-line posting and paginated adjustment history
 - [x] Product Stock Ledger screen with filters, running balances, and source-document links
-- [ ] Reservations and reservation lifecycle service (deferred until sales order lines exist)
+- [x] Phase 4 reservation balance service (reserve/release/consume) with partial quantity tracking
+- [x] Minimal sales-order/line persistence and reservation foreign-key target
+- [ ] Integrate reservations with Sales order workflow in Phase 7
 - [ ] Physical count
 - [ ] Screens: Physical Count
 - [ ] Invariant, negative-stock and concurrency tests
@@ -99,24 +101,24 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Screens: 8 Money screens
 - [ ] Exit: account and due invariants pass
 
-## Phase 7 — Production
-- [ ] BOM + lines
-- [ ] Production order (draft → in progress → completed)
-- [ ] Consumption + output posting through inventory service
-- [ ] Cost calculation (materials + labor + overhead)
-- [ ] Screens: 5 Production screens
-- [ ] Exit: cost and stock effects tested
-
-## Phase 8 — Sales
+## Phase 7 — Sales
 - [ ] Quotation, sales order (+ convert quotation → order)
-- [ ] Reservation
-- [ ] Link order shortage → production order
+- [ ] Reserve/release order-line quantities through the Phase 4 reservation service
 - [ ] Delivery with COGS
 - [ ] Invoice, customer due, credit-limit check
 - [ ] Sales return
 - [ ] Order tracking (Ordered/Available/Reserved/Produced/Delivered/Remaining)
 - [ ] Screens: 9 Sales screens
 - [ ] Exit: stock + COGS + due tested together
+
+## Phase 8 — Production
+- [ ] BOM + lines
+- [ ] Production order (draft → in progress → completed)
+- [ ] Consumption + output posting through inventory service
+- [ ] Cost calculation (materials + labor + overhead)
+- [ ] Link sales-order shortages to production orders
+- [ ] Screens: 5 Production screens
+- [ ] Exit: cost and stock effects tested
 
 ## Phase 9 — Assets
 - [ ] Asset, assignment, maintenance models + services

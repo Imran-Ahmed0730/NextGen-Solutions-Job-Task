@@ -47,7 +47,7 @@ their respective transaction workflows.
 ## 4. Inventory
 **stock_transactions** (ledger, append-only): id, txn_date, product_id(FK), warehouse_id(FK), movement_type, qty_signed, unit_cost, source_type, source_id, source_line_id, note, created_by, created_at
 **stock_balances**: product_id(FK), warehouse_id(FK) (PK both), qty_on_hand, qty_reserved, updated_at
-**stock_reservations**: id, sales_order_line_id(FK), product_id, warehouse_id, qty, status(ACTIVE/RELEASED/CONSUMED)
+**stock_reservations**: id, sales_order_line_id(FK), product_id, warehouse_id, qty, qty_consumed, qty_released, status(ACTIVE/RELEASED/CONSUMED). `qty_consumed` and `qty_released` preserve partial lifecycle history; active quantity is `qty - qty_consumed - qty_released`. Reserve/release affect available stock only; consume reduces reserved quantity, increments the order line's delivered quantity, and posts a `SALE_DELIVERY` ledger movement at current average cost.
 **stock_transfers**: id, doc_no, doc_date, from_warehouse_id, to_warehouse_id, status, note
 **stock_transfer_lines**: id, transfer_id(FK), product_id, qty
 **stock_adjustments**: id, doc_no, doc_date, warehouse_id, reason, status
@@ -83,6 +83,11 @@ their respective transaction workflows.
 **invoice_lines**: id, invoice_id(FK), product_id, qty, unit_price, line_total, unit_cost_cogs
 **sales_returns**: id, doc_no, doc_date, customer_id, invoice_id(FK), warehouse_id, status, total
 **sales_return_lines**: id, return_id(FK), invoice_line_id(FK), product_id, qty, unit_price, unit_cost_cogs
+
+The Phase 4 reservation prerequisite migration creates only the `sales_orders` and
+`sales_order_lines` columns needed for valid reservation references. It does not implement the Sales
+workflow, screens, quotation linkage, or status transitions; `quotation_id` will receive its foreign
+key when the quotation table is implemented in Phase 7.
 
 ## 8. Money
 **money_transactions** (ledger, append-only): id, txn_date, account_id(FK), amount_signed, txn_type(COLLECTION/PAYMENT/EXPENSE/INCOME/TRANSFER_OUT/TRANSFER_IN/OPENING/PURCHASE_PAYMENT/SALARY), source_type, source_id, party_type, party_id, note, created_by, created_at

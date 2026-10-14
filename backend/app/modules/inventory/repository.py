@@ -4,7 +4,13 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, aliased
 
-from app.modules.inventory.models import StockBalance, StockTransaction
+from app.modules.inventory.models import StockBalance, StockReservation, StockTransaction
+
+
+def get_reservation_for_update(db: Session, reservation_id: int) -> StockReservation | None:
+    return db.scalar(
+        select(StockReservation).where(StockReservation.id == reservation_id).with_for_update()
+    )
 
 
 def get_balance(

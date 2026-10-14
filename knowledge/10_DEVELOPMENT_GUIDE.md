@@ -17,7 +17,7 @@ are not independent services.
 The target business cycle is:
 
 ```text
-Supplier → Purchase → Inventory → Production → Sales → Customer due
+Supplier → Purchase → Inventory → Sales order → Production (if needed) → Delivery/Sale → Customer due
           → Collection → Cash/Bank/MFS → Expenses → Management reports
 ```
 
@@ -559,13 +559,18 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   hooks remain part of the later Approvals phase.
 - A weighted-average-cost helper follows the PRD formula; transaction-specific costing integration
   remains for purchase and production posting workflows.
-- Not complete: reservation lifecycle, physical-count workflow, and Phase 4 concurrency tests.
-  Reservations are deferred until Sales implements the required `sales_order_line_id`; the current
-  schema does not include sales-order lines.
+- The inventory reservation service supports reserve, partial release, and partial consume. Reserve
+  changes `qty_reserved` only; consume reduces the reserved amount, increments the order line's
+  `qty_delivered`, and posts a `SALE_DELIVERY` movement through the shared stock service in the
+  caller's transaction. A minimal sales-order and sales-order-line persistence foundation supplies
+  the reservation FK, but Sales workflows,
+  quotation linkage, and status transitions are not implemented yet.
+- Not complete: physical-count workflow and Phase 4 concurrency exit tests. Reservation operations
+  are service-level only until Phase 7 Sales endpoints integrate them with order lifecycle rules.
 
 ### Planned, not yet implemented
 
-The remaining roadmap is inventory, purchase, money, production, sales, assets, employees,
+The remaining roadmap is inventory, purchase, money, sales, production, assets, employees,
 approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens

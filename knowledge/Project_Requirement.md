@@ -24,7 +24,7 @@ The system replaces manual records for a small manufacturing and trading company
 auditable application. Its target business cycle is:
 
 ```text
-Supplier -> Purchase -> Inventory -> Production -> Sale
+Supplier -> Purchase -> Inventory -> Sales Order -> Production (if needed) -> Delivery/Sale
          -> Customer Due -> Collection -> Cash/Bank/MFS -> Expense -> Dashboard
 ```
 
@@ -121,18 +121,24 @@ criteria and tests pass.
 | 4 | Inventory ledger, balances, reservations, transfers, adjustments, counts, and stock views |
 | 5 | Purchase orders, receipts, direct purchases, supplier due effects, and returns |
 | 6 | Money accounts and ledger, collections, payments, expenses, income, transfers, opening balances |
-| 7 | BOM, production orders, material consumption, output, and production costing |
-| 8 | Quotations, sales orders, reservations, delivery, invoices, returns, and customer dues |
+| 7 | Quotations, sales orders, reservations, delivery, invoices, returns, and customer dues |
+| 8 | BOM, production orders, material consumption, output, production costing, and sales-order shortage fulfillment |
 | 9 | Asset register, assignment, and maintenance |
 | 10 | Employee master, attendance, and basic payroll |
 | 11 | Approval rules, requests, decisions, and posting gates |
 | 12 | Reports, exports/print, dashboard, and audit-log screen |
 | 13 | Full-cycle testing, performance/security hardening, delivery documentation, and demo |
 
-Inventory precedes purchase, production, and sales. Money workflows precede complete party
-statement integration. Phase 3 statements initially contain the opening-balance line; later
-purchase, sales, return, collection, and payment postings extend those statements in their own
-phases. Do not claim the current opening-only statement is a complete financial ledger.
+The AI software-development practice roadmap explicitly numbers phases through Phase 7 (Sales) but
+does not assign Production a phase. Production remains required by `03_PRD.md` and `09_SCHEMA.md`;
+Phase 8 in this supporting plan is a supplemental implementation phase for that required scope.
+
+Inventory precedes purchase, sales, and production. Sales orders and reservations are implemented
+in Phase 7; Phase 8 production can then link production orders to sales-order shortages. Money
+workflows precede complete party statement integration. Phase 3 statements initially contain the
+opening-balance line; later purchase, sales, return, collection, and payment postings extend those
+statements in their own phases. Do not claim the current opening-only statement is a complete
+financial ledger.
 
 ## 6. Testing and completion
 

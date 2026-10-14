@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 from app.modules.auth.audit import record_audit
 from app.modules.auth.models import User
 from app.modules.inventory import repository
-from app.modules.inventory.models import MovementType, StockBalance, StockTransaction
+from app.modules.inventory.models import (
+    MovementType,
+    StockBalance,
+    StockReservation,
+    StockTransaction,
+)
 from app.modules.inventory.schemas import (
     StockLedgerEntryResponse,
     StockLedgerOptionsResponse,
@@ -16,6 +21,8 @@ from app.modules.inventory.schemas import (
     WarehouseStockResponse,
 )
 from app.modules.products import service as product_service
+from app.modules.sales import service as sales_service
+from app.modules.sales.models import SalesOrder, SalesOrderLine
 from app.modules.warehouses import service as warehouse_service
 
 INBOUND_MOVEMENTS = frozenset(
@@ -136,6 +143,169 @@ def post_stock_movement(
     )
     db.flush()
     return transaction
+
+
+def reserve_stock(
+    db: Session,
+    *,
+    sales_order_line_id: int,
+    qty: Decimal,
+    actor: User,
+    ip: str | None = None,
+) -> StockReservation:
+    _validate_positive_quantity(qty)
+    line_and_order = sales_service.lock_order_line_for_reservation(db, sales_order_line_id)
+    if line_and_order is None:
+        raise HTTPException(status_code=404, detail="Sales order line not found")
+    line, order = line_and_order
+
+    product = product_service.lock_product_for_stock_posting(db, line.product_id)
+    if product is None or not product.is_active or product.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if not product.is_stocked:
+        raise HTTPException(status_code=422, detail="Only stocked products can be reserved")
+    if not product.unit.allow_decimal and qty != qty.to_integral_value():
+        raise HTTPException(status_code=422, detail="Product unit does not allow decimal quantity")
+    if warehouse_service.get_active_warehouse(db, order.warehouse_id) is None:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+
+    balance = _get_or_create_locked_balance(
+        db, product_id=product.id, warehouse_id=order.warehouse_id
+    )
+    available_order_qty = line.qty_ordered - line.qty_delivered - line.qty_reserved
+    if qty > available_order_qty:
+        raise HTTPException(status_code=409, detail="RESERVATION_EXCEEDS_ORDER_REMAINING")
+    if balance.available < qty:
+        raise HTTPException(status_code=409, detail="STOCK_INSUFFICIENT")
+
+    now = datetime.now(UTC)
+    balance.qty_reserved += qty
+    balance.updated_at = now
+    sales_service.adjust_reserved_quantity(db, line=line, quantity_delta=qty, actor=actor, ip=ip)
+    reservation = StockReservation(
+        sales_order_line_id=line.id,
+        product_id=product.id,
+        warehouse_id=order.warehouse_id,
+        qty=qty,
+        created_by=actor.id,
+    )
+    db.add(reservation)
+    db.flush()
+    record_audit(
+        db,
+        actor_id=actor.id,
+        entity_type="stock_reservation",
+        entity_id=reservation.id,
+        action="CREATE",
+        after=_reservation_snapshot(reservation),
+        ip=ip,
+    )
+    db.flush()
+    return reservation
+
+
+def release_reservation(
+    db: Session,
+    *,
+    reservation_id: int,
+    qty: Decimal,
+    actor: User,
+    ip: str | None = None,
+) -> StockReservation:
+    _validate_positive_quantity(qty)
+    reservation, line, _ = _get_locked_reservation_context(db, reservation_id)
+    remaining = reservation.qty - reservation.qty_consumed - reservation.qty_released
+    if qty > remaining:
+        raise HTTPException(status_code=409, detail="RESERVATION_QUANTITY_EXCEEDED")
+
+    product = product_service.lock_product_for_stock_posting(db, reservation.product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    balance = repository.get_balance(
+        db, reservation.product_id, reservation.warehouse_id, for_update=True
+    )
+    if balance is None or balance.qty_reserved < qty:
+        raise HTTPException(status_code=409, detail="RESERVATION_BALANCE_INVALID")
+
+    before = _reservation_snapshot(reservation)
+    now = datetime.now(UTC)
+    reservation.qty_released += qty
+    reservation.status = _reservation_status(reservation)
+    reservation.updated_at = now
+    balance.qty_reserved -= qty
+    balance.updated_at = now
+    sales_service.adjust_reserved_quantity(db, line=line, quantity_delta=-qty, actor=actor, ip=ip)
+    db.flush()
+    record_audit(
+        db,
+        actor_id=actor.id,
+        entity_type="stock_reservation",
+        entity_id=reservation.id,
+        action="UPDATE",
+        before=before,
+        after=_reservation_snapshot(reservation),
+        ip=ip,
+    )
+    db.flush()
+    return reservation
+
+
+def consume_reservation(
+    db: Session,
+    *,
+    reservation_id: int,
+    qty: Decimal,
+    actor: User,
+    ip: str | None = None,
+) -> tuple[StockReservation, StockTransaction]:
+    _validate_positive_quantity(qty)
+    reservation, line, _ = _get_locked_reservation_context(db, reservation_id)
+    remaining = reservation.qty - reservation.qty_consumed - reservation.qty_released
+    if qty > remaining:
+        raise HTTPException(status_code=409, detail="RESERVATION_QUANTITY_EXCEEDED")
+
+    product = product_service.lock_product_for_stock_posting(db, reservation.product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    balance = repository.get_balance(
+        db, reservation.product_id, reservation.warehouse_id, for_update=True
+    )
+    if balance is None or balance.qty_reserved < qty:
+        raise HTTPException(status_code=409, detail="RESERVATION_BALANCE_INVALID")
+
+    before = _reservation_snapshot(reservation)
+    now = datetime.now(UTC)
+    reservation.qty_consumed += qty
+    reservation.status = _reservation_status(reservation)
+    reservation.updated_at = now
+    balance.qty_reserved -= qty
+    balance.updated_at = now
+    sales_service.consume_reserved_quantity(db, line=line, quantity=qty, actor=actor, ip=ip)
+    transaction = post_stock_movement(
+        db,
+        product_id=reservation.product_id,
+        warehouse_id=reservation.warehouse_id,
+        movement_type=MovementType.SALE_DELIVERY,
+        qty_signed=-qty,
+        unit_cost=product.avg_cost,
+        source_type="STOCK_RESERVATION",
+        source_id=reservation.id,
+        source_line_id=line.id,
+        actor=actor,
+        txn_date=now,
+    )
+    record_audit(
+        db,
+        actor_id=actor.id,
+        entity_type="stock_reservation",
+        entity_id=reservation.id,
+        action="UPDATE",
+        before=before,
+        after=_reservation_snapshot(reservation),
+        ip=ip,
+    )
+    db.flush()
+    return reservation, transaction
 
 
 def list_stock(
@@ -301,6 +471,64 @@ def _validate_quantity(value: Decimal) -> None:
         raise HTTPException(status_code=422, detail="Quantity exceeds supported precision")
     if value != value.quantize(QUANTITY_SCALE):
         raise HTTPException(status_code=422, detail="Quantity supports at most 3 decimal places")
+
+
+def _validate_positive_quantity(value: Decimal) -> None:
+    _validate_quantity(value)
+    if value < 0:
+        raise HTTPException(status_code=422, detail="Quantity must be positive")
+
+
+def _get_or_create_locked_balance(
+    db: Session, *, product_id: int, warehouse_id: int
+) -> StockBalance:
+    balance = repository.get_balance(db, product_id, warehouse_id, for_update=True)
+    if balance is None:
+        balance = StockBalance(
+            product_id=product_id,
+            warehouse_id=warehouse_id,
+            qty_on_hand=Decimal("0.000"),
+            qty_reserved=Decimal("0.000"),
+        )
+        db.add(balance)
+        db.flush()
+    return balance
+
+
+def _get_locked_reservation_context(
+    db: Session, reservation_id: int
+) -> tuple[StockReservation, SalesOrderLine, SalesOrder]:
+    reservation = repository.get_reservation_for_update(db, reservation_id)
+    if reservation is None:
+        raise HTTPException(status_code=404, detail="Stock reservation not found")
+    line_and_order = sales_service.lock_order_line_for_reservation(
+        db, reservation.sales_order_line_id
+    )
+    if line_and_order is None:
+        raise HTTPException(status_code=409, detail="RESERVATION_ORDER_LINE_MISSING")
+    line, order = line_and_order
+    if line.product_id != reservation.product_id or order.warehouse_id != reservation.warehouse_id:
+        raise HTTPException(status_code=409, detail="RESERVATION_ORDER_LINE_MISMATCH")
+    return reservation, line, order
+
+
+def _reservation_status(reservation: StockReservation) -> str:
+    remaining = reservation.qty - reservation.qty_consumed - reservation.qty_released
+    if remaining > 0:
+        return "ACTIVE"
+    return "RELEASED" if reservation.qty_released > 0 else "CONSUMED"
+
+
+def _reservation_snapshot(reservation: StockReservation) -> dict[str, object]:
+    return {
+        "sales_order_line_id": reservation.sales_order_line_id,
+        "product_id": reservation.product_id,
+        "warehouse_id": reservation.warehouse_id,
+        "qty": str(reservation.qty),
+        "qty_consumed": str(reservation.qty_consumed),
+        "qty_released": str(reservation.qty_released),
+        "status": reservation.status,
+    }
 
 
 def _validate_unit_cost(value: Decimal) -> None:
