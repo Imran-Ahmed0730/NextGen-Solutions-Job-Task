@@ -157,6 +157,17 @@ const navigation = [
       },
     ],
   },
+  {
+    label: 'Purchase',
+    items: [
+      {
+        href: '/purchase-orders',
+        label: 'Purchase Orders',
+        icon: 'supplier',
+        permissions: ['purchase.orders.read'],
+      },
+    ],
+  },
 ] as const;
 
 const iconPaths = {

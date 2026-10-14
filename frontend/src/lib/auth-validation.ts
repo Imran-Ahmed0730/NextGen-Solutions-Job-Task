@@ -338,6 +338,38 @@ export const supplierSchema = z.object({
   is_active: z.boolean(),
 });
 
+const purchaseOrderQuantity = z
+  .string()
+  .regex(/^\d{1,15}(?:\.\d{1,3})?$/, 'Enter a quantity with up to 3 decimal places')
+  .refine((value) => /[1-9]/.test(value), 'Quantity must be greater than zero');
+const purchaseOrderUnitPrice = z
+  .string()
+  .regex(/^\d{1,16}(?:\.\d{1,2})?$/, 'Enter an amount with up to 2 decimal places');
+
+export const purchaseOrderSchema = z.object({
+  doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid document date'),
+  supplier_id: z.number().int().positive('Select a supplier'),
+  warehouse_id: z.number().int().positive('Select a warehouse'),
+  expected_date: z
+    .string()
+    .regex(/^$|^\d{4}-\d{2}-\d{2}$/, 'Enter a valid expected date')
+    .transform((value) => value || null),
+  discount: z
+    .string()
+    .regex(/^\d{1,16}(?:\.\d{1,2})?$/, 'Enter a discount with up to 2 decimal places'),
+  note: z.string().max(2000, 'Use at most 2000 characters'),
+  lines: z
+    .array(
+      z.object({
+        product_id: z.number().int().positive('Select a product'),
+        qty: purchaseOrderQuantity,
+        unit_price: purchaseOrderUnitPrice,
+      }),
+    )
+    .min(1, 'Add at least one product')
+    .max(500, 'A purchase order can have at most 500 lines'),
+});
+
 const optionalPartyBangladeshMobile = z
   .string()
   .trim()

@@ -579,10 +579,28 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 - Reservation operations are service-level only until Phase 7 Sales endpoints integrate them with
   order lifecycle rules.
 
+### Phase 5 in progress — Purchase Order drafts
+
+- The `purchase_orders` and `purchase_order_lines` tables store the purchase-order header, stocked
+  product lines, totals, and received quantities. Their migration also introduces read, create, and
+  draft-update permissions for the Administrator role.
+- `POST /api/v1/purchase/orders` creates a DRAFT; `PUT /api/v1/purchase/orders/{id}` edits DRAFT
+  documents only. Both validate active suppliers/warehouses and active stocked products, preserve
+  decimal quantities and money as `Decimal`, calculate line totals to cents, use the central
+  `PURCHASE_ORDER` document sequence, and write audit snapshots in the same transaction.
+- `GET /api/v1/purchase/orders` lists documents, `GET /api/v1/purchase/orders/{id}` retrieves one,
+  and `GET /api/v1/purchase/orders/options` supplies active suppliers, warehouses, and stocked
+  products. The `/purchase-orders` screen supports draft creation/editing and list/details, gated by
+  `purchase.orders.read`, `purchase.orders.create`, and `purchase.orders.update`.
+- The UI/API currently implement draft workflows only. Submit/approve/reject transitions are
+  deferred to Phase 11; goods receipt, direct purchase, returns, inventory/cost updates, and
+  supplier due posting remain unimplemented. Configure a `PURCHASE_ORDER` sequence before creating
+  drafts.
+
 ### Planned, not yet implemented
 
-The remaining roadmap is inventory, purchase, money, sales, production, assets, employees,
-approvals, reports/dashboard, and full-cycle hardening. Consult
+The remaining roadmap includes the Phase 4 live concurrency check, the rest of purchase, money,
+sales, production, assets, employees, approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens
 are actually delivered.

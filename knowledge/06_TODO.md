@@ -86,11 +86,13 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Exit: all inventory invariants pass
 
 ## Phase 5 — Purchase
-- [ ] PO + lines, status machine
+- [x] Purchase Order header/lines, DRAFT create/edit/list/details, validation, audit, and permissions
+- [ ] PO submission/approval/status transitions (approval actions deferred to Phase 11)
 - [ ] Goods receipt (post → stock + cost + due)
 - [ ] Direct purchase
 - [ ] Purchase return
-- [ ] Screens: PO List, Create/Edit PO, PO Details, Goods Receive, Direct Purchase, Purchase Return
+- [x] Screens: PO List, Create/Edit PO, PO Details
+- [ ] Screens: Goods Receive, Direct Purchase, Purchase Return
 - [ ] Exit: receive/return atomicity tested
 
 ## Phase 6 — Money

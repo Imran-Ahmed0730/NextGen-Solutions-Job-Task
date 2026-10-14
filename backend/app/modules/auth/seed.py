@@ -156,6 +156,9 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("inventory.adjustments.create", "inventory", "Post stock adjustments"),
     PermissionDefinition("inventory.physical_counts.read", "inventory", "View physical counts"),
     PermissionDefinition("inventory.physical_counts.create", "inventory", "Manage physical counts"),
+    PermissionDefinition("purchase.orders.read", "purchase", "View purchase orders"),
+    PermissionDefinition("purchase.orders.create", "purchase", "Create purchase orders"),
+    PermissionDefinition("purchase.orders.update", "purchase", "Update purchase order drafts"),
 )
 
 
