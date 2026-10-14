@@ -569,9 +569,15 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   entry, calculate variances against the snapshot, and post signed `COUNT_ADJUSTMENT` movements
   atomically. Posting refuses stale stock or a changed stocked-product scope. The count number is
   allocated only when posted, so abandoned open sheets do not consume posted document numbers.
-- Not complete: Phase 4 inventory invariant, negative-stock, and concurrency exit tests. Reservation
-  operations are service-level only until Phase 7 Sales endpoints integrate them with order
-  lifecycle rules.
+- Inventory invariant tests assert that the balance equals the signed ledger total across every
+  movement type and that a stocked product cannot issue reserved stock or become negative. A real
+  concurrent-posting test is opt-in: set `INVENTORY_CONCURRENCY_DATABASE_URL` to a separately
+  migrated MySQL database whose name ends in `_test`, then run
+  `pytest tests/test_inventory_concurrency.py`. The test refuses non-MySQL URLs and databases
+  without the `_test` suffix, uses uniquely named records, and removes only those records afterward;
+  it never falls back to the application or shared development database.
+- Reservation operations are service-level only until Phase 7 Sales endpoints integrate them with
+  order lifecycle rules.
 
 ### Planned, not yet implemented
 

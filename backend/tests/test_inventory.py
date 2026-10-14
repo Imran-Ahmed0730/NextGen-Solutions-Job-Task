@@ -184,6 +184,30 @@ def test_stocked_product_cannot_become_negative_or_consume_reserved_stock(
         )
     assert reserved_error.value.detail == "STOCK_INSUFFICIENT"
 
+    _post(
+        db_session,
+        actor,
+        product,
+        warehouse,
+        MovementType.SALE_DELIVERY,
+        Decimal("-3.000"),
+    )
+    db_session.flush()
+    balance = db_session.get(StockBalance, (product.id, warehouse.id))
+    assert balance is not None
+    assert balance.qty_on_hand == Decimal("2.000")
+    assert balance.qty_reserved == Decimal("2.000")
+    assert balance.available == Decimal("0.000")
+    assert (
+        db_session.scalar(
+            select(func.sum(StockTransaction.qty_signed)).where(
+                StockTransaction.product_id == product.id,
+                StockTransaction.warehouse_id == warehouse.id,
+            )
+        )
+        == balance.qty_on_hand
+    )
+
 
 def test_non_stocked_product_can_post_negative_quantity(db_session: Session) -> None:
     actor, _, product, warehouse = _create_inventory_records(db_session, is_stocked=False)
@@ -201,6 +225,50 @@ def test_non_stocked_product_can_post_negative_quantity(db_session: Session) -> 
     balance = db_session.get(StockBalance, (product.id, warehouse.id))
     assert balance is not None
     assert balance.qty_on_hand == Decimal("-3.000")
+    assert (
+        db_session.scalar(
+            select(func.sum(StockTransaction.qty_signed)).where(
+                StockTransaction.product_id == product.id,
+                StockTransaction.warehouse_id == warehouse.id,
+            )
+        )
+        == balance.qty_on_hand
+    )
+
+
+def test_stock_balance_matches_ledger_for_every_movement_type(db_session: Session) -> None:
+    actor, _, product, warehouse = _create_inventory_records(db_session)
+    movements = [
+        (MovementType.OPENING, Decimal("10.000")),
+        (MovementType.PURCHASE_RECEIPT, Decimal("1.000")),
+        (MovementType.PURCHASE_RETURN, Decimal("-1.000")),
+        (MovementType.PRODUCTION_CONSUME, Decimal("-1.000")),
+        (MovementType.PRODUCTION_OUTPUT, Decimal("1.000")),
+        (MovementType.SALE_DELIVERY, Decimal("-1.000")),
+        (MovementType.SALE_RETURN, Decimal("1.000")),
+        (MovementType.TRANSFER_OUT, Decimal("-1.000")),
+        (MovementType.TRANSFER_IN, Decimal("1.000")),
+        (MovementType.ADJUSTMENT_IN, Decimal("1.000")),
+        (MovementType.ADJUSTMENT_OUT, Decimal("-1.000")),
+        (MovementType.COUNT_ADJUSTMENT, Decimal("2.000")),
+        (MovementType.COUNT_ADJUSTMENT, Decimal("-1.000")),
+    ]
+
+    for movement_type, quantity in movements:
+        _post(db_session, actor, product, warehouse, movement_type, quantity)
+    db_session.commit()
+
+    balance = db_session.get(StockBalance, (product.id, warehouse.id))
+    assert balance is not None
+    ledger_total = db_session.scalar(
+        select(func.sum(StockTransaction.qty_signed)).where(
+            StockTransaction.product_id == product.id,
+            StockTransaction.warehouse_id == warehouse.id,
+        )
+    )
+    assert {movement_type for movement_type, _ in movements} == set(MovementType)
+    assert ledger_total == balance.qty_on_hand == Decimal("11.000")
+    assert balance.qty_reserved == Decimal("0.000")
 
 
 @pytest.mark.parametrize(

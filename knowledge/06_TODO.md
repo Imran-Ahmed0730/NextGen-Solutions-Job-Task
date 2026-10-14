@@ -82,6 +82,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Physical count snapshot, counted quantities, variance review, and atomic posting
 - [x] Physical Count screen with permission gating
 - [ ] Invariant, negative-stock and concurrency tests
+- [ ] Run `backend/tests/test_inventory_concurrency.py` against a separately migrated MySQL database ending in `_test`; it is skipped unless `INVENTORY_CONCURRENCY_DATABASE_URL` is configured
 - [ ] Exit: all inventory invariants pass
 
 ## Phase 5 — Purchase
