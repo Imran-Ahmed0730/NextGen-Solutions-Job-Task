@@ -90,7 +90,7 @@ workflow, screens, quotation linkage, or status transitions; `quotation_id` will
 key when the quotation table is implemented in Phase 7.
 
 ## 8. Money
-**money_transactions** (ledger, append-only): id, txn_date, account_id(FK), amount_signed, txn_type(COLLECTION/PAYMENT/EXPENSE/INCOME/TRANSFER_OUT/TRANSFER_IN/OPENING/PURCHASE_PAYMENT/SALARY), source_type, source_id, party_type, party_id, note, created_by, created_at
+**money_transactions** (ledger, append-only): id, txn_date, account_id(FK), amount_signed, txn_type(COLLECTION/PAYMENT/EXPENSE/INCOME/TRANSFER_OUT/TRANSFER_IN/OPENING/PURCHASE_PAYMENT/SALARY), source_type, source_id, party_type, party_id, note, created_by, created_at. `money_accounts.opening_balance` is the pre-ledger baseline; `OPENING` transactions are later signed adjustments included in the sum, and the baseline is immutable after the first ledger transaction.
 **customer_collections**: id, doc_no, doc_date, customer_id, account_id, amount, method_ref, status, note
 **collection_allocations**: id, collection_id(FK), invoice_id(FK), amount
 **supplier_payments**: id, doc_no, doc_date, supplier_id, account_id, amount, status, note

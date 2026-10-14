@@ -62,9 +62,7 @@ def _seed_bank_method(db: Session) -> PaymentMethod:
     return method
 
 
-def test_money_account_crud_soft_delete_and_audit(
-    client: TestClient, db_session: Session
-) -> None:
+def test_money_account_crud_soft_delete_and_audit(client: TestClient, db_session: Session) -> None:
     headers = _login_admin(client, db_session)
     method = _seed_bank_method(db_session)
 
@@ -129,9 +127,31 @@ def test_money_account_crud_soft_delete_and_audit(
     assert actions.count("STATUS") == 1
 
 
-def test_money_account_permission_denial(
-    client: TestClient, db_session: Session
-) -> None:
+def test_money_account_balance_endpoint(client: TestClient, db_session: Session) -> None:
+    headers = _login_admin(client, db_session)
+    method = _seed_bank_method(db_session)
+    created = client.post(
+        "/api/v1/money-accounts",
+        headers=headers,
+        json={
+            "name": "Opening Balance Account",
+            "type": "BANK",
+            "payment_method_id": method.id,
+            "opening_balance": "200.00",
+        },
+    )
+    assert created.status_code == 201
+
+    response = client.get(
+        f"/api/v1/money-transactions/accounts/{created.json()['id']}/balance",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"account_id": created.json()["id"], "balance": "200.00"}
+
+
+def test_money_account_permission_denial(client: TestClient, db_session: Session) -> None:
     user = User(
         username="readonly",
         full_name="Read Only",
@@ -156,12 +176,15 @@ def test_money_account_permission_denial(
         == 403
     )
     assert (
-        client.patch(
-            "/api/v1/money-accounts/1", headers=headers, json={"name": "X"}
-        ).status_code
+        client.patch("/api/v1/money-accounts/1", headers=headers, json={"name": "X"}).status_code
         == 403
     )
     assert client.delete("/api/v1/money-accounts/1", headers=headers).status_code == 403
+    assert client.post("/api/v1/money-accounts/1/activate", headers=headers).status_code == 403
     assert (
-        client.post("/api/v1/money-accounts/1/activate", headers=headers).status_code == 403
+        client.get(
+            "/api/v1/money-transactions/accounts/1/balance",
+            headers=headers,
+        ).status_code
+        == 403
     )

@@ -64,6 +64,7 @@ is protected.
 │   │   ├── modules/income_categories/  # Flat income categories
 │   │   ├── modules/payment_methods/    # CASH/BANK/MFS/ONLINE payment methods
 │   │   ├── modules/money_accounts/     # Cash/bank/MFS accounts for money movements
+│   │   ├── modules/money_transactions/ # Append-only money ledger and balance service
 │   │   ├── modules/price_lists/        # Price lists and product prices
 │   │   ├── modules/company_settings/    # Flexible key/value company settings
 │   │   └── main.py              # FastAPI app and router registration
@@ -310,6 +311,7 @@ The implemented auth API is:
 | `PATCH /api/v1/money-accounts/{id}` | `master_data.money_accounts.update` | Update a money account |
 | `DELETE /api/v1/money-accounts/{id}` | `master_data.money_accounts.delete` | Soft-delete a money account |
 | `POST /api/v1/money-accounts/{id}/activate` | `master_data.money_accounts.update` | Restore a soft-deleted money account |
+| `GET /api/v1/money-transactions/accounts/{id}/balance` | `money.transactions.read` | Read opening balance plus posted money transactions |
 | `GET /api/v1/price-lists` | `master_data.price_lists.read` | List price lists; `include_inactive=true` includes deleted lists |
 | `POST /api/v1/price-lists` | `master_data.price_lists.create` | Create a price list with optional validity range and default flag |
 | `PATCH /api/v1/price-lists/{id}` | `master_data.price_lists.update` | Update a price list |
@@ -645,9 +647,26 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   screen provides eligible Goods Receipt lines, quantity validation, posting, and paginated history;
   access is gated by `purchase.returns.read` and `purchase.returns.create`.
 
+### Phase 6 in progress — Money transaction ledger
+
+- The `money_transactions` table is an append-only signed ledger with transaction type, account,
+  source, party, date, and audit fields. The balance service calculates each account as
+  `money_accounts.opening_balance + SUM(money_transactions.amount_signed)`.
+- Posting locks the account row and reads ledger rows with locking/current-read semantics before
+  checking the resulting balance, preventing concurrent postings or an older transaction snapshot
+  from spending the same funds on MySQL. Negative resulting balances are rejected unless that
+  account permits overdrafts. Each transaction and its audit entry are written in the caller's
+  database transaction; the service does not commit independently.
+- The account's `opening_balance` is the pre-ledger baseline. `OPENING` entries represent later
+  signed adjustments, and account maintenance rejects changing the baseline after the first ledger
+  transaction. Collections, supplier payments, expenses, income, transfers, and ledger screens will
+  call this shared service in their respective Phase 6 slices. The balance read endpoint is gated by
+  `money.transactions.read`; arbitrary transaction posting is intentionally available only through
+  the service so document workflows can post the money effect atomically.
+
 ### Planned, not yet implemented
 
-The remaining roadmap includes the rest of purchase, money, sales, production, assets, employees,
+The remaining roadmap includes the rest of purchase and money, sales, production, assets, employees,
 approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens

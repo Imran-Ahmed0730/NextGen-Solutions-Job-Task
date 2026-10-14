@@ -8,7 +8,11 @@ from app.modules.auth.audit import record_audit
 from app.modules.auth.models import User
 from app.modules.money_accounts import repository
 from app.modules.money_accounts.models import MoneyAccount, MoneyAccountType
+from app.modules.money_transactions import service as money_transaction_service
 from app.modules.payment_methods.models import PaymentMethod
+
+CENT = Decimal("0.01")
+MAX_BALANCE = Decimal("9999999999999999.99")
 
 
 def list_money_accounts(
@@ -33,6 +37,10 @@ def create_money_account(
     opening_balance = _validate_balance(data.get("opening_balance"), default=Decimal("0.00"))
     if not isinstance(data.get("allow_overdraft", False), bool):
         raise HTTPException(status_code=422, detail="allow_overdraft must be a boolean")
+    if opening_balance < 0 and not data.get("allow_overdraft", False):
+        raise HTTPException(
+            status_code=422, detail="Negative opening balance requires overdraft permission"
+        )
     if not isinstance(data.get("is_active", True), bool):
         raise HTTPException(status_code=422, detail="is_active must be a boolean")
 
@@ -68,8 +76,10 @@ def update_money_account(
     actor: User,
     ip: str | None = None,
 ) -> MoneyAccount:
-    if account.deleted_at is not None:
+    locked_account = repository.get_money_account_for_update(db, account.id)
+    if locked_account is None or locked_account.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Money account not found")
+    account = locked_account
 
     name = account.name
     if "name" in data:
@@ -106,6 +116,28 @@ def update_money_account(
         if not isinstance(value, bool):
             raise HTTPException(status_code=422, detail="is_active must be a boolean")
         is_active = value
+
+    opening_balance_changed = opening_balance != account.opening_balance
+    if opening_balance_changed and money_transaction_service.has_account_transactions(
+        db, account.id
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="MONEY_ACCOUNT_OPENING_BALANCE_LOCKED",
+        )
+    if opening_balance < 0 and not allow_overdraft:
+        raise HTTPException(
+            status_code=422, detail="Negative opening balance requires overdraft permission"
+        )
+    if not allow_overdraft and (account.allow_overdraft or opening_balance_changed):
+        resulting_balance = money_transaction_service.get_account_balance_for_update(db, account.id)
+        if opening_balance_changed:
+            resulting_balance += opening_balance - account.opening_balance
+        if resulting_balance < 0:
+            raise HTTPException(
+                status_code=409,
+                detail="MONEY_ACCOUNT_OVERDRAFT_REQUIRED",
+            )
 
     before = _snapshot(account)
     account.name = name
@@ -231,11 +263,21 @@ def _validate_balance(value: object, *, default: Decimal) -> Decimal:
     if value is None:
         return default
     try:
-        return Decimal(str(value))
+        balance = Decimal(str(value))
     except (InvalidOperation, TypeError, ValueError) as exc:
         raise HTTPException(
             status_code=422, detail="Opening balance is not a valid number"
         ) from exc
+    if not balance.is_finite() or abs(balance) > MAX_BALANCE:
+        raise HTTPException(status_code=422, detail="Opening balance is outside supported range")
+    try:
+        if balance.quantize(CENT) != balance:
+            raise HTTPException(
+                status_code=422, detail="Opening balance cannot have more than two decimals"
+            )
+    except InvalidOperation as exc:
+        raise HTTPException(status_code=422, detail="Opening balance is invalid") from exc
+    return balance
 
 
 def _snapshot(account: MoneyAccount) -> dict[str, object]:

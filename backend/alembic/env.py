@@ -14,6 +14,7 @@ from app.modules.goods_receipts.models import GoodsReceipt, GoodsReceiptLine  # 
 from app.modules.income_categories.models import IncomeCategory  # noqa: F401
 from app.modules.inventory.models import StockBalance, StockTransaction  # noqa: F401
 from app.modules.money_accounts.models import MoneyAccount  # noqa: F401
+from app.modules.money_transactions.models import MoneyTransaction  # noqa: F401
 from app.modules.parties.models import PartyContact  # noqa: F401
 from app.modules.payment_methods.models import PaymentMethod  # noqa: F401
 from app.modules.physical_counts.models import PhysicalCount, PhysicalCountLine  # noqa: F401

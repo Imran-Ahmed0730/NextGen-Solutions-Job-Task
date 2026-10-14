@@ -21,3 +21,12 @@ def list_money_accounts(
 
 def get_money_account(db: Session, account_id: int) -> MoneyAccount | None:
     return db.get(MoneyAccount, account_id)
+
+
+def get_money_account_for_update(db: Session, account_id: int) -> MoneyAccount | None:
+    return db.scalar(
+        select(MoneyAccount)
+        .where(MoneyAccount.id == account_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )

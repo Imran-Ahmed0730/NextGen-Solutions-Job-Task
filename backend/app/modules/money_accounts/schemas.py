@@ -18,7 +18,12 @@ class MoneyAccountCreate(BaseModel):
     type: MoneyAccountType
     payment_method_id: PositiveId | None = None
     account_no: AccountNo | None = None
-    opening_balance: Decimal = Field(default=Decimal("0.00"))
+    opening_balance: Decimal = Field(
+        default=Decimal("0.00"),
+        max_digits=18,
+        decimal_places=2,
+        allow_inf_nan=False,
+    )
     allow_overdraft: bool = False
     is_active: bool = True
 
@@ -28,7 +33,12 @@ class MoneyAccountUpdate(BaseModel):
     type: MoneyAccountType | None = None
     payment_method_id: PositiveId | None = None
     account_no: AccountNo | None = None
-    opening_balance: Decimal | None = Field(default=None)
+    opening_balance: Decimal | None = Field(
+        default=None,
+        max_digits=18,
+        decimal_places=2,
+        allow_inf_nan=False,
+    )
     allow_overdraft: bool | None = None
     is_active: bool | None = None
 

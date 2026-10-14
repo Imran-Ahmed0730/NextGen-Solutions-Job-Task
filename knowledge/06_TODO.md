@@ -13,6 +13,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 ## Decisions made
 - Password recovery uses one-time reset links sent to the user's registered email address.
 - Lock an account for 15 minutes after 5 consecutive failed login attempts.
+- A money account's `opening_balance` is the pre-ledger baseline; later opening adjustments use signed `OPENING` ledger rows. The baseline is immutable after the first money transaction.
 
 ## Phase 0 — Foundation
 - [x] Create monorepo and git repository
@@ -100,7 +101,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Exit: receipt/return posting and rollback, stock, original-cost, and supplier-due behavior tested
 
 ## Phase 6 — Money
-- [ ] `money_transactions` + balance service
+- [x] `money_transactions` + balance service (append-only ledger, account locking, overdraft enforcement, and opening-balance invariant)
 - [ ] Customer collection, supplier payment
 - [ ] Expense, income
 - [ ] Fund transfer, opening balances

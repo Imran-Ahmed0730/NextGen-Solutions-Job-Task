@@ -48,6 +48,7 @@ Three groups: **Business rules** (the requirement wins), **Engineering rules**, 
 - B-MON-3: Fund transfer writes two linked rows (out + in) in one transaction.
 - B-MON-4: Cash/bank account balance may not go negative unless account allows overdraft.
 - B-MON-5: Invariant: `account balance == opening + SUM(money_transactions.amount_signed)`.
+- B-MON-6: `money_accounts.opening_balance` is the pre-ledger baseline. `OPENING` transactions are later signed adjustments included in the ledger sum; the baseline cannot be changed after the first money transaction.
 
 ### Documents & status
 - B-DOC-1: Posted documents are immutable. Corrections use returns, reversals or adjustments.
