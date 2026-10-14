@@ -71,9 +71,11 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Weighted-average cost calculation helper
 - [x] Current stock and stock ledger read APIs with permission checks
 - [x] Warehouse Stock screen with product search, warehouse filtering, pagination, and permission gating
+- [x] Stock transfers with central document numbering and atomic paired stock postings
+- [x] Stock Transfer screen with multi-line posting and paginated transfer history
 - [ ] Reservations and reservation lifecycle service
-- [ ] Transfer, adjustment, physical count
-- [ ] Screens: Product Stock Ledger, Transfer, Adjustment, Physical Count
+- [ ] Adjustment, physical count
+- [ ] Screens: Product Stock Ledger, Adjustment, Physical Count
 - [ ] Invariant, negative-stock and concurrency tests
 - [ ] Exit: all inventory invariants pass
 

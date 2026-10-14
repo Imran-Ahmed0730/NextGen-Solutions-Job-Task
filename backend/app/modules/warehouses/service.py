@@ -22,6 +22,13 @@ def get_warehouse(db: Session, warehouse_id: int) -> Warehouse | None:
     return repository.get_warehouse(db, warehouse_id)
 
 
+def get_active_warehouse(db: Session, warehouse_id: int) -> Warehouse | None:
+    warehouse = repository.get_warehouse(db, warehouse_id)
+    if warehouse is None or not warehouse.is_active or warehouse.deleted_at is not None:
+        return None
+    return warehouse
+
+
 def create_warehouse(
     db: Session, data: dict[str, object], actor: User, ip: str | None = None
 ) -> Warehouse:

@@ -171,6 +171,37 @@ export const warehouseSchema = z.object({
   is_active: z.boolean(),
 });
 
+export const stockTransferSchema = z
+  .object({
+    doc_date: z.string().date('Enter a valid transfer date'),
+    from_warehouse_id: z.number().int().positive('Choose a source warehouse'),
+    to_warehouse_id: z.number().int().positive('Choose a destination warehouse'),
+    note: z.string().trim().max(1000, 'Use at most 1000 characters').nullable(),
+    lines: z
+      .array(
+        z.object({
+          product_id: z.number().int().positive('Choose a product'),
+          qty: z
+            .string()
+            .regex(
+              /^(?:0|[1-9]\d{0,14})(?:\.\d{1,3})?$/,
+              'Quantity must be positive with at most 3 decimal places',
+            )
+            .refine((value) => Number(value) > 0, 'Quantity must be greater than zero'),
+        }),
+      )
+      .min(1, 'Add at least one product')
+      .max(500, 'A transfer may contain at most 500 products')
+      .refine(
+        (items) => new Set(items.map((item) => item.product_id)).size === items.length,
+        'A product may only be selected once',
+      ),
+  })
+  .refine((value) => value.from_warehouse_id !== value.to_warehouse_id, {
+    message: 'Choose different source and destination warehouses',
+    path: ['to_warehouse_id'],
+  });
+
 export const expenseCategorySchema = z.object({
   name: z
     .string()

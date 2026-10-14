@@ -20,6 +20,7 @@ from app.modules.payment_methods.router import router as payment_methods_router
 from app.modules.price_lists.router import router as price_lists_router
 from app.modules.product_categories.router import router as product_categories_router
 from app.modules.products.router import router as products_router
+from app.modules.stock_transfers.router import router as stock_transfers_router
 from app.modules.suppliers.router import router as suppliers_router
 from app.modules.units.router import router as units_router
 from app.modules.warehouses.router import router as warehouses_router
@@ -41,6 +42,7 @@ app.include_router(company_settings_router)
 app.include_router(customers_router)
 app.include_router(document_numbering_router)
 app.include_router(inventory_router)
+app.include_router(stock_transfers_router)
 app.include_router(suppliers_router)
 app.include_router(units_router)
 app.include_router(product_categories_router)

@@ -55,6 +55,7 @@ is protected.
 │   │   ├── core/                # Configuration, DB, security, exceptions, email
 │   │   ├── modules/auth/        # Authentication and user/role administration
 │   │   ├── modules/inventory/   # Stock ledger, balances, posting service, read APIs
+│   │   ├── modules/stock_transfers/ # Atomic inter-warehouse transfers
 │   │   ├── modules/units/       # Measurement-unit master-data reference module
 │   │   ├── modules/product_categories/ # Hierarchical product categories
 │   │   ├── modules/products/    # Products (stocked/trading) with category and unit
@@ -87,10 +88,10 @@ that structure for hierarchical categories. The `products`, `warehouses`, `expen
 `income_categories`, `payment_methods`, `money_accounts`, `price_lists`, and `company_settings` modules follow the same
 router/schema/model/service/repository split. `backend/app/core/` contains shared facilities such as
 JWT/session validation, configuration, database access, and SMTP delivery.
-The Phase 4 `inventory` module currently provides the append-only stock transaction ledger,
-product/warehouse balance projection, the sole stock-posting service, and authenticated stock and
-ledger read APIs. Reservation, transfer, adjustment, physical-count, and frontend workflows remain
-planned.
+The Phase 4 `inventory` module provides the append-only stock transaction ledger, product/warehouse
+balance projection, the sole stock-posting service, and authenticated stock and ledger read APIs.
+The separate `stock_transfers` module uses that posting service to move stock between warehouses
+atomically.
 
 The protected app shell uses a permission-filtered, grouped sidebar on desktop and a toggleable
 drawer on smaller screens. The top bar shows the current route and signed-in account.
@@ -115,6 +116,7 @@ The frontend route tree currently includes:
 | `/products` | List, create, update, soft-delete, and restore products |
 | `/warehouses` | List, create, update, soft-delete, and restore warehouses |
 | `/warehouse-stock` | View on-hand, reserved, and available quantities by warehouse |
+| `/stock-transfers` | Post inter-warehouse stock transfers and browse transfer history |
 | `/expense-categories` | List, create, update, soft-delete, and restore expense categories |
 | `/income-categories` | List, create, update, soft-delete, and restore income categories |
 | `/payment-methods` | List, create, update, soft-delete, and restore payment methods |
@@ -270,6 +272,10 @@ The implemented auth API is:
 | `PATCH /api/v1/warehouses/{id}` | `master_data.warehouses.update` | Update a warehouse |
 | `DELETE /api/v1/warehouses/{id}` | `master_data.warehouses.delete` | Soft-delete a warehouse |
 | `POST /api/v1/warehouses/{id}/activate` | `master_data.warehouses.update` | Restore a soft-deleted warehouse |
+| `GET /api/v1/inventory/transfers/options` | `inventory.transfers.read` | Read transfer warehouse and stocked-product choices |
+| `GET /api/v1/inventory/transfers?offset=0&limit=50` | `inventory.transfers.read` | List posted stock transfers |
+| `GET /api/v1/inventory/transfers/{id}` | `inventory.transfers.read` | Read one posted stock transfer |
+| `POST /api/v1/inventory/transfers` | `inventory.transfers.create` | Atomically post a transfer and paired stock-ledger movements |
 | `GET /api/v1/expense-categories` | `master_data.expense_categories.read` | List expense categories; `include_inactive=true` includes deleted categories |
 | `POST /api/v1/expense-categories` | `master_data.expense_categories.create` | Create an expense category with an optional parent |
 | `PATCH /api/v1/expense-categories/{id}` | `master_data.expense_categories.update` | Update an expense category |
@@ -530,10 +536,16 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   including zero balances for active stocked products, with warehouse and product search filters
   and pagination. The `/warehouse-stock` screen displays on-hand, reserved, and available amounts
   and is permission-gated in the navigation.
+- The `stock_transfers` module posts a transfer document and paired `TRANSFER_OUT`/`TRANSFER_IN`
+  ledger entries for each line in a single database transaction. Any posting failure rolls back the
+  document, sequence increment, audit entries, ledger rows, and balances together. Configure a
+  `STOCK_TRANSFER` sequence in Document Numbering before posting transfers. The `/stock-transfers`
+  screen supports multiple products and displays paginated posted-transfer history; access uses
+  `inventory.transfers.read` and `inventory.transfers.create`.
 - A weighted-average-cost helper follows the PRD formula; transaction-specific costing integration
   remains for purchase and production posting workflows.
-- Not complete: reservation lifecycle, transfer/adjustment/count workflows, the Product Stock Ledger
-  screen, and Phase 4 concurrency/transfer atomicity exit tests.
+- Not complete: reservation lifecycle, adjustment/count workflows, the Product Stock Ledger
+  screen, and Phase 4 concurrency tests.
 
 ### Planned, not yet implemented
 
