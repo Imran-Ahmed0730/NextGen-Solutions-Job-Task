@@ -42,6 +42,14 @@ def get_receipt(db: Session, receipt_id: int) -> GoodsReceipt | None:
     return repository.get_receipt(db, receipt_id)
 
 
+def get_receipt_for_purchase_return(db: Session, receipt_id: int) -> GoodsReceipt | None:
+    return repository.get_receipt_for_update(db, receipt_id)
+
+
+def list_receipt_lines_for_purchase_return(db: Session, receipt_id: int) -> list[GoodsReceiptLine]:
+    return repository.list_receipt_lines_for_update(db, receipt_id)
+
+
 def get_receipt_options(db: Session) -> GoodsReceiptOptionsResponse:
     orders = repository.list_receivable_orders(db, limit=200)
     options: list[GoodsReceiptOrderOption] = []

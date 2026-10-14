@@ -608,8 +608,8 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   ledger entries and balances, weighted-average product costs, PO received quantities/status, and
   audit records. The `GOODS_RECEIPT` sequence must be configured before posting.
 - Supplier statements include posted Goods Receipts and Direct Purchases in the running due
-  balance. Purchase returns and supplier payments are not yet implemented, so statements do not
-  yet reflect those offsets.
+  balance. Posted Purchase Returns are included as negative due entries; supplier payments remain
+  unimplemented until the Phase 6 money workflows.
 - The `/goods-receipts` screen supports choosing an eligible PO, entering received quantities and
   unit costs, posting, and viewing paginated receipt history. Access is gated by
   `purchase.receipts.read` and `purchase.receipts.create`.
@@ -625,6 +625,19 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   workflows.
 - Configure the `DIRECT_PURCHASE` sequence before posting. The `/direct-purchases` screen is gated
   by `purchase.direct_purchases.read` and `purchase.direct_purchases.create`.
+
+### Phase 5 in progress — Purchase Returns
+
+- A Purchase Return is posted against an original Goods Receipt and its lines. Returned quantities
+  cannot exceed the received quantity less prior returns; each return line takes the original
+  receipt unit cost rather than the product's current average cost.
+- Posting locks the source receipt and lines, then atomically writes `PURCHASE_RETURN` stock
+  movements, reduces supplier due, records the immutable return and audit entry, and advances the
+  `PURCHASE_RETURN` document sequence. Insufficient stock or any other posting failure rolls back
+  all effects. Returns against Direct Purchases are not in the current schema.
+- Supplier statements include posted returns as negative due entries. The `/purchase-returns`
+  screen provides eligible Goods Receipt lines, quantity validation, posting, and paginated history;
+  access is gated by `purchase.returns.read` and `purchase.returns.create`.
 
 ### Planned, not yet implemented
 

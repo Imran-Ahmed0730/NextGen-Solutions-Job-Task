@@ -407,6 +407,21 @@ export const directPurchaseSchema = z.object({
     .max(500, 'A direct purchase can have at most 500 lines'),
 });
 
+export const purchaseReturnSchema = z.object({
+  doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid return date'),
+  receipt_id: z.number().int().positive('Select a goods receipt'),
+  note: z.string().max(2000, 'Use at most 2000 characters'),
+  lines: z
+    .array(
+      z.object({
+        receipt_line_id: z.number().int().positive(),
+        qty: purchaseOrderQuantity,
+      }),
+    )
+    .min(1, 'Enter quantities for at least one receipt line')
+    .max(500, 'A purchase return can have at most 500 lines'),
+});
+
 const optionalPartyBangladeshMobile = z
   .string()
   .trim()

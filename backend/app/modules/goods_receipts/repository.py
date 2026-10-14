@@ -1,7 +1,7 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session, lazyload, selectinload
 
-from app.modules.goods_receipts.models import GoodsReceipt
+from app.modules.goods_receipts.models import GoodsReceipt, GoodsReceiptLine
 from app.modules.purchase_orders.models import PurchaseOrder, PurchaseOrderLine
 
 
@@ -35,6 +35,22 @@ def list_order_lines_for_update(db: Session, po_id: int) -> list[PurchaseOrderLi
         select(PurchaseOrderLine)
         .where(PurchaseOrderLine.po_id == po_id)
         .order_by(PurchaseOrderLine.id)
+        .with_for_update()
+    )
+    return list(db.scalars(statement))
+
+
+def get_receipt_for_update(db: Session, receipt_id: int) -> GoodsReceipt | None:
+    statement = select(GoodsReceipt).where(GoodsReceipt.id == receipt_id).with_for_update()
+    return db.scalar(statement)
+
+
+def list_receipt_lines_for_update(db: Session, receipt_id: int) -> list[GoodsReceiptLine]:
+    statement = (
+        select(GoodsReceiptLine)
+        .options(lazyload(GoodsReceiptLine.product))
+        .where(GoodsReceiptLine.receipt_id == receipt_id)
+        .order_by(GoodsReceiptLine.id)
         .with_for_update()
     )
     return list(db.scalars(statement))

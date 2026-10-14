@@ -163,6 +163,8 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("purchase.receipts.create", "purchase", "Post goods receipts"),
     PermissionDefinition("purchase.direct_purchases.read", "purchase", "View direct purchases"),
     PermissionDefinition("purchase.direct_purchases.create", "purchase", "Post direct purchases"),
+    PermissionDefinition("purchase.returns.read", "purchase", "View purchase returns"),
+    PermissionDefinition("purchase.returns.create", "purchase", "Post purchase returns"),
 )
 
 

@@ -77,11 +77,12 @@ container on 2026-10-15; the shared application database was not used.
 **Screens:** PO List, Create/Edit PO, PO Details, Goods Receive, Direct Purchase, Purchase Return.
 **Exit:** receive raises stock, average cost and supplier due atomically; return reverses; PO status transitions tested.
 
-**Progress:** Purchase Order drafts, Goods Receipt, and credit-only Direct Purchase are implemented.
-Goods Receipt posting requires an approved or partially received PO and enforces the configured
-receiving tolerance. Both posting workflows atomically update stock ledger/balances,
-weighted-average cost, supplier due, audit logs, and document numbering. PO approval remains
-deferred to Phase 11; purchase returns are not implemented.
+**Progress:** Purchase Order drafts, Goods Receipt, credit-only Direct Purchase, and Purchase
+Returns are implemented. Goods Receipt posting requires an approved or partially received PO and
+enforces the configured receiving tolerance. Receipt and direct-purchase posting atomically update
+stock ledger/balances, weighted-average cost, supplier due, audit logs, and document numbering.
+Purchase Returns reference original Goods Receipt lines and atomically reverse stock and supplier
+due at the original receipt cost. PO approval remains deferred to Phase 11.
 
 ## Phase 6 — Money & Simple Accounting
 **Build:** money ledger, accounts balances, customer collection, supplier payment, expense, income, fund transfer, opening balances, cash book.

@@ -24,6 +24,7 @@ from app.modules.price_lists.router import router as price_lists_router
 from app.modules.product_categories.router import router as product_categories_router
 from app.modules.products.router import router as products_router
 from app.modules.purchase_orders.router import router as purchase_orders_router
+from app.modules.purchase_returns.router import router as purchase_returns_router
 from app.modules.stock_adjustments.router import router as stock_adjustments_router
 from app.modules.stock_transfers.router import router as stock_transfers_router
 from app.modules.suppliers.router import router as suppliers_router
@@ -53,6 +54,7 @@ app.include_router(physical_counts_router)
 app.include_router(purchase_orders_router)
 app.include_router(goods_receipts_router)
 app.include_router(direct_purchases_router)
+app.include_router(purchase_returns_router)
 app.include_router(suppliers_router)
 app.include_router(units_router)
 app.include_router(product_categories_router)

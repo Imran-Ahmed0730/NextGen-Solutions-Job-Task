@@ -422,9 +422,11 @@ def get_supplier_statement(db: Session, supplier: Supplier) -> dict[str, object]
     ]
     from app.modules.direct_purchases import service as direct_purchase_service
     from app.modules.goods_receipts import service as goods_receipt_service
+    from app.modules.purchase_returns import service as purchase_return_service
 
     purchase_entries = goods_receipt_service.list_supplier_due_entries(db, supplier.id)
     purchase_entries.extend(direct_purchase_service.list_supplier_due_entries(db, supplier.id))
+    purchase_entries.extend(purchase_return_service.list_supplier_due_entries(db, supplier.id))
     purchase_entries.sort(key=lambda entry: (str(entry["date"]), str(entry["description"])))
     for purchase in purchase_entries:
         amount = purchase["amount"]

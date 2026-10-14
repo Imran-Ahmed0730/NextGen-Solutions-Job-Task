@@ -178,6 +178,12 @@ const navigation = [
         icon: 'supplier',
         permissions: ['purchase.direct_purchases.read'],
       },
+      {
+        href: '/purchase-returns',
+        label: 'Purchase Returns',
+        icon: 'supplier',
+        permissions: ['purchase.returns.read'],
+      },
     ],
   },
 ] as const;
