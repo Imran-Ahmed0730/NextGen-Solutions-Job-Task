@@ -117,7 +117,8 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Quotation send/accept/convert lifecycle (define status transitions during Sales Order design)
 - [x] Sales Order draft create/edit/list/details, totals, audit, permissions, and screen
 - [ ] Convert accepted quotations → Sales Orders (after quotation lifecycle decision)
-- [ ] Reserve/release order-line quantities through the Phase 4 reservation service
+- [x] Reserve/release order-line quantities through the Phase 4 reservation service; reserved orders
+      cannot be edited
 - [ ] Delivery with COGS
 - [ ] Invoice, customer due, credit-limit check
 - [ ] Sales return

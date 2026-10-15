@@ -7,6 +7,20 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 SalesOrderNote = Annotated[str, StringConstraints(max_length=2000)]
 
 
+class SalesOrderReservationInput(BaseModel):
+    qty: Decimal = Field(gt=0, max_digits=18, decimal_places=3, allow_inf_nan=False)
+
+
+class SalesOrderReservationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    qty: Decimal
+    qty_consumed: Decimal
+    qty_released: Decimal
+    status: str
+
+
 class SalesOrderLineInput(BaseModel):
     product_id: int = Field(ge=1)
     qty_ordered: Decimal = Field(gt=0, max_digits=18, decimal_places=3, allow_inf_nan=False)
@@ -40,6 +54,7 @@ class SalesOrderLineResponse(BaseModel):
     qty_reserved: Decimal
     qty_produced: Decimal
     qty_delivered: Decimal
+    reservations: list[SalesOrderReservationResponse]
 
 
 class SalesOrderResponse(BaseModel):

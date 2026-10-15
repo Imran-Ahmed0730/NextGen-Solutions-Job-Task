@@ -100,15 +100,17 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 
 ### 5.4 Sales
 1. Quotation → Send → Accept → Convert to Sales Order (or create order directly).
-2. Sales Order → Reserve: reserves available stock; shortage can raise a Production Order.
+2. Sales Order → Reserve: reserves available stock through the Phase 4 reservation service; a draft
+   order cannot be edited after reservation history exists. Shortage can raise a Production Order.
 3. Order Details shows Ordered / Available / Reserved / Produced / Delivered / Remaining.
 4. Delivery (partial allowed) → Post → stock ↓, COGS stored per line, reservation released.
 5. Invoice from delivery → Post → customer due ↑ (credit-limit check).
 6. Sales Return → qty ≤ delivered → Post → stock ↑ at original COGS, customer due ↓ (or credit note).
 
 Current delivery includes draft quotation and draft Sales Order create/edit/list/detail workflows.
-Reservation, quotation lifecycle/conversion, delivery, invoices, and returns are not yet implemented;
-quotation status transitions and credit-limit behavior remain open decisions in `06_TODO.md`.
+Sales Order reservation and release now call the Phase 4 inventory reservation service. Quotation
+lifecycle/conversion, delivery, invoices, and returns are not yet implemented; quotation status
+transitions and credit-limit behavior remain open decisions in `06_TODO.md`.
 
 ### 5.5 Money
 - **Customer Collection:** customer, account, amount, optional reference → Post → customer due ↓,

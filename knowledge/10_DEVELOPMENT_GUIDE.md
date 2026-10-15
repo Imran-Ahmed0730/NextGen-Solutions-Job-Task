@@ -285,6 +285,8 @@ The implemented auth API is:
 | `GET /api/v1/sales/orders/options` | `sales.orders.read` | Read active customers, warehouses, and products for order entry |
 | `POST /api/v1/sales/orders` | `sales.orders.create` | Create a numbered draft sales order and audit snapshot |
 | `PUT /api/v1/sales/orders/{id}` | `sales.orders.update` | Update a sales order while it remains a draft |
+| `POST /api/v1/sales/orders/{id}/lines/{line_id}/reservations` | `sales.orders.reserve` | Reserve available stock through the Phase 4 inventory service |
+| `DELETE /api/v1/sales/orders/{id}/reservations/{reservation_id}` | `sales.orders.reserve` | Release the remaining active reservation quantity |
 | `GET/POST /api/v1/customers/{id}/contacts` | `master_data.customers.read/create` | List or add an additional contact |
 | `PATCH/DELETE /api/v1/customers/{id}/contacts/{contact_id}` | `master_data.customers.update/delete` | Update or remove an additional contact |
 | `GET /api/v1/suppliers?search=&offset=0&limit=50` | `master_data.suppliers.read` | Search and page through suppliers; `include_inactive=true` includes inactive/deleted records |
@@ -706,13 +708,15 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   exposed until those lifecycle rules are defined with Sales Orders. Permissions:
   `sales.quotations.read`, `sales.quotations.create`, and `sales.quotations.update`. Frontend:
   `/quotations`.
-- **Sales Order drafts** — Sales Orders are created with status `DRAFT`; the service validates an
-  active customer, warehouse, and products, calculates line totals and discount using decimal
-  arithmetic, allocates the central `SALES_ORDER` number, and writes audit snapshots in the same
-  transaction. Drafts can be edited; the existing reservation service is not called by draft
-  creation. Quotation conversion, reservation, and credit-limit enforcement wait for the later
-  lifecycle/posting slices. Permissions: `sales.orders.read`, `sales.orders.create`, and
-  `sales.orders.update`. Frontend: `/sales-orders`.
+- **Sales Orders** — Orders are created with status `DRAFT`; the service validates active customer,
+  warehouse, and products, calculates line totals and discount using decimal arithmetic, allocates
+  the central `SALES_ORDER` number, and writes audit snapshots transactionally. Users explicitly
+  reserve and release stock through the Phase 4 inventory reservation service using
+  `sales.orders.reserve`. Reservation history is shown per line; edits are rejected once any
+  reservation history exists, even after release. Draft creation itself does not reserve stock.
+  Quotation conversion, delivery, and credit-limit enforcement remain later slices. Permissions:
+  `sales.orders.read`, `sales.orders.create`, `sales.orders.update`, and `sales.orders.reserve`.
+  Frontend: `/sales-orders`.
 - **Account Ledger** — `GET /api/v1/money-transactions/accounts/{id}/ledger` returns a date-filtered
   list of transactions for a given account with a running balance per row and an opening-period balance
   calculated from all prior transactions. The `/account-ledger` screen lists current balances and

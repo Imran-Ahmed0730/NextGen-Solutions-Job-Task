@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -18,6 +19,9 @@ from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.modules.inventory.models import StockReservation
 
 ID_TYPE = (
     BigInteger().with_variant(BIGINT(unsigned=True), "mysql").with_variant(Integer(), "sqlite")
@@ -108,3 +112,8 @@ class SalesOrderLine(Base):
         Numeric(18, 3), nullable=False, server_default=text("0.000")
     )
     sales_order: Mapped[SalesOrder] = relationship(back_populates="lines")
+    reservations: Mapped[list["StockReservation"]] = relationship(
+        back_populates="sales_order_line",
+        lazy="selectin",
+        order_by="StockReservation.id",
+    )

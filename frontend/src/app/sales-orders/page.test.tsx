@@ -12,7 +12,12 @@ vi.mock('@/components/auth/protected-page', () => ({
 
 vi.mock('@/components/auth/session-shell', () => ({
   useSessionProfile: () => ({
-    permissions: ['sales.orders.read', 'sales.orders.create', 'sales.orders.update'],
+    permissions: [
+      'sales.orders.read',
+      'sales.orders.create',
+      'sales.orders.update',
+      'sales.orders.reserve',
+    ],
   }),
 }));
 
@@ -36,8 +41,45 @@ describe('SalesOrdersPage', () => {
         return Promise.resolve({
           customers: [{ id: 2, code: 'CUS-1', name: 'Customer One' }],
           warehouses: [{ id: 3, code: 'MAIN', name: 'Main Warehouse' }],
-          products: [{ id: 7, sku: 'FG-001', name: 'Finished Good', unit_code: 'pcs' }],
+          products: [
+            { id: 7, sku: 'FG-001', name: 'Finished Good', unit_code: 'pcs', allow_decimal: true },
+          ],
         });
+      }
+      if (path.includes('/reservations') && init?.method === 'POST') {
+        const current = savedOrders[0] as {
+          id: number;
+          lines: {
+            id: number;
+            qty_reserved: string;
+            reservations: {
+              id: number;
+              qty: string;
+              qty_consumed: string;
+              qty_released: string;
+              status: string;
+            }[];
+          }[];
+        };
+        const updated = {
+          ...current,
+          lines: current.lines.map((line) => ({
+            ...line,
+            qty_reserved: '1.000',
+            reservations: [
+              ...line.reservations,
+              {
+                id: 91,
+                qty: '1.000',
+                qty_consumed: '0.000',
+                qty_released: '0.000',
+                status: 'ACTIVE',
+              },
+            ],
+          })),
+        };
+        savedOrders[0] = updated;
+        return Promise.resolve(updated);
       }
       if (init?.method === 'POST') {
         const body = JSON.parse(String(init.body)) as {
@@ -64,6 +106,7 @@ describe('SalesOrdersPage', () => {
             qty_reserved: '0.000',
             qty_produced: '0.000',
             qty_delivered: '0.000',
+            reservations: [],
           })),
         };
         savedOrders.push(order);
@@ -107,5 +150,43 @@ describe('SalesOrdersPage', () => {
     await waitFor(() => {
       expect(mocks.apiRequest).toHaveBeenCalledWith('/api/v1/sales/orders?offset=0&limit=51');
     });
+  });
+
+  it('reserves stock through the Sales Order action', async () => {
+    render(<SalesOrdersPage />);
+
+    await screen.findByRole('heading', { name: 'New Sales Order' });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Customer' }), {
+      target: { value: '2' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Warehouse' }), {
+      target: { value: '3' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Product 1' }), {
+      target: { value: '7' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Quantity 1' }), {
+      target: { value: '2.500' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Unit price 1' }), {
+      target: { value: '10.00' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+    await screen.findByText('SO-20260001');
+
+    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Reserve quantity for line 1' }), {
+      target: { value: '1.000' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Reserve' }));
+
+    await screen.findByText(/Reservation 91: ACTIVE/);
+    expect(mocks.apiRequest).toHaveBeenCalledWith(
+      '/api/v1/sales/orders/11/lines/1/reservations',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ qty: '1.000' }),
+      }),
+    );
   });
 });

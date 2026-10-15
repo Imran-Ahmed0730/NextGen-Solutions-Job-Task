@@ -7,12 +7,18 @@ import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { apiRequest } from '@/lib/auth-api';
-import { salesOrderSchema } from '@/lib/auth-validation';
+import { salesOrderReservationSchema, salesOrderSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
 type CustomerOption = { id: number; code: string; name: string };
 type WarehouseOption = { id: number; code: string; name: string };
-type ProductOption = { id: number; sku: string; name: string; unit_code: string };
+type ProductOption = {
+  id: number;
+  sku: string;
+  name: string;
+  unit_code: string;
+  allow_decimal: boolean;
+};
 type SalesOrderOptions = {
   customers: CustomerOption[];
   warehouses: WarehouseOption[];
@@ -25,6 +31,13 @@ type SalesOrderLine = DraftLine & {
   qty_reserved: string;
   qty_produced: string;
   qty_delivered: string;
+  reservations: {
+    id: number;
+    qty: string;
+    qty_consumed: string;
+    qty_released: string;
+    status: string;
+  }[];
 };
 type SalesOrderRecord = {
   id: number;
@@ -57,6 +70,7 @@ function SalesOrdersContent() {
   const canRead = profile?.permissions.includes('sales.orders.read') ?? false;
   const canCreate = profile?.permissions.includes('sales.orders.create') ?? false;
   const canUpdate = profile?.permissions.includes('sales.orders.update') ?? false;
+  const canReserve = profile?.permissions.includes('sales.orders.reserve') ?? false;
   const [options, setOptions] = useState<SalesOrderOptions>({
     customers: [],
     warehouses: [],
@@ -76,6 +90,8 @@ function SalesOrdersContent() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [reservationQuantities, setReservationQuantities] = useState<Record<number, string>>({});
+  const [reservationBusy, setReservationBusy] = useState(false);
   const [error, setError] = useState('');
 
   const reload = useCallback(async (nextOffset = 0) => {
@@ -210,6 +226,67 @@ function SalesOrdersContent() {
     }
   }
 
+  function replaceOrder(updated: SalesOrderRecord) {
+    setOrders((current) => current.map((order) => (order.id === updated.id ? updated : order)));
+  }
+
+  async function reserveLine(orderId: number, lineId: number) {
+    const parsed = salesOrderReservationSchema.safeParse({
+      qty: reservationQuantities[lineId] ?? '',
+    });
+    if (!parsed.success) {
+      const message = parsed.error.issues[0]?.message ?? 'Enter a valid reservation quantity.';
+      setError(message);
+      showErrorToast(message);
+      return;
+    }
+    const order = orders.find((item) => item.id === orderId);
+    const line = order?.lines.find((item) => item.id === lineId);
+    const product = options.products.find((item) => item.id === Number(line?.product_id));
+    if (product && !product.allow_decimal && !/^\d+(?:\.0+)?$/.test(parsed.data.qty)) {
+      const message = `${product.unit_code} quantities must be whole numbers.`;
+      setError(message);
+      showErrorToast(message);
+      return;
+    }
+    setReservationBusy(true);
+    setError('');
+    try {
+      const updated = await apiRequest<SalesOrderRecord>(
+        `/api/v1/sales/orders/${orderId}/lines/${lineId}/reservations`,
+        { method: 'POST', body: JSON.stringify(parsed.data) },
+      );
+      replaceOrder(updated);
+      setReservationQuantities((current) => ({ ...current, [lineId]: '' }));
+      showSuccessToast('Stock reserved for the sales order.');
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not reserve stock';
+      setError(message);
+      showErrorToast(message);
+    } finally {
+      setReservationBusy(false);
+    }
+  }
+
+  async function releaseReservation(orderId: number, reservationId: number) {
+    setReservationBusy(true);
+    setError('');
+    try {
+      const updated = await apiRequest<SalesOrderRecord>(
+        `/api/v1/sales/orders/${orderId}/reservations/${reservationId}`,
+        { method: 'DELETE' },
+      );
+      replaceOrder(updated);
+      showSuccessToast('Reserved stock released.');
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not release reserved stock';
+      setError(message);
+      showErrorToast(message);
+    } finally {
+      setReservationBusy(false);
+    }
+  }
+
   if (!canRead) {
     return (
       <section className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
@@ -223,8 +300,8 @@ function SalesOrdersContent() {
       <header>
         <h1 className="text-2xl font-semibold text-slate-900">Sales Orders</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Create and update draft sales orders. Reservations, fulfillment, and quotation conversion
-          are handled in later Sales slices.
+          Create and update draft sales orders, then reserve or release stock through the inventory
+          reservation service.
         </p>
       </header>
 
@@ -406,7 +483,7 @@ function SalesOrdersContent() {
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Total</th>
                   <th className="px-4 py-3">Details</th>
-                  {canUpdate && <th className="px-4 py-3">Action</th>}
+                  {(canUpdate || canReserve) && <th className="px-4 py-3">Action</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -436,9 +513,11 @@ function SalesOrdersContent() {
                           {detailsId === order.id ? 'Hide' : 'View'}
                         </button>
                       </td>
-                      {canUpdate && (
+                      {(canUpdate || canReserve) && (
                         <td className="px-4 py-3">
-                          {order.status === 'DRAFT' && (
+                          {canUpdate &&
+                            order.status === 'DRAFT' &&
+                            order.lines.every((line) => line.reservations.length === 0) && (
                             <button
                               type="button"
                               onClick={() => editOrder(order)}
@@ -452,17 +531,70 @@ function SalesOrdersContent() {
                     </tr>
                     {detailsId === order.id && (
                       <tr key={`${order.id}-details`}>
-                        <td colSpan={canUpdate ? 8 : 7} className="bg-slate-50 px-5 py-3">
+                        <td
+                          colSpan={canUpdate || canReserve ? 8 : 7}
+                          className="bg-slate-50 px-5 py-3"
+                        >
                           <p className="mb-2 text-xs text-slate-600">
                             Ordered / Reserved / Produced / Delivered
                           </p>
                           <ul className="space-y-1 text-sm">
                             {order.lines.map((line) => (
-                              <li key={line.id}>
+                              <li key={line.id} className="space-y-2 py-2">
                                 {options.products.find((item) => item.id === Number(line.product_id))
                                   ?.name ?? `Product ${line.product_id}`}
                                 : {line.qty_ordered} / {line.qty_reserved} / {line.qty_produced} /{' '}
                                 {line.qty_delivered} · {line.line_total}
+                                {canReserve && order.status === 'DRAFT' && (
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <label className="text-xs text-slate-600">
+                                      Reserve quantity <RequiredMark />
+                                      <input
+                                        required
+                                        aria-label={`Reserve quantity for line ${line.id}`}
+                                        inputMode="decimal"
+                                        value={reservationQuantities[line.id] ?? ''}
+                                        onChange={(event) =>
+                                          setReservationQuantities((current) => ({
+                                            ...current,
+                                            [line.id]: event.target.value,
+                                          }))
+                                        }
+                                        className="ml-2 min-h-8 w-28 rounded-md border border-slate-300 bg-white px-2"
+                                      />
+                                    </label>
+                                    <button
+                                      type="button"
+                                      disabled={reservationBusy}
+                                      onClick={() => void reserveLine(order.id, line.id)}
+                                      className="rounded-md border border-emerald-700 px-2 py-1 text-xs text-emerald-800 disabled:opacity-50"
+                                    >
+                                      Reserve
+                                    </button>
+                                  </div>
+                                )}
+                                {line.reservations.map((reservation) => (
+                                  <div
+                                    key={reservation.id}
+                                    className="flex flex-wrap items-center gap-2 text-xs text-slate-600"
+                                  >
+                                    Reservation {reservation.id}: {reservation.status} · qty{' '}
+                                    {reservation.qty}, consumed {reservation.qty_consumed}, released{' '}
+                                    {reservation.qty_released}
+                                    {canReserve && reservation.status === 'ACTIVE' && (
+                                      <button
+                                        type="button"
+                                        disabled={reservationBusy}
+                                        onClick={() =>
+                                          void releaseReservation(order.id, reservation.id)
+                                        }
+                                        className="rounded-md border border-amber-700 px-2 py-1 text-amber-800 disabled:opacity-50"
+                                      >
+                                        Release remaining
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
                               </li>
                             ))}
                           </ul>

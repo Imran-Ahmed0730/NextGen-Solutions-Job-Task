@@ -1,13 +1,17 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.modules.sales.models import SalesOrder
+from app.modules.sales.models import SalesOrder, SalesOrderLine
 
 
 def list_sales_orders(db: Session, *, offset: int = 0, limit: int = 50) -> list[SalesOrder]:
     statement = (
         select(SalesOrder)
-        .options(selectinload(SalesOrder.lines))
+        .options(
+            selectinload(SalesOrder.lines).selectinload(
+                SalesOrderLine.reservations
+            )
+        )
         .order_by(SalesOrder.doc_date.desc(), SalesOrder.id.desc())
         .offset(offset)
         .limit(limit)
@@ -20,7 +24,11 @@ def get_sales_order(
 ) -> SalesOrder | None:
     statement = (
         select(SalesOrder)
-        .options(selectinload(SalesOrder.lines))
+        .options(
+            selectinload(SalesOrder.lines).selectinload(
+                SalesOrderLine.reservations
+            )
+        )
         .where(SalesOrder.id == sales_order_id)
     )
     if for_update:

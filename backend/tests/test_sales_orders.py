@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,6 +14,8 @@ from app.modules.auth.models import AuditLog, Permission, Role, User
 from app.modules.auth.seed import seed_initial_admin
 from app.modules.customers.models import Customer
 from app.modules.document_numbering.models import DocumentSequence
+from app.modules.inventory.models import MovementType, StockBalance, StockTransaction
+from app.modules.inventory.service import post_stock_movement
 from app.modules.product_categories.models import ProductCategory
 from app.modules.products.models import Product, ProductType
 from app.modules.sales.models import SalesOrder
@@ -65,7 +68,12 @@ def sales_order_fixture(
     assert admin_role is not None
     permissions = [
         Permission(code=code, module="sales", description=code)
-        for code in ("sales.orders.read", "sales.orders.create", "sales.orders.update")
+        for code in (
+            "sales.orders.read",
+            "sales.orders.create",
+            "sales.orders.update",
+            "sales.orders.reserve",
+        )
     ]
     db_session.add_all(permissions)
     admin_role.permissions.extend(permissions)
@@ -95,6 +103,16 @@ def sales_order_fixture(
                 padding=4,
             ),
         ]
+    )
+    db_session.commit()
+    post_stock_movement(
+        db_session,
+        product_id=product.id,
+        warehouse_id=warehouse.id,
+        movement_type=MovementType.OPENING,
+        qty_signed=Decimal("10.000"),
+        actor=actor,
+        unit_cost=Decimal("2.5000"),
     )
     db_session.commit()
     for record in (customer, warehouse, product):
@@ -139,6 +157,7 @@ def test_sales_order_draft_create_edit_details_and_options(
     assert order["total"] == "17.00"
     assert [line["line_total"] for line in order["lines"]] == ["13.00", "5.00"]
     assert [line["qty_reserved"] for line in order["lines"]] == ["0.000", "0.000"]
+    assert [line["reservations"] for line in order["lines"]] == [[], []]
     assert [line["qty_delivered"] for line in order["lines"]] == ["0.000", "0.000"]
 
     changed = _payload(customer, warehouse, product)
@@ -257,3 +276,100 @@ def test_sales_order_routes_require_permissions(
     assert client.get("/api/v1/sales/orders", headers=headers).status_code == 403
     assert client.get("/api/v1/sales/orders/options", headers=headers).status_code == 403
     assert client.post("/api/v1/sales/orders", headers=headers, json=payload).status_code == 403
+
+
+def test_reserve_and_release_order_line_stock_and_lock_draft_edits(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    headers = _login(client, actor.username, password)
+    created = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json={
+            **_payload(customer, warehouse, product),
+            "lines": [{"product_id": product.id, "qty_ordered": "4.000", "unit_price": "5.00"}],
+        },
+    )
+    assert created.status_code == 201
+    order = created.json()
+    line = order["lines"][0]
+
+    reserved = client.post(
+        f"/api/v1/sales/orders/{order['id']}/lines/{line['id']}/reservations",
+        headers=headers,
+        json={"qty": "3.000"},
+    )
+    assert reserved.status_code == 200
+    reserved_line = reserved.json()["lines"][0]
+    assert reserved_line["qty_reserved"] == "3.000"
+    assert reserved_line["reservations"][0]["status"] == "ACTIVE"
+    balance = db_session.get(StockBalance, (product.id, warehouse.id))
+    assert balance is not None
+    assert balance.qty_on_hand == Decimal("10.000")
+    assert balance.qty_reserved == Decimal("3.000")
+    assert db_session.scalar(select(func.count(StockTransaction.id))) == 1
+
+    changed_payload = {
+        **_payload(customer, warehouse, product),
+        "lines": [{"product_id": product.id, "qty_ordered": "5.000", "unit_price": "5.00"}],
+    }
+    blocked_edit = client.put(
+        f"/api/v1/sales/orders/{order['id']}",
+        headers=headers,
+        json=changed_payload,
+    )
+    assert blocked_edit.status_code == 409
+    assert blocked_edit.json()["detail"] == "SALES_ORDER_HAS_RESERVATION_HISTORY"
+
+    reservation_id = reserved_line["reservations"][0]["id"]
+    released = client.delete(
+        f"/api/v1/sales/orders/{order['id']}/reservations/{reservation_id}",
+        headers=headers,
+    )
+    assert released.status_code == 200
+    released_line = released.json()["lines"][0]
+    assert released_line["qty_reserved"] == "0.000"
+    assert released_line["reservations"][0]["status"] == "RELEASED"
+    assert balance.qty_on_hand == Decimal("10.000")
+    assert balance.qty_reserved == Decimal("0.000")
+
+    blocked_after_release = client.put(
+        f"/api/v1/sales/orders/{order['id']}",
+        headers=headers,
+        json=changed_payload,
+    )
+    assert blocked_after_release.status_code == 409
+
+
+def test_order_reservation_rejects_foreign_lines_and_missing_permission(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    readonly = User(
+        username="sales_order_reservation_readonly",
+        full_name="Sales Order Reservation Readonly",
+        password_hash=hash_password("ReadOnly-Password-123"),
+    )
+    db_session.add(readonly)
+    db_session.commit()
+    headers = _login(client, readonly.username, "ReadOnly-Password-123")
+    created = client.post(
+        "/api/v1/sales/orders",
+        headers=_login(client, actor.username, password),
+        json=_payload(customer, warehouse, product),
+    )
+    assert created.status_code == 201
+    order = created.json()
+    line_id = order["lines"][0]["id"]
+
+    denied = client.post(
+        f"/api/v1/sales/orders/{order['id']}/lines/{line_id}/reservations",
+        headers=headers,
+        json={"qty": "1.000"},
+    )
+    assert denied.status_code == 403

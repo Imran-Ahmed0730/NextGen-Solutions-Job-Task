@@ -454,6 +454,10 @@ export const salesOrderSchema = z.object({
     .max(500, 'A sales order can have at most 500 lines'),
 });
 
+export const salesOrderReservationSchema = z.object({
+  qty: purchaseOrderQuantity,
+});
+
 export const purchaseReturnSchema = z.object({
   doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid return date'),
   receipt_id: z.number().int().positive('Select a goods receipt'),

@@ -9,6 +9,7 @@ from app.modules.sales_orders import service
 from app.modules.sales_orders.schemas import (
     SalesOrderCreate,
     SalesOrderOptionsResponse,
+    SalesOrderReservationInput,
     SalesOrderResponse,
     SalesOrderUpdate,
 )
@@ -67,3 +68,44 @@ def update_sales_order(
 ) -> SalesOrder:
     ip = request.client.host if request.client else None
     return service.update_sales_order(db, sales_order_id, payload, actor, ip)
+
+
+@router.post("/{sales_order_id}/lines/{line_id}/reservations", response_model=SalesOrderResponse)
+def reserve_sales_order_line(
+    sales_order_id: int,
+    line_id: int,
+    payload: SalesOrderReservationInput,
+    request: Request,
+    db: Session = Depends(get_db),
+    actor: User = Depends(require_permission("sales.orders.reserve")),
+) -> SalesOrder:
+    ip = request.client.host if request.client else None
+    return service.reserve_order_line(
+        db,
+        sales_order_id=sales_order_id,
+        line_id=line_id,
+        qty=payload.qty,
+        actor=actor,
+        ip=ip,
+    )
+
+
+@router.delete(
+    "/{sales_order_id}/reservations/{reservation_id}",
+    response_model=SalesOrderResponse,
+)
+def release_sales_order_reservation(
+    sales_order_id: int,
+    reservation_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    actor: User = Depends(require_permission("sales.orders.reserve")),
+) -> SalesOrder:
+    ip = request.client.host if request.client else None
+    return service.release_order_reservation(
+        db,
+        sales_order_id=sales_order_id,
+        reservation_id=reservation_id,
+        actor=actor,
+        ip=ip,
+    )

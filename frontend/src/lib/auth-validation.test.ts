@@ -15,6 +15,7 @@ import {
   resetPasswordSchema,
   roleSchema,
   salesOrderSchema,
+  salesOrderReservationSchema,
   stockAdjustmentSchema,
   supplierPaymentSchema,
   unitSchema,
@@ -41,6 +42,12 @@ describe('auth-validation schemas', () => {
         lines: [{ ...valid.lines[0], qty_ordered: '0.000' }],
       }).success,
     ).toBe(false);
+  });
+
+  it('validates reservation quantities', () => {
+    expect(salesOrderReservationSchema.safeParse({ qty: '2.500' }).success).toBe(true);
+    expect(salesOrderReservationSchema.safeParse({ qty: '0.000' }).success).toBe(false);
+    expect(salesOrderReservationSchema.safeParse({ qty: '1.0000' }).success).toBe(false);
   });
 
   it('validates customer collections', () => {

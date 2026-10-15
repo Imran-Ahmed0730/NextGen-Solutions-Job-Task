@@ -162,6 +162,8 @@ def reserve_stock(
     if line_and_order is None:
         raise HTTPException(status_code=404, detail="Sales order line not found")
     line, order = line_and_order
+    if order.status != "DRAFT":
+        raise HTTPException(status_code=409, detail="SALES_ORDER_NOT_RESERVABLE")
 
     product = product_service.lock_product_for_stock_posting(db, line.product_id)
     if product is None or not product.is_active or product.deleted_at is not None:

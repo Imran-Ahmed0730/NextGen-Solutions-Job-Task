@@ -8,6 +8,8 @@ from app.modules.auth.audit import record_audit
 from app.modules.auth.models import User
 from app.modules.customers import service as customer_service
 from app.modules.document_numbering.service import generate_next_number
+from app.modules.inventory import service as inventory_service
+from app.modules.inventory.models import StockReservation
 from app.modules.products import service as product_service
 from app.modules.products.models import Product
 from app.modules.sales.models import SalesOrder, SalesOrderLine
@@ -33,6 +35,73 @@ def list_sales_orders(db: Session, *, offset: int = 0, limit: int = 50) -> list[
 
 def get_sales_order(db: Session, sales_order_id: int) -> SalesOrder | None:
     return repository.get_sales_order(db, sales_order_id)
+
+
+def reserve_order_line(
+    db: Session,
+    *,
+    sales_order_id: int,
+    line_id: int,
+    qty: Decimal,
+    actor: User,
+    ip: str | None = None,
+) -> SalesOrder:
+    try:
+        line = db.get(SalesOrderLine, line_id)
+        if line is None or line.order_id != sales_order_id:
+            raise HTTPException(status_code=404, detail="Sales order line not found")
+        inventory_service.reserve_stock(
+            db,
+            sales_order_line_id=line.id,
+            qty=qty,
+            actor=actor,
+            ip=ip,
+        )
+        db.flush()
+        order = repository.get_sales_order(db, sales_order_id)
+        if order is None:
+            raise HTTPException(status_code=404, detail="Sales order not found")
+        db.commit()
+        return order
+    except Exception:
+        db.rollback()
+        raise
+
+
+def release_order_reservation(
+    db: Session,
+    *,
+    sales_order_id: int,
+    reservation_id: int,
+    actor: User,
+    ip: str | None = None,
+) -> SalesOrder:
+    try:
+        reservation = db.get(StockReservation, reservation_id)
+        if reservation is None:
+            raise HTTPException(status_code=404, detail="Stock reservation not found")
+        line = db.get(SalesOrderLine, reservation.sales_order_line_id)
+        if line is None or line.order_id != sales_order_id:
+            raise HTTPException(status_code=404, detail="Stock reservation not found")
+        qty_remaining = reservation.qty - reservation.qty_consumed - reservation.qty_released
+        if qty_remaining <= 0:
+            raise HTTPException(status_code=409, detail="RESERVATION_QUANTITY_EXCEEDED")
+        inventory_service.release_reservation(
+            db,
+            reservation_id=reservation.id,
+            qty=qty_remaining,
+            actor=actor,
+            ip=ip,
+        )
+        db.flush()
+        order = repository.get_sales_order(db, sales_order_id)
+        if order is None:
+            raise HTTPException(status_code=404, detail="Sales order not found")
+        db.commit()
+        return order
+    except Exception:
+        db.rollback()
+        raise
 
 
 def get_sales_order_options(db: Session) -> SalesOrderOptionsResponse:
@@ -121,6 +190,8 @@ def update_sales_order(
             raise HTTPException(status_code=404, detail="Sales order not found")
         if order.status != "DRAFT":
             raise HTTPException(status_code=409, detail="SALES_ORDER_NOT_EDITABLE")
+        if any(line.reservations for line in order.lines):
+            raise HTTPException(status_code=409, detail="SALES_ORDER_HAS_RESERVATION_HISTORY")
         if payload.doc_date.year != order.doc_date.year:
             raise HTTPException(
                 status_code=422, detail="Document date year cannot change after numbering"

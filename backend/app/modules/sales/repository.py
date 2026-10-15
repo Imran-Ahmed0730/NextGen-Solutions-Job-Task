@@ -7,12 +7,19 @@ from app.modules.sales.models import SalesOrder, SalesOrderLine
 def get_order_line_for_update(
     db: Session, sales_order_line_id: int
 ) -> tuple[SalesOrderLine, SalesOrder] | None:
-    line = db.scalar(
-        select(SalesOrderLine).where(SalesOrderLine.id == sales_order_line_id).with_for_update()
+    order_id = db.scalar(
+        select(SalesOrderLine.order_id).where(SalesOrderLine.id == sales_order_line_id)
     )
-    if line is None:
+    if order_id is None:
         return None
-    order = db.scalar(select(SalesOrder).where(SalesOrder.id == line.order_id).with_for_update())
+    order = db.scalar(select(SalesOrder).where(SalesOrder.id == order_id).with_for_update())
     if order is None:
+        return None
+    line = db.scalar(
+        select(SalesOrderLine)
+        .where(SalesOrderLine.id == sales_order_line_id)
+        .with_for_update()
+    )
+    if line is None or line.order_id != order.id:
         return None
     return line, order
