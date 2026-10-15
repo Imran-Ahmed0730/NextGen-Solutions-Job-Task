@@ -351,6 +351,7 @@ function PurchaseOrdersContent() {
                 step="0.01"
                 value={discount}
                 onChange={(event) => setDiscount(event.target.value)}
+                placeholder="0.00"
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
               />
             </label>
@@ -361,6 +362,7 @@ function PurchaseOrdersContent() {
                 maxLength={2000}
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
+                placeholder="Optional order note"
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
               />
             </label>
@@ -414,6 +416,7 @@ function PurchaseOrdersContent() {
                       required
                       value={line.qty}
                       onChange={(event) => updateLine(index, 'qty', event.target.value)}
+                      placeholder="Enter quantity"
                       className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
                     />
                   </label>
@@ -427,6 +430,7 @@ function PurchaseOrdersContent() {
                       required
                       value={line.unit_price}
                       onChange={(event) => updateLine(index, 'unit_price', event.target.value)}
+                      placeholder="0.00"
                       className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
                     />
                   </label>

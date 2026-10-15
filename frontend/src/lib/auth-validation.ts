@@ -458,6 +458,23 @@ export const salesOrderReservationSchema = z.object({
   qty: purchaseOrderQuantity,
 });
 
+export const salesDeliverySchema = z.object({
+  doc_date: z.string().date('Enter a valid delivery date'),
+  lines: z
+    .array(
+      z.object({
+        order_line_id: z.number().int().positive(),
+        qty: purchaseOrderQuantity,
+      }),
+    )
+    .min(1, 'Enter a delivery quantity for at least one order line')
+    .max(500, 'A delivery can contain at most 500 lines')
+    .refine(
+      (items) => new Set(items.map((item) => item.order_line_id)).size === items.length,
+      'An order line may only be selected once',
+    ),
+});
+
 export const purchaseReturnSchema = z.object({
   doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid return date'),
   receipt_id: z.number().int().positive('Select a goods receipt'),

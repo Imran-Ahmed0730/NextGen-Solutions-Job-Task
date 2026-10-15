@@ -265,6 +265,7 @@ function QuotationsContent() {
                 inputMode="decimal"
                 value={discount}
                 onChange={(event) => setDiscount(event.target.value)}
+                placeholder="0.00"
                 className="mt-1 min-h-10 w-full rounded-lg border border-slate-300 px-3"
               />
             </label>
@@ -297,6 +298,7 @@ function QuotationsContent() {
                     inputMode="decimal"
                     value={line.qty}
                     onChange={(event) => updateLine(index, 'qty', event.target.value)}
+                    placeholder="Enter quantity"
                     className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3"
                   />
                 </label>
@@ -307,6 +309,7 @@ function QuotationsContent() {
                     inputMode="decimal"
                     value={line.unit_price}
                     onChange={(event) => updateLine(index, 'unit_price', event.target.value)}
+                    placeholder="0.00"
                     className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3"
                   />
                 </label>
@@ -338,6 +341,7 @@ function QuotationsContent() {
               onChange={(event) => setNote(event.target.value)}
               maxLength={2000}
               rows={2}
+              placeholder="Optional quotation note"
               className="w-full rounded-lg border border-slate-300 px-3 py-2"
             />
           </label>

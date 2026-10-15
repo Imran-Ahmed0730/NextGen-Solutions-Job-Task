@@ -77,8 +77,8 @@ their respective transaction workflows.
 **quotation_lines**: id, quotation_id(FK), product_id, qty, unit_price, line_total
 **sales_orders**: id, doc_no, doc_date, customer_id(FK), quotation_id(FK, null), warehouse_id, status, delivery_date, subtotal, discount, total, note, created_by(FK), created_at, updated_at
 **sales_order_lines**: id, order_id(FK), product_id, qty_ordered, unit_price, line_total, qty_reserved, qty_produced, qty_delivered
-**deliveries**: id, doc_no, doc_date, order_id(FK), customer_id, warehouse_id, status
-**delivery_lines**: id, delivery_id(FK), order_line_id(FK), product_id, qty, unit_cost_cogs
+**deliveries**: id, doc_no, doc_date, order_id(FK), customer_id(FK), warehouse_id(FK), status(POSTED), created_by(FK), created_at
+**delivery_lines**: id, delivery_id(FK), order_line_id(FK), product_id(FK), qty, unit_cost_cogs (weighted-average cost captured at posting)
 **invoices**: id, doc_no, doc_date, customer_id, delivery_id(FK, null), order_id(FK, null), due_date, status, subtotal, discount, total, paid_amount, cogs_total
 **invoice_lines**: id, invoice_id(FK), product_id, qty, unit_price, line_total, unit_cost_cogs
 **sales_returns**: id, doc_no, doc_date, customer_id, invoice_id(FK), warehouse_id, status, total
@@ -91,7 +91,9 @@ not yet specified in the implemented workflow.
 
 Sales Order reserve/release actions reuse the Phase 4 `stock_reservations` service and balance
 updates. Draft edits are rejected once any reservation history exists, including fully released
-reservations.
+reservations. Delivery lines consume active reservations first and reserve/consume any remaining
+available quantity through the same inventory service. Delivery and stock changes are atomic;
+delivery status is `POSTED`, and partial deliveries do not change the Sales Order status.
 
 ## 8. Money
 **money_transactions** (ledger, append-only): id, txn_date, account_id(FK), amount_signed, txn_type(COLLECTION/PAYMENT/EXPENSE/INCOME/TRANSFER_OUT/TRANSFER_IN/OPENING/PURCHASE_PAYMENT/SALARY), source_type, source_id, party_type, party_id, note, created_by, created_at. `money_accounts.opening_balance` is the pre-ledger baseline; `OPENING` transactions are later signed adjustments included in the sum, and the baseline is immutable after the first ledger transaction.

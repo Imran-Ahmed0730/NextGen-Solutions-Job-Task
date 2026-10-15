@@ -9,12 +9,13 @@ from app.modules.auth.models import User
 from app.modules.customers import service as customer_service
 from app.modules.document_numbering.service import generate_next_number
 from app.modules.inventory import service as inventory_service
-from app.modules.inventory.models import StockReservation
+from app.modules.inventory.models import StockReservation, StockTransaction
 from app.modules.products import service as product_service
 from app.modules.products.models import Product
-from app.modules.sales.models import SalesOrder, SalesOrderLine
+from app.modules.sales.models import SalesDelivery, SalesDeliveryLine, SalesOrder, SalesOrderLine
 from app.modules.sales_orders import repository
 from app.modules.sales_orders.schemas import (
+    SalesDeliveryCreate,
     SalesOrderCreate,
     SalesOrderCustomerOption,
     SalesOrderOptionsResponse,
@@ -27,6 +28,7 @@ from app.modules.warehouses import service as warehouse_service
 DOCUMENT_TYPE = "SALES_ORDER"
 CENT = Decimal("0.01")
 MAX_MONEY = Decimal("9999999999999999.99")
+DELIVERY_DOCUMENT_TYPE = "DELIVERY"
 
 
 def list_sales_orders(db: Session, *, offset: int = 0, limit: int = 50) -> list[SalesOrder]:
@@ -102,6 +104,162 @@ def release_order_reservation(
     except Exception:
         db.rollback()
         raise
+
+
+def create_delivery(
+    db: Session,
+    *,
+    sales_order_id: int,
+    payload: SalesDeliveryCreate,
+    actor: User,
+    ip: str | None = None,
+) -> SalesDelivery:
+    try:
+        order = repository.get_sales_order(db, sales_order_id, for_update=True)
+        if order is None:
+            raise HTTPException(status_code=404, detail="Sales order not found")
+        if order.status != "DRAFT":
+            raise HTTPException(status_code=409, detail="SALES_ORDER_NOT_DELIVERABLE")
+        line_by_id = {line.id: line for line in order.lines}
+        requested_ids = [line.order_line_id for line in payload.lines]
+        if len(requested_ids) != len(set(requested_ids)):
+            raise HTTPException(status_code=422, detail="Delivery lines must be unique")
+        for delivery_line in payload.lines:
+            line = line_by_id.get(delivery_line.order_line_id)
+            if line is None:
+                raise HTTPException(status_code=404, detail="Sales order line not found")
+            if delivery_line.qty > line.qty_ordered - line.qty_delivered:
+                raise HTTPException(status_code=409, detail="DELIVERY_EXCEEDS_ORDER_REMAINING")
+
+        delivery = SalesDelivery(
+            doc_no=generate_next_number(db, DELIVERY_DOCUMENT_TYPE, payload.doc_date.year),
+            doc_date=payload.doc_date,
+            order_id=order.id,
+            customer_id=order.customer_id,
+            warehouse_id=order.warehouse_id,
+            status="POSTED",
+            created_by=actor.id,
+        )
+        db.add(delivery)
+        db.flush()
+
+        for requested_line in payload.lines:
+            line = line_by_id[requested_line.order_line_id]
+            unit_cost_cogs = _consume_delivery_quantity(
+                db,
+                line=line,
+                qty=requested_line.qty,
+                actor=actor,
+                ip=ip,
+            )
+            delivery.lines.append(
+                SalesDeliveryLine(
+                    order_line_id=line.id,
+                    product_id=line.product_id,
+                    qty=requested_line.qty,
+                    unit_cost_cogs=unit_cost_cogs,
+                )
+            )
+        db.flush()
+        record_audit(
+            db,
+            actor_id=actor.id,
+            entity_type="delivery",
+            entity_id=delivery.id,
+            action="CREATE",
+            after=_delivery_snapshot(delivery),
+            ip=ip,
+        )
+        db.commit()
+        result = db.get(SalesDelivery, delivery.id)
+        if result is None:
+            raise HTTPException(status_code=500, detail="Posted delivery could not be reloaded")
+        return result
+    except Exception:
+        db.rollback()
+        raise
+
+
+def _consume_delivery_quantity(
+    db: Session,
+    *,
+    line: SalesOrderLine,
+    qty: Decimal,
+    actor: User,
+    ip: str | None,
+) -> Decimal:
+    remaining = qty
+    costs: list[tuple[Decimal, Decimal]] = []
+    for reservation in sorted(line.reservations, key=lambda item: item.id):
+        active_qty = reservation.qty - reservation.qty_consumed - reservation.qty_released
+        consume_qty = min(remaining, active_qty)
+        if consume_qty <= 0:
+            continue
+        _, transaction = inventory_service.consume_reservation(
+            db,
+            reservation_id=reservation.id,
+            qty=consume_qty,
+            actor=actor,
+            ip=ip,
+        )
+        _append_delivery_cost(costs, consume_qty, transaction)
+        remaining -= consume_qty
+        if remaining == 0:
+            break
+
+    if remaining > 0:
+        reservation = inventory_service.reserve_stock(
+            db,
+            sales_order_line_id=line.id,
+            qty=remaining,
+            actor=actor,
+            ip=ip,
+        )
+        _, transaction = inventory_service.consume_reservation(
+            db,
+            reservation_id=reservation.id,
+            qty=remaining,
+            actor=actor,
+            ip=ip,
+        )
+        _append_delivery_cost(costs, remaining, transaction)
+
+    total_qty = sum((quantity for quantity, _ in costs), Decimal("0.000"))
+    total_cost = sum(
+        (quantity * unit_cost for quantity, unit_cost in costs),
+        Decimal("0.000000"),
+    )
+    if total_qty != qty:
+        raise HTTPException(status_code=409, detail="DELIVERY_QUANTITY_NOT_CONSUMED")
+    return (total_cost / total_qty).quantize(Decimal("0.0001"))
+
+
+def _append_delivery_cost(
+    costs: list[tuple[Decimal, Decimal]], qty: Decimal, transaction: StockTransaction
+) -> None:
+    if transaction.unit_cost is None:
+        raise HTTPException(status_code=409, detail="DELIVERY_COST_MISSING")
+    costs.append((qty, transaction.unit_cost))
+
+
+def _delivery_snapshot(delivery: SalesDelivery) -> dict[str, object]:
+    return {
+        "doc_no": delivery.doc_no,
+        "doc_date": delivery.doc_date.isoformat(),
+        "order_id": delivery.order_id,
+        "customer_id": delivery.customer_id,
+        "warehouse_id": delivery.warehouse_id,
+        "status": delivery.status,
+        "lines": [
+            {
+                "order_line_id": line.order_line_id,
+                "product_id": line.product_id,
+                "qty": str(line.qty),
+                "unit_cost_cogs": str(line.unit_cost_cogs),
+            }
+            for line in delivery.lines
+        ],
+    }
 
 
 def get_sales_order_options(db: Session) -> SalesOrderOptionsResponse:

@@ -271,6 +271,7 @@ function PurchaseReturnsContent() {
                     maxLength={2000}
                     value={note}
                     onChange={(event) => setNote(event.target.value)}
+                    placeholder="Optional return note"
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
                   />
                 </label>
@@ -312,6 +313,7 @@ function PurchaseReturnsContent() {
                         step={sourceLine.allow_decimal ? '0.001' : '1'}
                         value={line.qty}
                         onChange={(event) => updateLine(index, event.target.value)}
+                        placeholder="Enter return quantity"
                         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
                       />
                     </label>

@@ -17,6 +17,7 @@ vi.mock('@/components/auth/session-shell', () => ({
       'sales.orders.create',
       'sales.orders.update',
       'sales.orders.reserve',
+      'sales.deliveries.create',
     ],
   }),
 }));
@@ -45,6 +46,40 @@ describe('SalesOrdersPage', () => {
             { id: 7, sku: 'FG-001', name: 'Finished Good', unit_code: 'pcs', allow_decimal: true },
           ],
         });
+      }
+      if (path.endsWith('/deliveries') && init?.method === 'POST') {
+        const current = savedOrders[0] as {
+          id: number;
+          lines: { id: number; qty_delivered: string }[];
+          deliveries: Record<string, unknown>[];
+        };
+        const body = JSON.parse(String(init.body)) as {
+          doc_date: string;
+          lines: { order_line_id: number; qty: string }[];
+        };
+        const delivery = {
+          id: 101,
+          doc_no: 'DEL-20260001',
+          doc_date: body.doc_date,
+          status: 'POSTED',
+          lines: body.lines.map((line, index) => ({
+            id: index + 1,
+            ...line,
+            product_id: 7,
+            unit_cost_cogs: '4.2500',
+          })),
+        };
+        savedOrders[0] = {
+          ...current,
+          lines: current.lines.map((line) => ({
+            ...line,
+            qty_delivered:
+              body.lines.find((deliveryLine) => deliveryLine.order_line_id === line.id)?.qty ??
+              line.qty_delivered,
+          })),
+          deliveries: [...current.deliveries, delivery],
+        };
+        return Promise.resolve(delivery);
       }
       if (path.includes('/reservations') && init?.method === 'POST') {
         const current = savedOrders[0] as {
@@ -99,6 +134,7 @@ describe('SalesOrdersPage', () => {
           status: 'DRAFT',
           subtotal: '25.00',
           total: '25.00',
+          deliveries: [],
           lines: body.lines.map((line, index) => ({
             id: index + 1,
             ...line,
@@ -112,7 +148,9 @@ describe('SalesOrdersPage', () => {
         savedOrders.push(order);
         return Promise.resolve(order);
       }
-      if (path.startsWith('/api/v1/sales/orders?')) return Promise.resolve(savedOrders);
+      if (path.startsWith('/api/v1/sales/orders?')) {
+        return Promise.resolve(savedOrders);
+      }
       return Promise.resolve(null);
     });
   });
@@ -188,5 +226,45 @@ describe('SalesOrdersPage', () => {
         body: JSON.stringify({ qty: '1.000' }),
       }),
     );
+  });
+
+  it('posts a delivery and displays stored COGS in delivery history', async () => {
+    render(<SalesOrdersPage />);
+
+    await screen.findByRole('heading', { name: 'New Sales Order' });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Customer' }), {
+      target: { value: '2' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Warehouse' }), {
+      target: { value: '3' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Product 1' }), {
+      target: { value: '7' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Quantity 1' }), {
+      target: { value: '2.500' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Unit price 1' }), {
+      target: { value: '10.00' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+    await screen.findByText('SO-20260001');
+
+    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Delivery quantity for line 1' }), {
+      target: { value: '1.500' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Post delivery' }));
+    await waitFor(() => expect(mocks.apiRequest).toHaveBeenCalledTimes(8));
+
+    expect(mocks.apiRequest).toHaveBeenCalledWith(
+      '/api/v1/sales/orders/11/deliveries',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"qty":"1.500"'),
+      }),
+    );
+    expect(await screen.findByText(/DEL-20260001/)).toBeInTheDocument();
+    expect(screen.getByText(/COGS\/unit 4\.2500/)).toBeInTheDocument();
   });
 });

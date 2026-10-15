@@ -175,6 +175,7 @@ function DocumentNumberingContent() {
               max={9999}
               defaultValue={selected?.year ?? new Date().getFullYear()}
               required
+              placeholder="e.g. 2026"
               aria-invalid={Boolean(errors.year)}
               aria-describedby={errors.year ? 'year-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
@@ -190,6 +191,7 @@ function DocumentNumberingContent() {
               min={0}
               defaultValue={selected?.last_number ?? 0}
               required
+              placeholder="0"
               aria-invalid={Boolean(errors.last_number)}
               aria-describedby={errors.last_number ? 'last-number-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
@@ -206,6 +208,7 @@ function DocumentNumberingContent() {
               max={10}
               defaultValue={selected?.padding ?? 4}
               required
+              placeholder="e.g. 4"
               aria-invalid={Boolean(errors.padding)}
               aria-describedby={errors.padding ? 'padding-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"

@@ -7,7 +7,11 @@ import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { apiRequest } from '@/lib/auth-api';
-import { salesOrderReservationSchema, salesOrderSchema } from '@/lib/auth-validation';
+import {
+  salesDeliverySchema,
+  salesOrderReservationSchema,
+  salesOrderSchema,
+} from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
 type CustomerOption = { id: number; code: string; name: string };
@@ -53,6 +57,20 @@ type SalesOrderRecord = {
   total: string;
   note: string | null;
   lines: SalesOrderLine[];
+  deliveries: SalesDeliveryRecord[];
+};
+type SalesDeliveryRecord = {
+  id: number;
+  doc_no: string;
+  doc_date: string;
+  status: string;
+  lines: {
+    id: number;
+    order_line_id: number;
+    product_id: number;
+    qty: string;
+    unit_cost_cogs: string;
+  }[];
 };
 
 const PAGE_SIZE = 50;
@@ -71,6 +89,7 @@ function SalesOrdersContent() {
   const canCreate = profile?.permissions.includes('sales.orders.create') ?? false;
   const canUpdate = profile?.permissions.includes('sales.orders.update') ?? false;
   const canReserve = profile?.permissions.includes('sales.orders.reserve') ?? false;
+  const canDeliver = profile?.permissions.includes('sales.deliveries.create') ?? false;
   const [options, setOptions] = useState<SalesOrderOptions>({
     customers: [],
     warehouses: [],
@@ -92,6 +111,9 @@ function SalesOrdersContent() {
   const [saving, setSaving] = useState(false);
   const [reservationQuantities, setReservationQuantities] = useState<Record<number, string>>({});
   const [reservationBusy, setReservationBusy] = useState(false);
+  const [deliveryQuantities, setDeliveryQuantities] = useState<Record<number, string>>({});
+  const [deliveryDates, setDeliveryDates] = useState<Record<number, string>>({});
+  const [deliveryBusy, setDeliveryBusy] = useState(false);
   const [error, setError] = useState('');
 
   const reload = useCallback(async (nextOffset = 0) => {
@@ -287,6 +309,68 @@ function SalesOrdersContent() {
     }
   }
 
+  async function deliverOrder(order: SalesOrderRecord) {
+    const parsed = salesDeliverySchema.safeParse({
+      doc_date: deliveryDates[order.id] ?? today(),
+      lines: order.lines.flatMap((line) => {
+        const qty = deliveryQuantities[line.id] ?? '';
+        return qty.trim() ? [{ order_line_id: line.id, qty }] : [];
+      }),
+    });
+    if (!parsed.success) {
+      const message = parsed.error.issues[0]?.message ?? 'Check the delivery details.';
+      setError(message);
+      showErrorToast(message);
+      return;
+    }
+    for (const deliveryLine of parsed.data.lines) {
+      const orderLine = order.lines.find((line) => line.id === deliveryLine.order_line_id);
+      if (!orderLine || Number(deliveryLine.qty) > Number(orderLine.qty_ordered) - Number(orderLine.qty_delivered)) {
+        const message = 'A delivery quantity cannot exceed the remaining ordered quantity.';
+        setError(message);
+        showErrorToast(message);
+        return;
+      }
+      const product = options.products.find((item) => item.id === Number(orderLine.product_id));
+      if (product && !product.allow_decimal && !/^\d+(?:\.0+)?$/.test(deliveryLine.qty)) {
+        const message = `${product.unit_code} quantities must be whole numbers.`;
+        setError(message);
+        showErrorToast(message);
+        return;
+      }
+    }
+
+    setDeliveryBusy(true);
+    setError('');
+    try {
+      const delivery = await apiRequest<SalesDeliveryRecord>(
+        `/api/v1/sales/orders/${order.id}/deliveries`,
+        { method: 'POST', body: JSON.stringify(parsed.data) },
+      );
+      showSuccessToast(`Delivery ${delivery.doc_no} posted.`);
+      setDeliveryQuantities((current) => ({
+        ...current,
+        ...Object.fromEntries(order.lines.map((line) => [line.id, ''])),
+      }));
+      try {
+        await reload(offset);
+      } catch (cause) {
+        const message =
+          cause instanceof Error
+            ? `Delivery posted, but order history could not be refreshed: ${cause.message}`
+            : 'Delivery posted, but order history could not be refreshed.';
+        setError(message);
+        showErrorToast(message);
+      }
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not post delivery';
+      setError(message);
+      showErrorToast(message);
+    } finally {
+      setDeliveryBusy(false);
+    }
+  }
+
   if (!canRead) {
     return (
       <section className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
@@ -364,6 +448,7 @@ function SalesOrdersContent() {
                 inputMode="decimal"
                 value={discount}
                 onChange={(event) => setDiscount(event.target.value)}
+                placeholder="0.00"
                 className="mt-1 min-h-10 w-full rounded-lg border border-slate-300 px-3"
               />
             </label>
@@ -397,6 +482,7 @@ function SalesOrdersContent() {
                     aria-label={`Quantity ${index + 1}`}
                     value={line.qty_ordered}
                     onChange={(event) => updateLine(index, 'qty_ordered', event.target.value)}
+                    placeholder="Enter quantity"
                     className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3"
                   />
                 </label>
@@ -408,6 +494,7 @@ function SalesOrdersContent() {
                     aria-label={`Unit price ${index + 1}`}
                     value={line.unit_price}
                     onChange={(event) => updateLine(index, 'unit_price', event.target.value)}
+                    placeholder="0.00"
                     className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3"
                   />
                 </label>
@@ -439,6 +526,7 @@ function SalesOrdersContent() {
               onChange={(event) => setNote(event.target.value)}
               maxLength={2000}
               rows={2}
+              placeholder="Optional sales order note"
               className="w-full rounded-lg border border-slate-300 px-3 py-2"
             />
           </label>
@@ -483,7 +571,7 @@ function SalesOrdersContent() {
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Total</th>
                   <th className="px-4 py-3">Details</th>
-                  {(canUpdate || canReserve) && <th className="px-4 py-3">Action</th>}
+                  {(canUpdate || canReserve || canDeliver) && <th className="px-4 py-3">Action</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -513,7 +601,7 @@ function SalesOrdersContent() {
                           {detailsId === order.id ? 'Hide' : 'View'}
                         </button>
                       </td>
-                      {(canUpdate || canReserve) && (
+                      {(canUpdate || canReserve || canDeliver) && (
                         <td className="px-4 py-3">
                           {canUpdate &&
                             order.status === 'DRAFT' &&
@@ -532,7 +620,7 @@ function SalesOrdersContent() {
                     {detailsId === order.id && (
                       <tr key={`${order.id}-details`}>
                         <td
-                          colSpan={canUpdate || canReserve ? 8 : 7}
+                          colSpan={canUpdate || canReserve || canDeliver ? 8 : 7}
                           className="bg-slate-50 px-5 py-3"
                         >
                           <p className="mb-2 text-xs text-slate-600">
@@ -554,6 +642,7 @@ function SalesOrdersContent() {
                                         aria-label={`Reserve quantity for line ${line.id}`}
                                         inputMode="decimal"
                                         value={reservationQuantities[line.id] ?? ''}
+                                        placeholder="Enter quantity"
                                         onChange={(event) =>
                                           setReservationQuantities((current) => ({
                                             ...current,
@@ -598,6 +687,88 @@ function SalesOrdersContent() {
                               </li>
                             ))}
                           </ul>
+                          {canDeliver &&
+                            order.status === 'DRAFT' &&
+                            order.lines.some((line) => Number(line.qty_delivered) < Number(line.qty_ordered)) && (
+                              <div className="mt-4 space-y-3 border-t border-slate-200 pt-4">
+                                <h3 className="text-sm font-semibold text-slate-800">
+                                  Post Delivery · Delivery quantities <RequiredMark />
+                                </h3>
+                                <label className="block max-w-xs text-xs font-medium text-slate-600">
+                                  Delivery date <RequiredMark />
+                                  <input
+                                    aria-label={`Delivery date for ${order.doc_no}`}
+                                    type="date"
+                                    required
+                                    value={deliveryDates[order.id] ?? today()}
+                                    onChange={(event) =>
+                                      setDeliveryDates((current) => ({
+                                        ...current,
+                                        [order.id]: event.target.value,
+                                      }))
+                                    }
+                                    className="mt-1 min-h-9 w-full rounded-md border border-slate-300 bg-white px-2"
+                                  />
+                                </label>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                  {order.lines
+                                    .filter(
+                                      (line) =>
+                                        Number(line.qty_delivered) < Number(line.qty_ordered),
+                                    )
+                                    .map((line, index) => (
+                                      <label
+                                        key={`delivery-${line.id}`}
+                                        className="text-xs font-medium text-slate-600"
+                                      >
+                                        Delivery quantity for line {index + 1}
+                                        <input
+                                          aria-label={`Delivery quantity for line ${line.id}`}
+                                          inputMode="decimal"
+                                          value={deliveryQuantities[line.id] ?? ''}
+                                          placeholder="Enter quantity"
+                                          onChange={(event) =>
+                                            setDeliveryQuantities((current) => ({
+                                              ...current,
+                                              [line.id]: event.target.value,
+                                            }))
+                                          }
+                                          className="mt-1 min-h-9 w-full rounded-md border border-slate-300 bg-white px-2"
+                                        />
+                                      </label>
+                                    ))}
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={deliveryBusy}
+                                  onClick={() => void deliverOrder(order)}
+                                  className="rounded-md border border-emerald-700 px-3 py-1.5 text-xs text-emerald-800 disabled:opacity-50"
+                                >
+                                  {deliveryBusy ? 'Posting…' : 'Post delivery'}
+                                </button>
+                              </div>
+                            )}
+                          {order.deliveries.length > 0 && (
+                            <div className="mt-4 border-t border-slate-200 pt-4">
+                              <h3 className="text-sm font-semibold text-slate-800">Delivery history</h3>
+                              <ul className="mt-2 space-y-2 text-xs text-slate-600">
+                                {order.deliveries.map((delivery) => (
+                                  <li key={delivery.id}>
+                                    <p className="font-medium text-slate-800">
+                                      {delivery.doc_no} · {delivery.doc_date} · {delivery.status}
+                                    </p>
+                                    {delivery.lines.map((line) => (
+                                      <p key={line.id}>
+                                        {options.products.find((item) => item.id === line.product_id)?.name ??
+                                          `Product ${line.product_id}`}
+                                        : delivered {line.qty} · COGS/unit {line.unit_cost_cogs}
+                                      </p>
+                                    ))}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     )}

@@ -108,9 +108,12 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 6. Sales Return → qty ≤ delivered → Post → stock ↑ at original COGS, customer due ↓ (or credit note).
 
 Current delivery includes draft quotation and draft Sales Order create/edit/list/detail workflows.
-Sales Order reservation and release now call the Phase 4 inventory reservation service. Quotation
-lifecycle/conversion, delivery, invoices, and returns are not yet implemented; quotation status
-transitions and credit-limit behavior remain open decisions in `06_TODO.md`.
+Sales Order reservation, release, and delivery posting call the Phase 4 inventory reservation and
+stock-posting service. Deliveries consume reservations first, reserve-and-consume any remaining
+available quantity in the same transaction, and store the transaction's unit cost as line-level COGS.
+Partial deliveries leave the Sales Order status unchanged; delivered quantities and delivery history
+show progress. Quotation lifecycle/conversion, invoices, and returns are not yet implemented;
+quotation status transitions and credit-limit behavior remain open decisions in `06_TODO.md`.
 
 ### 5.5 Money
 - **Customer Collection:** customer, account, amount, optional reference → Post → customer due ↓,

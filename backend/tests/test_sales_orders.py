@@ -10,15 +10,20 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import Base, get_db
 from app.core.security import hash_password
 from app.main import app
-from app.modules.auth.models import AuditLog, Permission, Role, User
+from app.modules.auth.models import AuditLog, User
 from app.modules.auth.seed import seed_initial_admin
 from app.modules.customers.models import Customer
 from app.modules.document_numbering.models import DocumentSequence
-from app.modules.inventory.models import MovementType, StockBalance, StockTransaction
+from app.modules.inventory.models import (
+    MovementType,
+    StockBalance,
+    StockReservation,
+    StockTransaction,
+)
 from app.modules.inventory.service import post_stock_movement
 from app.modules.product_categories.models import ProductCategory
 from app.modules.products.models import Product, ProductType
-from app.modules.sales.models import SalesOrder
+from app.modules.sales.models import SalesDelivery, SalesDeliveryLine, SalesOrder
 from app.modules.units.models import Unit
 from app.modules.warehouses.models import Warehouse
 
@@ -64,20 +69,6 @@ def sales_order_fixture(
     assert result.password is not None
     actor = db_session.scalar(select(User).where(User.username == result.username))
     assert actor is not None
-    admin_role = db_session.scalar(select(Role).where(Role.name == "Administrator"))
-    assert admin_role is not None
-    permissions = [
-        Permission(code=code, module="sales", description=code)
-        for code in (
-            "sales.orders.read",
-            "sales.orders.create",
-            "sales.orders.update",
-            "sales.orders.reserve",
-        )
-    ]
-    db_session.add_all(permissions)
-    admin_role.permissions.extend(permissions)
-
     customer = Customer(code="CUS-SO-001", name="Sales Order Customer")
     category = ProductCategory(name="Sales Order Products")
     unit = Unit(name="Piece", code="pc", allow_decimal=True)
@@ -91,6 +82,7 @@ def sales_order_fixture(
         category_id=category.id,
         unit_id=unit.id,
         is_stocked=True,
+        avg_cost=Decimal("2.5000"),
     )
     db_session.add_all(
         [
@@ -98,6 +90,13 @@ def sales_order_fixture(
             DocumentSequence(
                 doc_type="SALES_ORDER",
                 prefix="SO-",
+                year=2026,
+                last_number=0,
+                padding=4,
+            ),
+            DocumentSequence(
+                doc_type="DELIVERY",
+                prefix="DN-",
                 year=2026,
                 last_number=0,
                 padding=4,
@@ -373,3 +372,197 @@ def test_order_reservation_rejects_foreign_lines_and_missing_permission(
         json={"qty": "1.000"},
     )
     assert denied.status_code == 403
+
+
+def test_post_delivery_consumes_reserved_or_available_stock_and_records_cogs(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    headers = _login(client, actor.username, password)
+    created = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json={
+            **_payload(customer, warehouse, product),
+            "lines": [{"product_id": product.id, "qty_ordered": "5.000", "unit_price": "5.00"}],
+        },
+    )
+    assert created.status_code == 201
+    order = created.json()
+    line = order["lines"][0]
+
+    response = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": line["id"], "qty": "3.000"}],
+        },
+    )
+    assert response.status_code == 201
+    delivery = response.json()
+    assert delivery["doc_no"] == "DN-20260001"
+    assert delivery["status"] == "POSTED"
+    assert delivery["lines"][0]["qty"] == "3.000"
+    assert delivery["lines"][0]["unit_cost_cogs"] == "2.5000"
+    db_session.expire_all()
+    delivery_record = db_session.get(SalesDelivery, delivery["id"])
+    assert delivery_record is not None
+    delivery_line = db_session.scalar(
+        select(SalesDeliveryLine).where(SalesDeliveryLine.delivery_id == delivery_record.id)
+    )
+    assert delivery_line is not None
+    assert delivery_line.unit_cost_cogs == Decimal("2.5000")
+    updated_order = client.get(f"/api/v1/sales/orders/{order['id']}", headers=headers).json()
+    assert updated_order["status"] == "DRAFT"
+    assert updated_order["lines"][0]["qty_delivered"] == "3.000"
+    assert updated_order["deliveries"][0]["doc_no"] == "DN-20260001"
+    balance = db_session.get(StockBalance, (product.id, warehouse.id))
+    assert balance is not None
+    assert balance.qty_on_hand == Decimal("7.000")
+    assert balance.qty_reserved == Decimal("0.000")
+    delivery_movement = db_session.scalar(
+        select(StockTransaction).where(
+            StockTransaction.movement_type == MovementType.SALE_DELIVERY
+        )
+    )
+    assert delivery_movement is not None
+    assert delivery_movement.qty_signed == Decimal("-3.000")
+    assert delivery_movement.unit_cost == Decimal("2.5000")
+    assert (
+        db_session.scalar(
+            select(func.count(AuditLog.id)).where(AuditLog.entity_type == "delivery")
+        )
+        == 1
+    )
+
+
+def test_delivery_consumes_existing_reservation_before_available_stock(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    headers = _login(client, actor.username, password)
+    created = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json={
+            **_payload(customer, warehouse, product),
+            "lines": [{"product_id": product.id, "qty_ordered": "5.000", "unit_price": "5.00"}],
+        },
+    )
+    order = created.json()
+    line = order["lines"][0]
+    reserved = client.post(
+        f"/api/v1/sales/orders/{order['id']}/lines/{line['id']}/reservations",
+        headers=headers,
+        json={"qty": "2.000"},
+    )
+    assert reserved.status_code == 200
+
+    delivered = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": line["id"], "qty": "3.000"}],
+        },
+    )
+    assert delivered.status_code == 201
+    current_order = client.get(f"/api/v1/sales/orders/{order['id']}", headers=headers).json()
+    assert current_order["lines"][0]["qty_reserved"] == "0.000"
+    assert current_order["lines"][0]["qty_delivered"] == "3.000"
+    assert [item["status"] for item in current_order["lines"][0]["reservations"]] == [
+        "CONSUMED",
+        "CONSUMED",
+    ]
+    balance = db_session.get(StockBalance, (product.id, warehouse.id))
+    assert balance is not None
+    assert balance.qty_on_hand == Decimal("7.000")
+    assert balance.qty_reserved == Decimal("0.000")
+
+
+def test_delivery_rejects_order_overage_and_rolls_back_insufficient_stock(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    headers = _login(client, actor.username, password)
+    created = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json={
+            **_payload(customer, warehouse, product),
+            "lines": [{"product_id": product.id, "qty_ordered": "12.000", "unit_price": "5.00"}],
+        },
+    )
+    order = created.json()
+    line = order["lines"][0]
+
+    insufficient = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": line["id"], "qty": "11.000"}],
+        },
+    )
+    assert insufficient.status_code == 409
+    assert insufficient.json()["detail"] == "STOCK_INSUFFICIENT"
+    assert db_session.scalar(select(func.count(SalesDelivery.id))) == 0
+    assert db_session.scalar(select(func.count(StockTransaction.id))) == 1
+    assert db_session.scalar(select(func.count(StockReservation.id))) == 0
+    balance = db_session.get(StockBalance, (product.id, warehouse.id))
+    assert balance is not None
+    assert balance.qty_on_hand == Decimal("10.000")
+    assert balance.qty_reserved == Decimal("0.000")
+
+    over_order = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": line["id"], "qty": "13.000"}],
+        },
+    )
+    assert over_order.status_code == 409
+    assert over_order.json()["detail"] == "DELIVERY_EXCEEDS_ORDER_REMAINING"
+    assert db_session.scalar(select(func.count(SalesDelivery.id))) == 0
+
+
+def test_delivery_route_requires_permission(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    created = client.post(
+        "/api/v1/sales/orders",
+        headers=_login(client, actor.username, password),
+        json={
+            **_payload(customer, warehouse, product),
+            "lines": [{"product_id": product.id, "qty_ordered": "2.000", "unit_price": "5.00"}],
+        },
+    )
+    order = created.json()
+    line_id = order["lines"][0]["id"]
+    readonly = User(
+        username="sales_delivery_readonly",
+        full_name="Sales Delivery Readonly",
+        password_hash=hash_password("ReadOnly-Password-123"),
+    )
+    db_session.add(readonly)
+    db_session.commit()
+    response = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=_login(client, readonly.username, "ReadOnly-Password-123"),
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": line_id, "qty": "1.000"}],
+        },
+    )
+    assert response.status_code == 403

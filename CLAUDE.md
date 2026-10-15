@@ -86,6 +86,7 @@ Three groups: **Business rules** (the requirement wins), **Engineering rules**, 
 - E-17: Create/update documentation for every part
 - E-18: Commit after completing a part or module so that it can be rolled back easily to a certain module.
 - E-19: Show a visible asterisk (`*`) beside every required field's visible label, including fields in dynamic rows and table/grid headers. Keep the marker consistent with frontend and backend validation; never mark optional fields as required.
+- E-20: Add helpful placeholder text to every user-editable text, number, textarea, and searchable-select form control. Placeholders provide an example, format, or selection hint and never replace visible labels, required markers, or validation. Do not add placeholders to native date/time, checkbox, radio, or button controls.
 
 ## C. AI usage rules
 

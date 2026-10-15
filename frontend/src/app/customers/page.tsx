@@ -158,12 +158,12 @@ function CustomersContent() {
         >
           <label className="block text-sm font-medium">
             Code<RequiredMark />
-            <input name="code" defaultValue={selected?.code ?? ''} minLength={1} maxLength={30} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.code)} aria-describedby={errors.code ? 'customer-code-error' : undefined} />
+            <input name="code" defaultValue={selected?.code ?? ''} minLength={1} maxLength={30} required placeholder="e.g. CUS-001" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.code)} aria-describedby={errors.code ? 'customer-code-error' : undefined} />
             <FieldError id="customer-code-error" message={errors.code} />
           </label>
           <label className="block text-sm font-medium">
             Name<RequiredMark />
-            <input name="name" defaultValue={selected?.name ?? ''} minLength={1} maxLength={255} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'customer-name-error' : undefined} />
+            <input name="name" defaultValue={selected?.name ?? ''} minLength={1} maxLength={255} required placeholder="Customer or company name" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'customer-name-error' : undefined} />
             <FieldError id="customer-name-error" message={errors.name} />
           </label>
           <label className="block text-sm font-medium">
@@ -178,7 +178,7 @@ function CustomersContent() {
           </label>
           <label className="block text-sm font-medium sm:col-span-2">
             Address
-            <textarea name="address" defaultValue={selected?.address ?? ''} rows={3} maxLength={1000} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.address)} aria-describedby={errors.address ? 'customer-address-error' : undefined} />
+            <textarea name="address" defaultValue={selected?.address ?? ''} rows={3} maxLength={1000} placeholder="Enter the customer's address" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.address)} aria-describedby={errors.address ? 'customer-address-error' : undefined} />
             <FieldError id="customer-address-error" message={errors.address} />
           </label>
           <label className="block text-sm font-medium">
@@ -197,12 +197,12 @@ function CustomersContent() {
           </label>
           <label className="block text-sm font-medium">
             Credit limit<RequiredMark />
-            <input name="credit_limit" type="number" step="0.01" min="0" defaultValue={selected?.credit_limit ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.credit_limit)} aria-describedby={errors.credit_limit ? 'customer-credit-limit-error' : undefined} />
+            <input name="credit_limit" type="number" step="0.01" min="0" defaultValue={selected?.credit_limit ?? '0.00'} required placeholder="0.00" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.credit_limit)} aria-describedby={errors.credit_limit ? 'customer-credit-limit-error' : undefined} />
             <FieldError id="customer-credit-limit-error" message={errors.credit_limit} />
           </label>
           <label className="block text-sm font-medium">
             Opening due<RequiredMark />
-            <input name="opening_due" type="number" step="0.01" defaultValue={selected?.opening_due ?? '0.00'} required className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.opening_due)} aria-describedby={errors.opening_due ? 'customer-opening-due-error' : undefined} />
+            <input name="opening_due" type="number" step="0.01" defaultValue={selected?.opening_due ?? '0.00'} required placeholder="0.00" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.opening_due)} aria-describedby={errors.opening_due ? 'customer-opening-due-error' : undefined} />
             <FieldError id="customer-opening-due-error" message={errors.opening_due} />
           </label>
           <div className="sm:col-span-2">

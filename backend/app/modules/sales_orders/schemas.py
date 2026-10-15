@@ -21,6 +21,49 @@ class SalesOrderReservationResponse(BaseModel):
     status: str
 
 
+class SalesOrderDeliveryLineResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    order_line_id: int
+    product_id: int
+    qty: Decimal
+    unit_cost_cogs: Decimal
+
+
+class SalesOrderDeliveryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    doc_no: str
+    doc_date: date
+    status: str
+    lines: list[SalesOrderDeliveryLineResponse]
+
+
+class SalesDeliveryLineInput(BaseModel):
+    order_line_id: int = Field(ge=1)
+    qty: Decimal = Field(gt=0, max_digits=18, decimal_places=3, allow_inf_nan=False)
+
+
+class SalesDeliveryCreate(BaseModel):
+    doc_date: date
+    lines: list[SalesDeliveryLineInput] = Field(min_length=1, max_length=500)
+
+
+class SalesDeliveryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    doc_no: str
+    doc_date: date
+    order_id: int
+    customer_id: int
+    warehouse_id: int
+    status: str
+    lines: list[SalesOrderDeliveryLineResponse]
+
+
 class SalesOrderLineInput(BaseModel):
     product_id: int = Field(ge=1)
     qty_ordered: Decimal = Field(gt=0, max_digits=18, decimal_places=3, allow_inf_nan=False)
@@ -73,6 +116,7 @@ class SalesOrderResponse(BaseModel):
     total: Decimal
     note: str | None
     lines: list[SalesOrderLineResponse]
+    deliveries: list[SalesOrderDeliveryResponse]
 
 
 class SalesOrderCustomerOption(BaseModel):

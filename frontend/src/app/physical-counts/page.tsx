@@ -372,6 +372,7 @@ function PhysicalCountsContent() {
                         step="0.001"
                         disabled={!canCreate || selectedCount.status === 'POSTED' || saving}
                         value={countedQuantities[line.product_id] ?? ''}
+                        placeholder="Enter counted quantity"
                         onChange={(event) =>
                           setCountedQuantities((current) => ({
                             ...current,

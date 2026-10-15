@@ -119,7 +119,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Convert accepted quotations → Sales Orders (after quotation lifecycle decision)
 - [x] Reserve/release order-line quantities through the Phase 4 reservation service; reserved orders
       cannot be edited
-- [ ] Delivery with COGS
+- [x] Delivery posting from reserved/available stock with stored line-level COGS and order history
 - [ ] Invoice, customer due, credit-limit check
 - [ ] Sales return
 - [ ] Order tracking (Ordered/Available/Reserved/Produced/Delivered/Remaining)

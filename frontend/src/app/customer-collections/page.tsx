@@ -183,15 +183,15 @@ function CustomerCollectionsContent() {
           </label>
           <label className="text-sm font-medium text-slate-700">
             Amount<RequiredMark />
-            <input aria-label="Collection amount" type="number" min="0.01" step="0.01" required value={amount} onChange={(event) => setAmount(event.target.value)} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
+            <input aria-label="Collection amount" type="number" min="0.01" step="0.01" required value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
           </label>
           <label className="text-sm font-medium text-slate-700">
             Payment reference
-            <input aria-label="Payment reference" maxLength={100} value={methodRef} onChange={(event) => setMethodRef(event.target.value)} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
+            <input aria-label="Payment reference" maxLength={100} value={methodRef} onChange={(event) => setMethodRef(event.target.value)} placeholder="Optional transaction reference" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
           </label>
           <label className="text-sm font-medium text-slate-700">
             Note
-            <input aria-label="Collection note" maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
+            <input aria-label="Collection note" maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Optional note" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
           </label>
           <div className="md:col-span-2">
             <button type="submit" disabled={saving} className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? 'Posting…' : 'Post collection'}</button>

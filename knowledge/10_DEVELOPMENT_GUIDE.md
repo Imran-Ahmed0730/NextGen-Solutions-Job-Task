@@ -132,7 +132,7 @@ The frontend route tree currently includes:
 | `/account-ledger` | Review current account balances and date-filtered money transactions with running balances |
 | `/customer-collections` | Post customer collections and view recent collection history |
 | `/quotations` | Create, edit, and browse sales quotation drafts |
-| `/sales-orders` | Create, edit, browse, and view draft sales order details |
+| `/sales-orders` | Create, edit, browse, view draft sales order details, and post deliveries with COGS |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/expenses` | Record operational expenses paid from any money account and browse expense history |
 | `/incomes` | Record money received into any account from any income source and browse income history |
@@ -287,6 +287,7 @@ The implemented auth API is:
 | `PUT /api/v1/sales/orders/{id}` | `sales.orders.update` | Update a sales order while it remains a draft |
 | `POST /api/v1/sales/orders/{id}/lines/{line_id}/reservations` | `sales.orders.reserve` | Reserve available stock through the Phase 4 inventory service |
 | `DELETE /api/v1/sales/orders/{id}/reservations/{reservation_id}` | `sales.orders.reserve` | Release the remaining active reservation quantity |
+| `POST /api/v1/sales/orders/{id}/deliveries` | `sales.deliveries.create` | Post delivery through the stock service, consume reservations first, and store unit COGS |
 | `GET/POST /api/v1/customers/{id}/contacts` | `master_data.customers.read/create` | List or add an additional contact |
 | `PATCH/DELETE /api/v1/customers/{id}/contacts/{contact_id}` | `master_data.customers.update/delete` | Update or remove an additional contact |
 | `GET /api/v1/suppliers?search=&offset=0&limit=50` | `master_data.suppliers.read` | Search and page through suppliers; `include_inactive=true` includes inactive/deleted records |
@@ -714,9 +715,13 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   reserve and release stock through the Phase 4 inventory reservation service using
   `sales.orders.reserve`. Reservation history is shown per line; edits are rejected once any
   reservation history exists, even after release. Draft creation itself does not reserve stock.
-  Quotation conversion, delivery, and credit-limit enforcement remain later slices. Permissions:
-  `sales.orders.read`, `sales.orders.create`, `sales.orders.update`, and `sales.orders.reserve`.
-  Frontend: `/sales-orders`.
+  Delivery posting consumes reservations first, reserves and immediately consumes any additional
+  available quantity in the same transaction, and stores the stock transaction's unit cost on each
+  delivery line. Partial delivery leaves the Sales Order status unchanged; the page shows delivered
+  quantities and delivery/COGS history. Permission: `sales.deliveries.create` (included in the
+  Administrator role). Quotation conversion, invoicing, returns, and credit-limit enforcement remain
+  later slices. Permissions: `sales.orders.read`, `sales.orders.create`, `sales.orders.update`,
+  `sales.orders.reserve`, and `sales.deliveries.create`. Frontend: `/sales-orders`.
 - **Account Ledger** — `GET /api/v1/money-transactions/accounts/{id}/ledger` returns a date-filtered
   list of transactions for a given account with a running balance per row and an opening-period balance
   calculated from all prior transactions. The `/account-ledger` screen lists current balances and

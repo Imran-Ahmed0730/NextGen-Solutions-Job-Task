@@ -79,6 +79,11 @@ class SalesOrder(Base):
         lazy="selectin",
         order_by="SalesOrderLine.id",
     )
+    deliveries: Mapped[list["SalesDelivery"]] = relationship(
+        back_populates="sales_order",
+        lazy="selectin",
+        order_by="SalesDelivery.id",
+    )
 
 
 class SalesOrderLine(Base):
@@ -117,3 +122,57 @@ class SalesOrderLine(Base):
         lazy="selectin",
         order_by="StockReservation.id",
     )
+
+
+class SalesDelivery(Base):
+    __tablename__ = "deliveries"
+    __table_args__ = (UniqueConstraint("doc_no", name="uq_deliveries_doc_no"),)
+
+    id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)
+    doc_no: Mapped[str] = mapped_column(String(50), nullable=False)
+    doc_date: Mapped[date] = mapped_column(Date, nullable=False)
+    order_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("sales_orders.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    customer_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("customers.id", ondelete="RESTRICT"), nullable=False
+    )
+    warehouse_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="POSTED")
+    created_by: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP")
+    )
+    lines: Mapped[list["SalesDeliveryLine"]] = relationship(
+        back_populates="delivery",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="SalesDeliveryLine.id",
+    )
+    sales_order: Mapped[SalesOrder] = relationship(back_populates="deliveries")
+
+
+class SalesDeliveryLine(Base):
+    __tablename__ = "delivery_lines"
+    __table_args__ = (
+        CheckConstraint("qty > 0", name="ck_delivery_lines_positive_qty"),
+        CheckConstraint("unit_cost_cogs >= 0", name="ck_delivery_lines_nonnegative_cogs"),
+    )
+
+    id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)
+    delivery_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("deliveries.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    order_line_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("sales_order_lines.id", ondelete="RESTRICT"), nullable=False
+    )
+    product_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("products.id", ondelete="RESTRICT"), nullable=False
+    )
+    qty: Mapped[Decimal] = mapped_column(Numeric(18, 3), nullable=False)
+    unit_cost_cogs: Mapped[Decimal] = mapped_column(Numeric(18, 4), nullable=False)
+    delivery: Mapped[SalesDelivery] = relationship(back_populates="lines")

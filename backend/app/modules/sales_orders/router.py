@@ -4,9 +4,11 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import require_permission
 from app.modules.auth.models import User
-from app.modules.sales.models import SalesOrder
+from app.modules.sales.models import SalesDelivery, SalesOrder
 from app.modules.sales_orders import service
 from app.modules.sales_orders.schemas import (
+    SalesDeliveryCreate,
+    SalesDeliveryResponse,
     SalesOrderCreate,
     SalesOrderOptionsResponse,
     SalesOrderReservationInput,
@@ -106,6 +108,28 @@ def release_sales_order_reservation(
         db,
         sales_order_id=sales_order_id,
         reservation_id=reservation_id,
+        actor=actor,
+        ip=ip,
+    )
+
+
+@router.post(
+    "/{sales_order_id}/deliveries",
+    response_model=SalesDeliveryResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_sales_order_delivery(
+    sales_order_id: int,
+    payload: SalesDeliveryCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    actor: User = Depends(require_permission("sales.deliveries.create")),
+) -> SalesDelivery:
+    ip = request.client.host if request.client else None
+    return service.create_delivery(
+        db,
+        sales_order_id=sales_order_id,
+        payload=payload,
         actor=actor,
         ip=ip,
     )

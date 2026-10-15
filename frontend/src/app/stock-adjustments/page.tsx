@@ -366,6 +366,7 @@ function StockAdjustmentsContent() {
               onChange={(event) => setReason(event.target.value)}
               maxLength={500}
               rows={2}
+              placeholder="Describe the reason for this adjustment"
               className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>

@@ -14,6 +14,7 @@ import {
   profileSchema,
   resetPasswordSchema,
   roleSchema,
+  salesDeliverySchema,
   salesOrderSchema,
   salesOrderReservationSchema,
   stockAdjustmentSchema,
@@ -48,6 +49,30 @@ describe('auth-validation schemas', () => {
     expect(salesOrderReservationSchema.safeParse({ qty: '2.500' }).success).toBe(true);
     expect(salesOrderReservationSchema.safeParse({ qty: '0.000' }).success).toBe(false);
     expect(salesOrderReservationSchema.safeParse({ qty: '1.0000' }).success).toBe(false);
+  });
+
+  it('validates sales delivery dates, quantities, and unique order lines', () => {
+    const valid = {
+      doc_date: '2026-10-27',
+      lines: [{ order_line_id: 1, qty: '2.500' }],
+    };
+    expect(salesDeliverySchema.safeParse(valid).success).toBe(true);
+    expect(salesDeliverySchema.safeParse({ ...valid, doc_date: 'invalid' }).success).toBe(false);
+    expect(
+      salesDeliverySchema.safeParse({
+        ...valid,
+        lines: [{ order_line_id: 1, qty: '0.000' }],
+      }).success,
+    ).toBe(false);
+    expect(
+      salesDeliverySchema.safeParse({
+        ...valid,
+        lines: [
+          { order_line_id: 1, qty: '1.000' },
+          { order_line_id: 1, qty: '1.000' },
+        ],
+      }).success,
+    ).toBe(false);
   });
 
   it('validates customer collections', () => {

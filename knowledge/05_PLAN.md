@@ -97,9 +97,10 @@ due at the original receipt cost. PO approval remains deferred to Phase 11.
 **Progress:** Quotation and Sales Order draft create/edit/list workflows are implemented with
 server-calculated totals, central document numbering, audit, permissions, and simple screens. Sales
 Orders now reserve and release stock through the Phase 4 inventory reservation service; an order
-cannot be edited after reservation history exists. Quotation send/accept/convert, delivery, invoicing,
-returns, and credit-limit enforcement remain separate Sales slices; quotation lifecycle decisions are
-recorded in `06_TODO.md`.
+cannot be edited after reservation history exists. Delivery posting now consumes reserved/available
+stock through the Phase 4 service, stores line-level COGS, and preserves the Sales Order status while
+tracking delivered quantities. Quotation send/accept/convert, invoicing, returns, and credit-limit
+enforcement remain separate Sales slices; quotation lifecycle decisions are recorded in `06_TODO.md`.
 
 ## Phase 8 — Production & Costing
 **Build:** BOM, production order, consumption, output, cost calculation (materials at avg cost + labor + overhead), and sales-order shortage fulfillment.

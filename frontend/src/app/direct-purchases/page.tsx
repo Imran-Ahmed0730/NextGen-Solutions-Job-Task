@@ -275,6 +275,7 @@ function DirectPurchasesContent() {
                 maxLength={2000}
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
+                placeholder="Optional purchase note"
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
               />
             </label>
@@ -321,6 +322,7 @@ function DirectPurchasesContent() {
                       required
                       value={line.qty}
                       onChange={(event) => updateLine(index, 'qty', event.target.value)}
+                      placeholder="Enter quantity"
                       className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
                     />
                   </label>
@@ -334,6 +336,7 @@ function DirectPurchasesContent() {
                       required
                       value={line.unit_cost}
                       onChange={(event) => updateLine(index, 'unit_cost', event.target.value)}
+                      placeholder="0.0000"
                       className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
                     />
                   </label>

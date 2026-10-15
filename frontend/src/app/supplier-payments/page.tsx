@@ -242,11 +242,11 @@ function SupplierPaymentsContent() {
             </label>
             <label className="text-sm font-medium text-slate-700">
               Amount<RequiredMark />
-              <input aria-label="Payment amount" type="number" min="0.01" step="0.01" required value={amount} onChange={(event) => setAmount(event.target.value)} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
+              <input aria-label="Payment amount" type="number" min="0.01" step="0.01" required value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
             </label>
             <label className="text-sm font-medium text-slate-700 md:col-span-2">
               Note
-              <input aria-label="Payment note" maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
+              <input aria-label="Payment note" maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Optional payment note" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
             </label>
           </div>
 
@@ -256,7 +256,7 @@ function SupplierPaymentsContent() {
               {bills.length === 0 ? <p className="px-4 pb-4 text-sm text-slate-600">No outstanding receipts or direct purchases.</p> : (
                 <table className="w-full text-left text-sm">
                   <thead className="bg-slate-50 text-slate-600"><tr><th className="px-4 py-2">Bill</th><th className="px-4 py-2">Date</th><th className="px-4 py-2 text-right">Outstanding</th><th className="px-4 py-2">Allocate amount</th></tr></thead>
-                  <tbody className="divide-y divide-slate-100">{bills.map((bill) => <tr key={`${bill.ref_type}:${bill.ref_id}`}><td className="px-4 py-2">{bill.doc_no} ({bill.ref_type === 'RECEIPT' ? 'Goods receipt' : 'Direct purchase'})</td><td className="px-4 py-2">{bill.doc_date}</td><td className="px-4 py-2 text-right">{bill.outstanding}</td><td className="px-4 py-2"><input aria-label={`Allocate to ${bill.doc_no}`} type="number" min="0.01" max={bill.outstanding} step="0.01" value={allocations[`${bill.ref_type}:${bill.ref_id}`] ?? ''} onChange={(event) => updateAllocation(bill, event.target.value)} className="w-36 rounded-md border border-slate-300 px-2 py-1" /></td></tr>)}</tbody>
+                  <tbody className="divide-y divide-slate-100">{bills.map((bill) => <tr key={`${bill.ref_type}:${bill.ref_id}`}><td className="px-4 py-2">{bill.doc_no} ({bill.ref_type === 'RECEIPT' ? 'Goods receipt' : 'Direct purchase'})</td><td className="px-4 py-2">{bill.doc_date}</td><td className="px-4 py-2 text-right">{bill.outstanding}</td><td className="px-4 py-2"><input aria-label={`Allocate to ${bill.doc_no}`} type="number" min="0.01" max={bill.outstanding} step="0.01" value={allocations[`${bill.ref_type}:${bill.ref_id}`] ?? ''} onChange={(event) => updateAllocation(bill, event.target.value)} placeholder="0.00" className="w-36 rounded-md border border-slate-300 px-2 py-1" /></td></tr>)}</tbody>
                 </table>
               )}
             </div>
