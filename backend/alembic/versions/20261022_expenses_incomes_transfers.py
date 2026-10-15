@@ -5,7 +5,7 @@ from sqlalchemy.dialects.mysql import BIGINT
 
 from alembic import op
 
-revision = "20261022_expenses_incomes_transfers"
+revision = "20261022_money_docs"
 down_revision = "20261021_po_status_perms"
 branch_labels = None
 depends_on = None
@@ -155,4 +155,3 @@ def downgrade() -> None:
     op.drop_index("ix_expenses_account_id", table_name="expenses")
     op.drop_index("ix_expenses_category_id", table_name="expenses")
     op.drop_table("expenses")
-

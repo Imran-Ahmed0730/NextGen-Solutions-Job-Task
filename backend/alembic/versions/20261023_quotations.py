@@ -6,7 +6,7 @@ from sqlalchemy.dialects.mysql import BIGINT
 from alembic import op
 
 revision = "20261023_quotations"
-down_revision = "20261022_expenses_incomes_transfers"
+down_revision = "20261022_money_docs"
 branch_labels = None
 depends_on = None
 
