@@ -24,6 +24,7 @@ from app.modules.product_categories.models import ProductCategory  # noqa: F401
 from app.modules.products.models import Product  # noqa: F401
 from app.modules.purchase_orders.models import PurchaseOrder, PurchaseOrderLine  # noqa: F401
 from app.modules.purchase_returns.models import PurchaseReturn, PurchaseReturnLine  # noqa: F401
+from app.modules.quotations.models import Quotation, QuotationLine  # noqa: F401
 from app.modules.sales.models import SalesOrder, SalesOrderLine  # noqa: F401
 from app.modules.stock_adjustments.models import StockAdjustment, StockAdjustmentLine  # noqa: F401
 from app.modules.stock_transfers.models import StockTransfer, StockTransferLine  # noqa: F401

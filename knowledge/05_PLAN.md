@@ -94,6 +94,11 @@ due at the original receipt cost. PO approval remains deferred to Phase 11.
 **Screens:** Quotation List, Create/Edit Quotation, Sales Order List, Create/Edit Sales Order, Sales Order Details, Delivery, Invoice List, Invoice Details/Print, Sales Return.
 **Exit:** delivery from reserved/available stock cuts stock and records COGS; invoice raises due; collection clears it; tracking numbers correct. Shortage fulfillment through production orders is completed in Phase 8.
 
+**Progress:** Quotation draft create/edit/list is implemented with server-calculated totals,
+central document numbering, audit, permissions, and a simple screen. The quotation lifecycle
+(send/accept/convert) remains for the Sales Order slice so its status transitions are defined once
+with their target behavior rather than guessed here.
+
 ## Phase 8 — Production & Costing
 **Build:** BOM, production order, consumption, output, cost calculation (materials at avg cost + labor + overhead), and sales-order shortage fulfillment.
 **Screens:** BOM List, BOM Create/Edit, Production Order List, Create/Edit Production Order, Production Details & Costing.

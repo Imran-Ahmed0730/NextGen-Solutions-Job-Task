@@ -407,6 +407,29 @@ export const directPurchaseSchema = z.object({
     .max(500, 'A direct purchase can have at most 500 lines'),
 });
 
+export const quotationSchema = z.object({
+  doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid quotation date'),
+  customer_id: z.number().int().positive('Select a customer'),
+  valid_until: z
+    .string()
+    .regex(/^$|^\d{4}-\d{2}-\d{2}$/, 'Enter a valid expiry date')
+    .transform((value) => value || null),
+  discount: z
+    .string()
+    .regex(/^\d{1,16}(?:\.\d{1,2})?$/, 'Enter a discount with up to 2 decimal places'),
+  note: z.string().max(2000, 'Use at most 2000 characters'),
+  lines: z
+    .array(
+      z.object({
+        product_id: z.number().int().positive('Select a product'),
+        qty: purchaseOrderQuantity,
+        unit_price: purchaseOrderUnitPrice,
+      }),
+    )
+    .min(1, 'Add at least one product')
+    .max(500, 'A quotation can have at most 500 lines'),
+});
+
 export const purchaseReturnSchema = z.object({
   doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid return date'),
   receipt_id: z.number().int().positive('Select a goods receipt'),
@@ -534,4 +557,3 @@ export const fundTransferSchema = z
     message: 'Source and destination accounts must be different',
     path: ['to_account_id'],
   });
-

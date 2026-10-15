@@ -131,6 +131,7 @@ The frontend route tree currently includes:
 | `/money-accounts` | List, create, update, soft-delete, and restore money accounts |
 | `/account-ledger` | Review current account balances and date-filtered money transactions with running balances |
 | `/customer-collections` | Post customer collections and view recent collection history |
+| `/quotations` | Create, edit, and browse sales quotation drafts |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/expenses` | Record operational expenses paid from any money account and browse expense history |
 | `/incomes` | Record money received into any account from any income source and browse income history |
@@ -275,6 +276,10 @@ The implemented auth API is:
 | `GET /api/v1/customers?search=&offset=0&limit=50` | `master_data.customers.read` | Search and page through customers; `include_inactive=true` includes inactive/deleted records |
 | `POST /api/v1/customers` / `PATCH /api/v1/customers/{id}` | `master_data.customers.create/update` | Create or update customer details and opening due |
 | `GET /api/v1/customers/{id}/statement` | `master_data.customers.read` | Read the current opening-balance statement |
+| `GET /api/v1/sales/quotations` / `GET /api/v1/sales/quotations/{id}` | `sales.quotations.read` | List or view quotation drafts |
+| `GET /api/v1/sales/quotations/options` | `sales.quotations.read` | Read active customers and products for quotation entry |
+| `POST /api/v1/sales/quotations` | `sales.quotations.create` | Create a numbered quotation draft and audit snapshot |
+| `PUT /api/v1/sales/quotations/{id}` | `sales.quotations.update` | Update a quotation while it remains a draft |
 | `GET/POST /api/v1/customers/{id}/contacts` | `master_data.customers.read/create` | List or add an additional contact |
 | `PATCH/DELETE /api/v1/customers/{id}/contacts/{contact_id}` | `master_data.customers.update/delete` | Update or remove an additional contact |
 | `GET /api/v1/suppliers?search=&offset=0&limit=50` | `master_data.suppliers.read` | Search and page through suppliers; `include_inactive=true` includes inactive/deleted records |
@@ -689,6 +694,13 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   enforces the overdraft guard on the source account. The `FUND_TRANSFER` document sequence must
   be configured before posting. Permissions: `money.transfers.read`, `money.transfers.create`.
   Frontend: `/fund-transfers`.
+- **Quotation drafts** — Quotations are created with status `DRAFT`; the service validates active
+  customers and products, calculates line totals and subtotal using decimal arithmetic, checks that
+  the discount does not exceed subtotal, allocates the central `QUOTATION` number, and writes audit
+  snapshots in the same transaction. Drafts can be edited; no send/accept/convert transitions are
+  exposed until those lifecycle rules are defined with Sales Orders. Permissions:
+  `sales.quotations.read`, `sales.quotations.create`, and `sales.quotations.update`. Frontend:
+  `/quotations`.
 - **Account Ledger** — `GET /api/v1/money-transactions/accounts/{id}/ledger` returns a date-filtered
   list of transactions for a given account with a running balance per row and an opening-period balance
   calculated from all prior transactions. The `/account-ledger` screen lists current balances and

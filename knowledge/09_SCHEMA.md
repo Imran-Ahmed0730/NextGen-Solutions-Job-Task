@@ -73,7 +73,7 @@ their respective transaction workflows.
 **production_outputs**: id, production_order_id(FK), product_id, qty, unit_cost
 
 ## 7. Sales
-**quotations**: id, doc_no, doc_date, customer_id(FK), valid_until, status, subtotal, discount, total, note
+**quotations**: id, doc_no, doc_date, customer_id(FK), valid_until, status(DRAFT initially), subtotal, discount, total, note, created_by(FK), created_at, updated_at
 **quotation_lines**: id, quotation_id(FK), product_id, qty, unit_price, line_total
 **sales_orders**: id, doc_no, doc_date, customer_id(FK), quotation_id(FK, null), warehouse_id, status, delivery_date, subtotal, discount, total, note
 **sales_order_lines**: id, order_id(FK), product_id, qty_ordered, unit_price, line_total, qty_reserved, qty_produced, qty_delivered
@@ -85,9 +85,9 @@ their respective transaction workflows.
 **sales_return_lines**: id, return_id(FK), invoice_line_id(FK), product_id, qty, unit_price, unit_cost_cogs
 
 The Phase 4 reservation prerequisite migration creates only the `sales_orders` and
-`sales_order_lines` columns needed for valid reservation references. It does not implement the Sales
-workflow, screens, quotation linkage, or status transitions; `quotation_id` will receive its foreign
-key when the quotation table is implemented in Phase 7.
+`sales_order_lines` columns needed for valid reservation references. Phase 7 adds quotation linkage
+and completes the Sales Order document fields. Quotation send/accept/convert status transitions are
+not yet specified in the implemented workflow.
 
 ## 8. Money
 **money_transactions** (ledger, append-only): id, txn_date, account_id(FK), amount_signed, txn_type(COLLECTION/PAYMENT/EXPENSE/INCOME/TRANSFER_OUT/TRANSFER_IN/OPENING/PURCHASE_PAYMENT/SALARY), source_type, source_id, party_type, party_id, note, created_by, created_at. `money_accounts.opening_balance` is the pre-ledger baseline; `OPENING` transactions are later signed adjustments included in the sum, and the baseline is immutable after the first ledger transaction.

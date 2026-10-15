@@ -187,6 +187,17 @@ const navigation = [
     ],
   },
   {
+    label: 'Sales',
+    items: [
+      {
+        href: '/quotations',
+        label: 'Quotations',
+        icon: 'customer',
+        permissions: ['sales.quotations.read'],
+      },
+    ],
+  },
+  {
     label: 'Money',
     items: [
       {
