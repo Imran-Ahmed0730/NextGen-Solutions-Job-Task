@@ -132,6 +132,7 @@ The frontend route tree currently includes:
 | `/account-ledger` | Review current account balances and date-filtered money transactions with running balances |
 | `/customer-collections` | Post customer collections and view recent collection history |
 | `/quotations` | Create, edit, and browse sales quotation drafts |
+| `/sales-orders` | Create, edit, browse, and view draft sales order details |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/expenses` | Record operational expenses paid from any money account and browse expense history |
 | `/incomes` | Record money received into any account from any income source and browse income history |
@@ -280,6 +281,10 @@ The implemented auth API is:
 | `GET /api/v1/sales/quotations/options` | `sales.quotations.read` | Read active customers and products for quotation entry |
 | `POST /api/v1/sales/quotations` | `sales.quotations.create` | Create a numbered quotation draft and audit snapshot |
 | `PUT /api/v1/sales/quotations/{id}` | `sales.quotations.update` | Update a quotation while it remains a draft |
+| `GET /api/v1/sales/orders` / `GET /api/v1/sales/orders/{id}` | `sales.orders.read` | List or view sales order drafts and their tracking quantities |
+| `GET /api/v1/sales/orders/options` | `sales.orders.read` | Read active customers, warehouses, and products for order entry |
+| `POST /api/v1/sales/orders` | `sales.orders.create` | Create a numbered draft sales order and audit snapshot |
+| `PUT /api/v1/sales/orders/{id}` | `sales.orders.update` | Update a sales order while it remains a draft |
 | `GET/POST /api/v1/customers/{id}/contacts` | `master_data.customers.read/create` | List or add an additional contact |
 | `PATCH/DELETE /api/v1/customers/{id}/contacts/{contact_id}` | `master_data.customers.update/delete` | Update or remove an additional contact |
 | `GET /api/v1/suppliers?search=&offset=0&limit=50` | `master_data.suppliers.read` | Search and page through suppliers; `include_inactive=true` includes inactive/deleted records |
@@ -701,6 +706,13 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   exposed until those lifecycle rules are defined with Sales Orders. Permissions:
   `sales.quotations.read`, `sales.quotations.create`, and `sales.quotations.update`. Frontend:
   `/quotations`.
+- **Sales Order drafts** — Sales Orders are created with status `DRAFT`; the service validates an
+  active customer, warehouse, and products, calculates line totals and discount using decimal
+  arithmetic, allocates the central `SALES_ORDER` number, and writes audit snapshots in the same
+  transaction. Drafts can be edited; the existing reservation service is not called by draft
+  creation. Quotation conversion, reservation, and credit-limit enforcement wait for the later
+  lifecycle/posting slices. Permissions: `sales.orders.read`, `sales.orders.create`, and
+  `sales.orders.update`. Frontend: `/sales-orders`.
 - **Account Ledger** — `GET /api/v1/money-transactions/accounts/{id}/ledger` returns a date-filtered
   list of transactions for a given account with a running balance per row and an opening-period balance
   calculated from all prior transactions. The `/account-ledger` screen lists current balances and
@@ -714,7 +726,7 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 
 ### Planned, not yet implemented
 
-The remaining roadmap includes sales, production, assets, employees,
+The remaining roadmap includes the rest of Sales, production, assets, employees,
 approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens

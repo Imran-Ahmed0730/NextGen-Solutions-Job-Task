@@ -195,6 +195,12 @@ const navigation = [
         icon: 'customer',
         permissions: ['sales.quotations.read'],
       },
+      {
+        href: '/sales-orders',
+        label: 'Sales Orders',
+        icon: 'customer',
+        permissions: ['sales.orders.read'],
+      },
     ],
   },
   {

@@ -9,6 +9,7 @@ from app.modules.auth.models import User
 from app.modules.customers import service as customer_service
 from app.modules.document_numbering.service import generate_next_number
 from app.modules.products import service as product_service
+from app.modules.products.models import Product
 from app.modules.quotations import repository
 from app.modules.quotations.models import Quotation, QuotationLine
 from app.modules.quotations.schemas import (
@@ -21,6 +22,7 @@ from app.modules.quotations.schemas import (
 
 DOCUMENT_TYPE = "QUOTATION"
 CENT = Decimal("0.01")
+MAX_MONEY = Decimal("9999999999999999.99")
 
 
 def list_quotations(db: Session, *, offset: int = 0, limit: int = 50) -> list[Quotation]:
@@ -147,10 +149,21 @@ def update_quotation(
 
 
 def _validate_products(db: Session, payload: QuotationCreate | QuotationUpdate) -> None:
-    for line in payload.lines:
-        product = product_service.get_product(db, line.product_id)
-        if product is None or not product.is_active or product.deleted_at is not None:
+    products: dict[int, Product] = {}
+    for product_id in {line.product_id for line in payload.lines}:
+        product = product_service.get_product(db, product_id)
+        if product is None:
             raise HTTPException(status_code=404, detail="Product not found")
+        if not product.is_active or product.deleted_at is not None:
+            raise HTTPException(status_code=404, detail="Product not found")
+        products[product_id] = product
+
+    for line in payload.lines:
+        product = products[line.product_id]
+        if not product.unit.allow_decimal and line.qty != line.qty.to_integral_value():
+            raise HTTPException(
+                status_code=422, detail="Product unit does not allow decimal quantity"
+            )
 
 
 def _build_lines(
@@ -159,7 +172,10 @@ def _build_lines(
     lines: list[QuotationLine] = []
     subtotal = Decimal("0.00")
     for line in payload.lines:
-        line_total = (line.qty * line.unit_price).quantize(CENT, rounding=ROUND_HALF_UP)
+        raw_line_total = line.qty * line.unit_price
+        if raw_line_total > MAX_MONEY:
+            raise HTTPException(status_code=422, detail="Quotation total exceeds supported amount")
+        line_total = raw_line_total.quantize(CENT, rounding=ROUND_HALF_UP)
         subtotal += line_total
         lines.append(
             QuotationLine(
@@ -169,6 +185,8 @@ def _build_lines(
                 line_total=line_total,
             )
         )
+    if subtotal > MAX_MONEY:
+        raise HTTPException(status_code=422, detail="Quotation total exceeds supported amount")
     if payload.discount > subtotal:
         raise HTTPException(status_code=422, detail="Discount cannot exceed the subtotal")
     return lines, subtotal, payload.discount, subtotal - payload.discount

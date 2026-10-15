@@ -74,7 +74,7 @@ def quotation_fixture(db_session: Session) -> tuple[User, str, Customer, Product
 
     customer = Customer(code="CUS-001", name="Quotation Customer")
     category = ProductCategory(name="Quotation Products")
-    unit = Unit(name="Piece", code="pcs")
+    unit = Unit(name="Piece", code="pcs", allow_decimal=True)
     db_session.add_all([customer, category, unit])
     db_session.flush()
     product = Product(
@@ -197,6 +197,47 @@ def test_quotation_rejects_excessive_discount_and_invalid_product(
         json=invalid_product,
     )
     assert response.status_code == 404
+
+    whole_number_unit = Unit(name="Whole Piece", code="whole-pc", allow_decimal=False)
+    db_session.add(whole_number_unit)
+    db_session.flush()
+    whole_product = Product(
+        sku="QUOTE-WHOLE",
+        name="Whole Piece Product",
+        type=ProductType.FINISHED,
+        category_id=product.category_id,
+        unit_id=whole_number_unit.id,
+        is_stocked=True,
+    )
+    db_session.add(whole_product)
+    db_session.commit()
+    invalid_fraction = _payload(customer, product)
+    invalid_fraction["lines"] = [
+        {"product_id": whole_product.id, "qty": "1.500", "unit_price": "1.00"}
+    ]
+    response = client.post(
+        "/api/v1/sales/quotations",
+        headers=headers,
+        json=invalid_fraction,
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Product unit does not allow decimal quantity"
+
+    oversized_total = _payload(customer, product)
+    oversized_total["lines"] = [
+        {
+            "product_id": product.id,
+            "qty": "999999999999999.999",
+            "unit_price": "9999999999999999.99",
+        }
+    ]
+    response = client.post(
+        "/api/v1/sales/quotations",
+        headers=headers,
+        json=oversized_total,
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Quotation total exceeds supported amount"
     assert db_session.scalar(select(func.count(Quotation.id))) == 0
 
 
@@ -220,6 +261,4 @@ def test_quotation_routes_require_permissions(
     payload = _payload(customer, product)
     assert client.get("/api/v1/sales/quotations", headers=headers).status_code == 403
     assert client.get("/api/v1/sales/quotations/options", headers=headers).status_code == 403
-    assert (
-        client.post("/api/v1/sales/quotations", headers=headers, json=payload).status_code == 403
-    )
+    assert client.post("/api/v1/sales/quotations", headers=headers, json=payload).status_code == 403

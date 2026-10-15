@@ -106,6 +106,10 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 5. Invoice from delivery → Post → customer due ↑ (credit-limit check).
 6. Sales Return → qty ≤ delivered → Post → stock ↑ at original COGS, customer due ↓ (or credit note).
 
+Current delivery includes draft quotation and draft Sales Order create/edit/list/detail workflows.
+Reservation, quotation lifecycle/conversion, delivery, invoices, and returns are not yet implemented;
+quotation status transitions and credit-limit behavior remain open decisions in `06_TODO.md`.
+
 ### 5.5 Money
 - **Customer Collection:** customer, account, amount, optional reference → Post → customer due ↓,
   account ↑. Customer collections are party-level until invoices are implemented in Phase 7.

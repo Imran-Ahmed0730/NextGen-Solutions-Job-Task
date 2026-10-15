@@ -75,7 +75,7 @@ their respective transaction workflows.
 ## 7. Sales
 **quotations**: id, doc_no, doc_date, customer_id(FK), valid_until, status(DRAFT initially), subtotal, discount, total, note, created_by(FK), created_at, updated_at
 **quotation_lines**: id, quotation_id(FK), product_id, qty, unit_price, line_total
-**sales_orders**: id, doc_no, doc_date, customer_id(FK), quotation_id(FK, null), warehouse_id, status, delivery_date, subtotal, discount, total, note
+**sales_orders**: id, doc_no, doc_date, customer_id(FK), quotation_id(FK, null), warehouse_id, status, delivery_date, subtotal, discount, total, note, created_by(FK), created_at, updated_at
 **sales_order_lines**: id, order_id(FK), product_id, qty_ordered, unit_price, line_total, qty_reserved, qty_produced, qty_delivered
 **deliveries**: id, doc_no, doc_date, order_id(FK), customer_id, warehouse_id, status
 **delivery_lines**: id, delivery_id(FK), order_line_id(FK), product_id, qty, unit_cost_cogs

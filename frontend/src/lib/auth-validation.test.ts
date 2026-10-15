@@ -14,6 +14,7 @@ import {
   profileSchema,
   resetPasswordSchema,
   roleSchema,
+  salesOrderSchema,
   stockAdjustmentSchema,
   supplierPaymentSchema,
   unitSchema,
@@ -22,6 +23,26 @@ import {
 } from './auth-validation';
 
 describe('auth-validation schemas', () => {
+  it('validates sales-order draft fields and lines', () => {
+    const valid = {
+      doc_date: '2026-10-24',
+      customer_id: 1,
+      warehouse_id: 2,
+      delivery_date: '',
+      discount: '1.00',
+      note: '',
+      lines: [{ product_id: 3, qty_ordered: '2.500', unit_price: '4.00' }],
+    };
+    expect(salesOrderSchema.safeParse(valid).success).toBe(true);
+    expect(salesOrderSchema.safeParse({ ...valid, warehouse_id: 0 }).success).toBe(false);
+    expect(
+      salesOrderSchema.safeParse({
+        ...valid,
+        lines: [{ ...valid.lines[0], qty_ordered: '0.000' }],
+      }).success,
+    ).toBe(false);
+  });
+
   it('validates customer collections', () => {
     const valid = {
       doc_date: '2026-10-15',

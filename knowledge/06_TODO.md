@@ -4,6 +4,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 
 ## Open questions (do not let AI guess; decide and record)
 - [ ] Credit-limit check: warn or block?
+- [ ] Define quotation status transitions and which statuses allow conversion to a Sales Order.
 - [ ] Receiving tolerance over PO qty (percent)?
 - [ ] Payroll scope: salary + deductions only, or allowances/overtime too?
 - [ ] Invoice/report language: English only or English + Bangla?
@@ -114,7 +115,8 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 ## Phase 7 — Sales
 - [x] Quotation draft create/edit/list, customer/product validation, totals, audit, permissions, and screen
 - [ ] Quotation send/accept/convert lifecycle (define status transitions during Sales Order design)
-- [ ] Sales Order create/edit/list/details (+ convert accepted quotations → orders)
+- [x] Sales Order draft create/edit/list/details, totals, audit, permissions, and screen
+- [ ] Convert accepted quotations → Sales Orders (after quotation lifecycle decision)
 - [ ] Reserve/release order-line quantities through the Phase 4 reservation service
 - [ ] Delivery with COGS
 - [ ] Invoice, customer due, credit-limit check

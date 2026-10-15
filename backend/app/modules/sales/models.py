@@ -1,10 +1,11 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
     BigInteger,
     CheckConstraint,
     Date,
+    DateTime,
     ForeignKey,
     Integer,
     Numeric,
@@ -14,7 +15,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.mysql import BIGINT
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
@@ -38,6 +39,9 @@ class SalesOrder(Base):
     customer_id: Mapped[int] = mapped_column(
         ID_TYPE, ForeignKey("customers.id", ondelete="RESTRICT"), nullable=False
     )
+    quotation_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("quotations.id", ondelete="RESTRICT"), nullable=True
+    )
     warehouse_id: Mapped[int] = mapped_column(
         ID_TYPE, ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=False
     )
@@ -53,6 +57,24 @@ class SalesOrder(Base):
         Numeric(18, 2), nullable=False, server_default=text("0.00")
     )
     note: Mapped[str] = mapped_column(Text, nullable=True)
+    created_by: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP"),
+    )
+    lines: Mapped[list["SalesOrderLine"]] = relationship(
+        back_populates="sales_order",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="SalesOrderLine.id",
+    )
 
 
 class SalesOrderLine(Base):
@@ -85,3 +107,4 @@ class SalesOrderLine(Base):
     qty_delivered: Mapped[Decimal] = mapped_column(
         Numeric(18, 3), nullable=False, server_default=text("0.000")
     )
+    sales_order: Mapped[SalesOrder] = relationship(back_populates="lines")

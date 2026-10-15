@@ -430,6 +430,30 @@ export const quotationSchema = z.object({
     .max(500, 'A quotation can have at most 500 lines'),
 });
 
+export const salesOrderSchema = z.object({
+  doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid order date'),
+  customer_id: z.number().int().positive('Select a customer'),
+  warehouse_id: z.number().int().positive('Select a warehouse'),
+  delivery_date: z
+    .string()
+    .regex(/^$|^\d{4}-\d{2}-\d{2}$/, 'Enter a valid delivery date')
+    .transform((value) => value || null),
+  discount: z
+    .string()
+    .regex(/^\d{1,16}(?:\.\d{1,2})?$/, 'Enter a discount with up to 2 decimal places'),
+  note: z.string().max(2000, 'Use at most 2000 characters'),
+  lines: z
+    .array(
+      z.object({
+        product_id: z.number().int().positive('Select a product'),
+        qty_ordered: purchaseOrderQuantity,
+        unit_price: purchaseOrderUnitPrice,
+      }),
+    )
+    .min(1, 'Add at least one product')
+    .max(500, 'A sales order can have at most 500 lines'),
+});
+
 export const purchaseReturnSchema = z.object({
   doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid return date'),
   receipt_id: z.number().int().positive('Select a goods receipt'),
