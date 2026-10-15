@@ -75,7 +75,8 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 3. Open the party statement to review its opening-balance entry and current opening balance.
 4. Search and page through party records; permissions are checked by the API for every operation.
 5. Posted purchases, purchase returns, customer collections, and supplier payments are included in
-   the applicable party statement. Sales and sales returns will be added with the sales workflows.
+   the applicable party statement. Posted sales invoices and sales returns are included in customer
+   statements.
 
 ### 5.1 Purchase
 1. Create PO (supplier, warehouse, lines) → Save Draft → Submit.
@@ -114,8 +115,11 @@ available quantity in the same transaction, and store the transaction's unit cos
 Partial deliveries leave the Sales Order status unchanged; delivered quantities and delivery history
 show progress. A posted delivery can be invoiced once. Invoices snapshot delivered quantities,
 order prices, and delivery COGS; posting updates the customer statement and checks the configured
-credit-limit mode. Quotation lifecycle/conversion and sales returns are not yet implemented;
-quotation status transitions remain open decisions in `06_TODO.md`.
+credit-limit mode. Sales Returns reference invoice lines and cap returns at remaining invoiced
+quantity. Posting creates an immutable document, restores stock at the invoice line's stored COGS,
+and reduces customer due using the invoice's discount-adjusted value. Quotation lifecycle/conversion
+and order tracking remain open slices; quotation status transitions remain open decisions in
+`06_TODO.md`.
 
 ### 5.5 Money
 - **Customer Collection:** customer, account, amount, optional reference → Post → customer due ↓,

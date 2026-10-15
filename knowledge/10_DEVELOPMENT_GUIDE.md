@@ -134,6 +134,7 @@ The frontend route tree currently includes:
 | `/quotations` | Create, edit, and browse sales quotation drafts |
 | `/sales-orders` | Create, edit, browse, view draft sales order details, and post deliveries with COGS |
 | `/sales-invoices` | Post invoices from deliveries, apply credit-limit mode, and browse invoice/COGS history |
+| `/sales-returns` | Return remaining invoiced quantities, restore stock at original COGS, and reduce customer due |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/expenses` | Record operational expenses paid from any money account and browse expense history |
 | `/incomes` | Record money received into any account from any income source and browse income history |
@@ -292,6 +293,9 @@ The implemented auth API is:
 | `GET /api/v1/sales/invoices/options` | `sales.invoices.read` | List posted deliveries that have not yet been invoiced |
 | `GET /api/v1/sales/invoices` / `GET /api/v1/sales/invoices/{id}` | `sales.invoices.read` | List or view posted invoices and line snapshots |
 | `POST /api/v1/sales/invoices` | `sales.invoices.create` | Post one invoice per delivery, add customer due, and check credit-limit mode |
+| `GET /api/v1/sales/returns/options` | `sales.returns.read` | List posted invoices and invoice lines with quantities still returnable |
+| `GET /api/v1/sales/returns` / `GET /api/v1/sales/returns/{id}` | `sales.returns.read` | List or view posted sales returns |
+| `POST /api/v1/sales/returns` | `sales.returns.create` | Post a return against invoice lines, restore stock at original COGS, and reduce customer due |
 | `GET/POST /api/v1/customers/{id}/contacts` | `master_data.customers.read/create` | List or add an additional contact |
 | `PATCH/DELETE /api/v1/customers/{id}/contacts/{contact_id}` | `master_data.customers.update/delete` | Update or remove an additional contact |
 | `GET /api/v1/suppliers?search=&offset=0&limit=50` | `master_data.suppliers.read` | Search and page through suppliers; `include_inactive=true` includes inactive/deleted records |
@@ -734,6 +738,14 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   visible warning. Configure an `INVOICE` document-number sequence before posting. Permissions:
   `sales.invoices.read` and `sales.invoices.create` (both included in the Administrator role).
   Frontend: `/sales-invoices`.
+- **Sales Returns** — Returns reference a posted invoice and its lines; quantities cannot exceed
+  each line's remaining invoiced quantity. The return's stock is posted through the inventory
+  service at stored invoice-line COGS. Refund values use the invoice's discount-adjusted line value
+  (with any rounding remainder applied to the final quantity returned), and posted return totals
+  reduce customer due. The customer and invoice are locked during posting to serialize due and
+  return-quantity checks. Configure a `SALES_RETURN` document-number sequence before posting.
+  Permissions: `sales.returns.read` and `sales.returns.create` (both included in the Administrator
+  role). Frontend: `/sales-returns`.
 - **Account Ledger** — `GET /api/v1/money-transactions/accounts/{id}/ledger` returns a date-filtered
   list of transactions for a given account with a running balance per row and an opening-period balance
   calculated from all prior transactions. The `/account-ledger` screen lists current balances and

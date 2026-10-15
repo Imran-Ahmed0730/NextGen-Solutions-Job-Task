@@ -17,6 +17,7 @@ from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.modules.products.models import Product
 from app.modules.sales.models import SalesDelivery
 
 ID_TYPE = (
@@ -90,3 +91,4 @@ class SalesInvoiceLine(Base):
     line_total: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
     unit_cost_cogs: Mapped[Decimal] = mapped_column(Numeric(18, 4), nullable=False)
     invoice: Mapped[SalesInvoice] = relationship(back_populates="lines")
+    product: Mapped[Product] = relationship(lazy="joined")

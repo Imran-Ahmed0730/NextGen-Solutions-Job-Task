@@ -33,6 +33,7 @@ from app.modules.purchase_returns.router import router as purchase_returns_route
 from app.modules.quotations.router import router as quotations_router
 from app.modules.sales_invoices.router import router as sales_invoices_router
 from app.modules.sales_orders.router import router as sales_orders_router
+from app.modules.sales_returns.router import router as sales_returns_router
 from app.modules.stock_adjustments.router import router as stock_adjustments_router
 from app.modules.stock_transfers.router import router as stock_transfers_router
 from app.modules.supplier_payments.router import router as supplier_payments_router
@@ -67,6 +68,7 @@ app.include_router(purchase_returns_router)
 app.include_router(quotations_router)
 app.include_router(sales_orders_router)
 app.include_router(sales_invoices_router)
+app.include_router(sales_returns_router)
 app.include_router(suppliers_router)
 app.include_router(units_router)
 app.include_router(product_categories_router)

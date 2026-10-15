@@ -501,6 +501,25 @@ export const purchaseReturnSchema = z.object({
     .max(500, 'A purchase return can have at most 500 lines'),
 });
 
+export const salesReturnSchema = z.object({
+  doc_date: z.string().date('Enter a valid return date'),
+  invoice_id: z.number().int().positive('Select an invoice'),
+  note: z.string().max(2000, 'Use at most 2000 characters'),
+  lines: z
+    .array(
+      z.object({
+        invoice_line_id: z.number().int().positive(),
+        qty: purchaseOrderQuantity,
+      }),
+    )
+    .min(1, 'Enter a return quantity for at least one invoice line')
+    .max(500, 'A return may contain at most 500 invoice lines')
+    .refine(
+      (items) => new Set(items.map((item) => item.invoice_line_id)).size === items.length,
+      'An invoice line may only be selected once',
+    ),
+});
+
 export function moneyAmountToCents(value: string): bigint | null {
   const match = /^(\d{1,16})(?:\.(\d{1,2}))?$/.exec(value);
   if (!match) return null;

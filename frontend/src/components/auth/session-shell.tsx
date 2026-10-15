@@ -207,6 +207,12 @@ const navigation = [
         icon: 'customer',
         permissions: ['sales.invoices.read'],
       },
+      {
+        href: '/sales-returns',
+        label: 'Sales Returns',
+        icon: 'customer',
+        permissions: ['sales.returns.read'],
+      },
     ],
   },
   {

@@ -102,7 +102,10 @@ stock through the Phase 4 service, stores line-level COGS, and preserves the Sal
 tracking delivered quantities. Invoices can now be posted once per delivery; they snapshot sales
 prices and delivery COGS, increase customer due, and warn/block according to `credit_limit_mode`.
 Quotation send/accept/convert and sales returns remain separate slices; quotation lifecycle
-decisions are recorded in `06_TODO.md`.
+decisions are recorded in `06_TODO.md`. Sales Returns are now posted against invoice lines,
+limited to the remaining invoiced quantity, and atomically restock at the original COGS while
+reducing customer due by the invoice-discounted return value. Order tracking and the remaining
+quotation lifecycle decisions are still open.
 
 ## Phase 8 — Production & Costing
 **Build:** BOM, production order, consumption, output, cost calculation (materials at avg cost + labor + overhead), and sales-order shortage fulfillment.

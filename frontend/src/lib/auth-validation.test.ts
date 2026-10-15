@@ -18,6 +18,7 @@ import {
   salesInvoiceSchema,
   salesOrderSchema,
   salesOrderReservationSchema,
+  salesReturnSchema,
   stockAdjustmentSchema,
   supplierPaymentSchema,
   unitSchema,
@@ -42,6 +43,26 @@ describe('auth-validation schemas', () => {
       salesOrderSchema.safeParse({
         ...valid,
         lines: [{ ...valid.lines[0], qty_ordered: '0.000' }],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('validates sales returns with unique, positive invoice-line quantities', () => {
+    const valid = {
+      doc_date: '2026-10-26',
+      invoice_id: 4,
+      note: '',
+      lines: [{ invoice_line_id: 9, qty: '1.250' }],
+    };
+    expect(salesReturnSchema.safeParse(valid).success).toBe(true);
+    expect(salesReturnSchema.safeParse({ ...valid, lines: [] }).success).toBe(false);
+    expect(
+      salesReturnSchema.safeParse({
+        ...valid,
+        lines: [
+          { invoice_line_id: 9, qty: '1.000' },
+          { invoice_line_id: 9, qty: '0.500' },
+        ],
       }).success,
     ).toBe(false);
   });

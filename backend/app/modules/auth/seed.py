@@ -134,6 +134,8 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("sales.deliveries.create", "sales", "Post sales deliveries"),
     PermissionDefinition("sales.invoices.read", "sales", "View sales invoices"),
     PermissionDefinition("sales.invoices.create", "sales", "Post sales invoices"),
+    PermissionDefinition("sales.returns.read", "sales", "View sales returns"),
+    PermissionDefinition("sales.returns.create", "sales", "Post sales returns"),
     PermissionDefinition("master_data.price_lists.read", "master_data", "View price lists"),
     PermissionDefinition("master_data.price_lists.create", "master_data", "Create price lists"),
     PermissionDefinition("master_data.price_lists.update", "master_data", "Update price lists"),

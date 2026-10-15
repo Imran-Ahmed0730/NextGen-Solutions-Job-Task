@@ -109,6 +109,13 @@ def sales_order_fixture(
                 last_number=0,
                 padding=4,
             ),
+            DocumentSequence(
+                doc_type="SALES_RETURN",
+                prefix="SR-",
+                year=2026,
+                last_number=0,
+                padding=4,
+            ),
         ]
     )
     db_session.commit()
@@ -735,6 +742,176 @@ def test_invoice_requires_permission_and_rejects_duplicate_delivery_invoice(
     duplicate = client.post("/api/v1/sales/invoices", headers=headers, json=payload)
     assert duplicate.status_code == 409
     assert duplicate.json()["detail"] == "DELIVERY_ALREADY_INVOICED"
+
+
+def test_sales_return_reduces_customer_due_and_restocks_at_original_cogs(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    headers = _login(client, actor.username, password)
+    order_response = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json={
+            **_payload(customer, warehouse, product),
+            "discount": "2.00",
+            "lines": [{"product_id": product.id, "qty_ordered": "2.000", "unit_price": "10.00"}],
+        },
+    )
+    assert order_response.status_code == 201
+    order = order_response.json()
+    delivery_response = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": order["lines"][0]["id"], "qty": "2.000"}],
+        },
+    )
+    assert delivery_response.status_code == 201
+    delivery = delivery_response.json()
+    invoice_response = client.post(
+        "/api/v1/sales/invoices",
+        headers=headers,
+        json={
+            "delivery_id": delivery["id"],
+            "doc_date": "2026-10-25",
+            "due_date": "2026-11-05",
+        },
+    )
+    assert invoice_response.status_code == 201
+    invoice = invoice_response.json()["invoice"]
+
+    returned = client.post(
+        "/api/v1/sales/returns",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-26",
+            "invoice_id": invoice["id"],
+            "lines": [{"invoice_line_id": invoice["lines"][0]["id"], "qty": "1.000"}],
+        },
+    )
+    assert returned.status_code == 201
+    sales_return = returned.json()
+    assert sales_return["doc_no"] == "SR-20260001"
+    assert sales_return["total"] == "9.00"
+    assert sales_return["lines"][0]["unit_cost_cogs"] == "2.5000"
+
+    statement = client.get(
+        f"/api/v1/customers/{customer.id}/statement",
+        headers=headers,
+    )
+    assert statement.status_code == 200
+    assert statement.json()["balance"] == "9.00"
+    assert [entry["type"] for entry in statement.json()["entries"]] == [
+        "OPENING_BALANCE",
+        "INVOICE",
+        "SALES_RETURN",
+    ]
+
+    balance = db_session.scalar(
+        select(StockBalance).where(
+            StockBalance.product_id == product.id,
+            StockBalance.warehouse_id == warehouse.id,
+        )
+    )
+    assert balance is not None
+    assert balance.qty_on_hand == Decimal("9.000")
+    return_movement = db_session.scalar(
+        select(StockTransaction).where(StockTransaction.movement_type == MovementType.SALE_RETURN)
+    )
+    assert return_movement is not None
+    assert return_movement.qty_signed == Decimal("1.000")
+    assert return_movement.unit_cost == Decimal("2.5000")
+    assert db_session.scalar(
+        select(func.count(AuditLog.id)).where(AuditLog.entity_type == "sales_return")
+    ) == 1
+    options = client.get("/api/v1/sales/returns/options", headers=headers)
+    assert options.status_code == 200
+    option_line = options.json()["invoices"][0]["lines"][0]
+    assert option_line["qty_returned"] == "1.000"
+    assert option_line["qty_available"] == "1.000"
+
+    final_return = client.post(
+        "/api/v1/sales/returns",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-27",
+            "invoice_id": invoice["id"],
+            "lines": [{"invoice_line_id": invoice["lines"][0]["id"], "qty": "1.000"}],
+        },
+    )
+    assert final_return.status_code == 201
+    assert final_return.json()["total"] == "9.00"
+    updated_statement = client.get(
+        f"/api/v1/customers/{customer.id}/statement",
+        headers=headers,
+    )
+    assert updated_statement.json()["balance"] == "0.00"
+    assert client.get("/api/v1/sales/returns/options", headers=headers).json()["invoices"] == []
+
+
+def test_sales_return_requires_permission_and_caps_qty_at_delivered(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    headers = _login(client, actor.username, password)
+    order = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json={
+            **_payload(customer, warehouse, product),
+            "lines": [{"product_id": product.id, "qty_ordered": "2.000", "unit_price": "10.00"}],
+        },
+    ).json()
+    delivery = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": order["lines"][0]["id"], "qty": "1.000"}],
+        },
+    ).json()
+    invoice = client.post(
+        "/api/v1/sales/invoices",
+        headers=headers,
+        json={
+            "delivery_id": delivery["id"],
+            "doc_date": "2026-10-25",
+            "due_date": "2026-11-05",
+        },
+    ).json()["invoice"]
+    payload = {
+        "doc_date": "2026-10-26",
+        "invoice_id": invoice["id"],
+        "lines": [{"invoice_line_id": invoice["lines"][0]["id"], "qty": "2.000"}],
+    }
+    readonly = User(
+        username="sales_return_readonly",
+        full_name="Sales Return Readonly",
+        password_hash=hash_password("ReadOnly-Password-123"),
+    )
+    db_session.add(readonly)
+    db_session.commit()
+    denied = client.post(
+        "/api/v1/sales/returns",
+        headers=_login(client, readonly.username, "ReadOnly-Password-123"),
+        json=payload,
+    )
+    assert denied.status_code == 403
+
+    excessive = client.post("/api/v1/sales/returns", headers=headers, json=payload)
+    assert excessive.status_code == 409
+    assert excessive.json()["detail"] == "SALES_RETURN_EXCEEDS_DELIVERED_QTY"
+    assert db_session.scalar(
+        select(func.count(StockTransaction.id)).where(
+            StockTransaction.movement_type == MovementType.SALE_RETURN
+        )
+    ) == 0
 
 
 def test_delivery_route_requires_permission(

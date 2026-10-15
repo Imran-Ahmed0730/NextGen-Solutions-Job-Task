@@ -433,6 +433,13 @@ def get_customer_statement(db: Session, customer: Customer) -> dict[str, object]
         invoice_due_entry_data(invoice)
         for invoice in list_customer_invoices(db, customer.id)
     )
+    from app.modules.sales_returns.service import due_entry_data as sales_return_due_entry_data
+    from app.modules.sales_returns.service import list_customer_returns
+
+    entries.extend(
+        sales_return_due_entry_data(sales_return)
+        for sales_return in list_customer_returns(db, customer.id)
+    )
     opening_entry, *due_entries = entries
     due_entries.sort(key=lambda entry: (str(entry["date"]), str(entry["description"])))
     entries = [opening_entry, *due_entries]

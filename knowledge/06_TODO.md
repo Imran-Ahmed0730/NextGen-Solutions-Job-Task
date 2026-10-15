@@ -122,7 +122,9 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Delivery posting from reserved/available stock with stored line-level COGS and order history
 - [x] Post invoice per delivery, add invoice totals to customer statements, and enforce configured
       credit-limit WARN/BLOCK mode
-- [ ] Sales return
+- [x] Sales Return against posted invoices, with delivered-quantity cap, original COGS restock,
+      customer-due reduction, audit, permissions, and screen
+- [x] Sales Return screen `/sales-returns`
 - [ ] Order tracking (Ordered/Available/Reserved/Produced/Delivered/Remaining)
 - [ ] Screens: 9 Sales screens
 - [ ] Exit: stock + COGS + due tested together

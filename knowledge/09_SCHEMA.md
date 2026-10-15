@@ -81,8 +81,8 @@ their respective transaction workflows.
 **delivery_lines**: id, delivery_id(FK), order_line_id(FK), product_id(FK), qty, unit_cost_cogs (weighted-average cost captured at posting)
 **invoices**: id, doc_no, doc_date, due_date, customer_id(FK), delivery_id(FK, unique), status(POSTED), subtotal, discount, total, cogs_total, created_by(FK), created_at
 **invoice_lines**: id, invoice_id(FK), product_id(FK), qty, unit_price, line_total, unit_cost_cogs
-**sales_returns**: id, doc_no, doc_date, customer_id, invoice_id(FK), warehouse_id, status, total
-**sales_return_lines**: id, return_id(FK), invoice_line_id(FK), product_id, qty, unit_price, unit_cost_cogs
+**sales_returns**: id, doc_no, doc_date, invoice_id(FK), customer_id(FK), warehouse_id(FK), status(POSTED), total, note, created_by(FK), created_at
+**sales_return_lines**: id, return_id(FK), invoice_line_id(FK), product_id(FK), qty, unit_price, line_total, unit_cost_cogs
 
 The Phase 4 reservation prerequisite migration creates only the `sales_orders` and
 `sales_order_lines` columns needed for valid reservation references. Phase 7 adds quotation linkage
@@ -99,6 +99,10 @@ unit price and delivery COGS; the invoice header stores the delivery's sales sub
 proportional share of any Sales Order discount, and total COGS. The invoice increases customer due
 in the statement calculation; the configured `credit_limit_mode` controls whether exceeding the
 customer credit limit warns or blocks posting.
+Sales returns reference the original posted invoice and line, cannot exceed the line's remaining
+invoiced quantity, and restock through the inventory posting service at the stored COGS. Each return
+line snapshots the original unit price, discounted refund amount, and original unit COGS. Posted
+returns reduce customer due in the statement calculation.
 
 ## 8. Money
 **money_transactions** (ledger, append-only): id, txn_date, account_id(FK), amount_signed, txn_type(COLLECTION/PAYMENT/EXPENSE/INCOME/TRANSFER_OUT/TRANSFER_IN/OPENING/PURCHASE_PAYMENT/SALARY), source_type, source_id, party_type, party_id, note, created_by, created_at. `money_accounts.opening_balance` is the pre-ledger baseline; `OPENING` transactions are later signed adjustments included in the sum, and the baseline is immutable after the first ledger transaction.
