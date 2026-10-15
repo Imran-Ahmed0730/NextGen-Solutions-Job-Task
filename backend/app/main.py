@@ -14,8 +14,11 @@ from app.modules.customers.router import router as customers_router
 from app.modules.direct_purchases.router import router as direct_purchases_router
 from app.modules.document_numbering.router import router as document_numbering_router
 from app.modules.expense_categories.router import router as expense_categories_router
+from app.modules.expenses.router import router as expenses_router
+from app.modules.fund_transfers.router import router as fund_transfers_router
 from app.modules.goods_receipts.router import router as goods_receipts_router
 from app.modules.income_categories.router import router as income_categories_router
+from app.modules.incomes.router import router as incomes_router
 from app.modules.inventory.router import router as inventory_router
 from app.modules.money_accounts.router import router as money_accounts_router
 from app.modules.money_collections.router import router as money_collections_router
@@ -71,6 +74,9 @@ app.include_router(money_collections_router)
 app.include_router(money_transactions_router)
 app.include_router(supplier_payments_router)
 app.include_router(price_lists_router)
+app.include_router(expenses_router)
+app.include_router(incomes_router)
+app.include_router(fund_transfers_router)
 
 
 @app.get("/")

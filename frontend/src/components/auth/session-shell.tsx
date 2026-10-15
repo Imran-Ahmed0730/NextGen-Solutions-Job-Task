@@ -201,6 +201,24 @@ const navigation = [
         icon: 'supplier',
         permissions: ['money.supplier_payments.read'],
       },
+      {
+        href: '/expenses',
+        label: 'Expenses',
+        icon: 'expense',
+        permissions: ['money.expenses.read'],
+      },
+      {
+        href: '/incomes',
+        label: 'Incomes',
+        icon: 'income',
+        permissions: ['money.incomes.read'],
+      },
+      {
+        href: '/fund-transfers',
+        label: 'Fund Transfers',
+        icon: 'account',
+        permissions: ['money.transfers.read'],
+      },
     ],
   },
 ] as const;

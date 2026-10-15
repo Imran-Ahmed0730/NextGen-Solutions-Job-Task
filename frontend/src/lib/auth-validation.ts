@@ -504,3 +504,34 @@ export const documentNumberingSchema = z.object({
   last_number: z.coerce.number().int().min(0),
   padding: z.coerce.number().int().min(1).max(10),
 });
+
+export const expenseSchema = z.object({
+  doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid expense date'),
+  category_id: z.number().int().positive('Select an expense category'),
+  account_id: z.number().int().positive('Select a money account'),
+  amount: moneyAmount,
+  paid_to: z.string().trim().max(200, 'Use at most 200 characters').optional(),
+  note: z.string().max(2000, 'Use at most 2000 characters').optional(),
+});
+
+export const incomeSchema = z.object({
+  doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid income date'),
+  category_id: z.number().int().positive('Select an income category'),
+  account_id: z.number().int().positive('Select a money account'),
+  amount: moneyAmount,
+  note: z.string().max(2000, 'Use at most 2000 characters').optional(),
+});
+
+export const fundTransferSchema = z
+  .object({
+    doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid transfer date'),
+    from_account_id: z.number().int().positive('Select a source money account'),
+    to_account_id: z.number().int().positive('Select a destination money account'),
+    amount: moneyAmount,
+    note: z.string().max(2000, 'Use at most 2000 characters').optional(),
+  })
+  .refine((data) => data.from_account_id !== data.to_account_id, {
+    message: 'Source and destination accounts must be different',
+    path: ['to_account_id'],
+  });
+

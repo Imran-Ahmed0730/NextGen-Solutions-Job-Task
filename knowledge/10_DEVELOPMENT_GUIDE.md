@@ -67,6 +67,9 @@ is protected.
 │   │   ├── modules/money_transactions/ # Append-only money ledger and balance service
 │   │   ├── modules/money_collections/  # Customer collection documents and ledger postings
 │   │   ├── modules/supplier_payments/  # Supplier payment documents and bill allocations
+│   │   ├── modules/expenses/           # Expense documents (debit money account, credit expense category)
+│   │   ├── modules/incomes/            # Income documents (credit money account, income category)
+│   │   ├── modules/fund_transfers/     # Inter-account fund transfer documents
 │   │   ├── modules/price_lists/        # Price lists and product prices
 │   │   ├── modules/company_settings/    # Flexible key/value company settings
 │   │   └── main.py              # FastAPI app and router registration
@@ -128,6 +131,9 @@ The frontend route tree currently includes:
 | `/money-accounts` | List, create, update, soft-delete, and restore money accounts |
 | `/customer-collections` | Post customer collections and view recent collection history |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
+| `/expenses` | Record operational expenses paid from any money account and browse expense history |
+| `/incomes` | Record money received into any account from any income source and browse income history |
+| `/fund-transfers` | Move money between accounts and browse transfer history |
 | `/price-lists` | List, create, update, soft-delete, and restore price lists and their product prices |
 | `/company-settings` | Manage flexible key/value company settings |
 
@@ -649,7 +655,7 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   screen provides eligible Goods Receipt lines, quantity validation, posting, and paginated history;
   access is gated by `purchase.returns.read` and `purchase.returns.create`.
 
-### Phase 6 in progress — Money ledger, customer collections, and supplier payments
+### Phase 6 — Money ledger, customer collections, supplier payments, expenses, incomes, and fund transfers
 
 - The `money_transactions` table is an append-only signed ledger with transaction type, account,
   source, party, date, and audit fields. The balance service calculates each account as
@@ -670,10 +676,30 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   is gated by `money.transactions.read`; arbitrary transaction posting is intentionally available
   only through the service so document workflows can post the money effect atomically. Configure
   the `CUSTOMER_COLLECTION` and `SUPPLIER_PAYMENT` document sequences before posting.
+- **Expenses** — `POST /api/v1/expenses` records a debit against a money account and associates
+  the spend with an expense category. The `EXPENSE` document sequence must be configured before
+  posting. Permissions: `money.expenses.read`, `money.expenses.create`. Frontend: `/expenses`.
+- **Incomes** — `POST /api/v1/incomes` records a credit to a money account for a given income
+  category. The `INCOME` document sequence must be configured before posting. Permissions:
+  `money.incomes.read`, `money.incomes.create`. Frontend: `/incomes`.
+- **Fund Transfers** — `POST /api/v1/fund-transfers` moves an amount from one money account to
+  another atomically (one debit + one credit transaction). Rejects same-account transfers and
+  enforces the overdraft guard on the source account. The `FUND_TRANSFER` document sequence must
+  be configured before posting. Permissions: `money.transfers.read`, `money.transfers.create`.
+  Frontend: `/fund-transfers`.
+- **Account Ledger** — `GET /api/v1/money-transactions/accounts/{id}/ledger` returns a date-filtered
+  list of transactions for a given account with a running balance per row and an opening-period balance
+  calculated from all prior transactions. Gated by `money.transactions.read`.
+- **Purchase Order lifecycle** — Purchase Orders now support `POST /{id}/submit` (DRAFT →
+  PENDING_APPROVAL, requires `purchase.orders.submit`), `POST /{id}/approve`
+  (PENDING_APPROVAL or DRAFT → APPROVED, requires `purchase.orders.approve`), and
+  `POST /{id}/cancel` (DRAFT or PENDING_APPROVAL → CANCELLED, requires `purchase.orders.cancel`;
+  blocked if any quantity has been received). The frontend `/purchase-orders` screen exposes these
+  actions based on the caller's permissions and the order's current status.
 
 ### Planned, not yet implemented
 
-The remaining roadmap includes the rest of money, sales, production, assets, employees,
+The remaining roadmap includes sales, production, assets, employees,
 approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens

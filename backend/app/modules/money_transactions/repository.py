@@ -81,3 +81,34 @@ def create_transaction(
     db.add(transaction)
     db.flush()
     return transaction
+
+
+def list_account_transactions(
+    db: Session,
+    account: MoneyAccount,
+    from_date: datetime | None = None,
+    to_date: datetime | None = None,
+) -> tuple[Decimal, list[MoneyTransaction]]:
+    prior_sum = Decimal("0.00")
+    if from_date is not None:
+        prior_total = db.scalar(
+            select(func.sum(MoneyTransaction.amount_signed)).where(
+                MoneyTransaction.account_id == account.id,
+                MoneyTransaction.txn_date < from_date,
+            )
+        )
+        if prior_total is not None:
+            prior_sum = prior_total
+
+    opening_balance = account.opening_balance + prior_sum
+
+    stmt = select(MoneyTransaction).where(MoneyTransaction.account_id == account.id)
+    if from_date is not None:
+        stmt = stmt.where(MoneyTransaction.txn_date >= from_date)
+    if to_date is not None:
+        stmt = stmt.where(MoneyTransaction.txn_date <= to_date)
+    stmt = stmt.order_by(MoneyTransaction.txn_date.asc(), MoneyTransaction.id.asc())
+
+    transactions = list(db.scalars(stmt))
+    return opening_balance, transactions
+

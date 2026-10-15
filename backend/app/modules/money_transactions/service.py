@@ -8,6 +8,7 @@ from app.modules.auth.audit import record_audit
 from app.modules.auth.models import User
 from app.modules.money_transactions import repository
 from app.modules.money_transactions.models import MoneyTransaction, MoneyTransactionType
+from app.modules.money_transactions.schemas import AccountLedgerResponse, LedgerEntry
 
 CENT = Decimal("0.01")
 MAX_AMOUNT = Decimal("9999999999999999.99")
@@ -165,3 +166,56 @@ def _snapshot(transaction: MoneyTransaction) -> dict[str, object]:
         "party_id": transaction.party_id,
         "note": transaction.note,
     }
+
+
+def get_account_ledger(
+    db: Session,
+    account_id: int,
+    from_date: datetime | None = None,
+    to_date: datetime | None = None,
+) -> AccountLedgerResponse:
+    account = repository.get_account_for_balance(db, account_id)
+    if account is None:
+        raise HTTPException(status_code=404, detail="Money account not found")
+
+    opening_balance, transactions = repository.list_account_transactions(
+        db, account, from_date=from_date, to_date=to_date
+    )
+
+    running = opening_balance
+    entries: list[LedgerEntry] = []
+    total_inflow = Decimal("0.00")
+    total_outflow = Decimal("0.00")
+
+    for txn in transactions:
+        running += txn.amount_signed
+        if txn.amount_signed > 0:
+            total_inflow += txn.amount_signed
+        else:
+            total_outflow += abs(txn.amount_signed)
+
+        entries.append(
+            LedgerEntry(
+                id=txn.id,
+                txn_date=txn.txn_date,
+                amount_signed=txn.amount_signed,
+                txn_type=txn.txn_type.value,
+                source_type=txn.source_type,
+                source_id=txn.source_id,
+                party_type=txn.party_type,
+                party_id=txn.party_id,
+                note=txn.note,
+                running_balance=running,
+            )
+        )
+
+    return AccountLedgerResponse(
+        account_id=account.id,
+        account_name=account.name,
+        opening_balance=opening_balance,
+        closing_balance=running,
+        total_inflow=total_inflow,
+        total_outflow=total_outflow,
+        entries=entries,
+    )
+

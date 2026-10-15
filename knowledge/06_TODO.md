@@ -105,11 +105,11 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] `money_transactions` + balance service (append-only ledger, account locking, overdraft enforcement, and opening-balance invariant)
 - [x] Customer collection (party-level until invoices are implemented in Phase 7)
 - [x] Supplier payment (optional allocation to Goods Receipts and Direct Purchases)
-- [ ] Expense, income
-- [ ] Fund transfer, opening balances
-- [ ] Account ledger / cash book
-- [ ] Screens: remaining Money screens (expenses, income, transfers, opening balances, ledger/cash book)
-- [ ] Exit: account and due invariants pass
+- [x] Expense, income
+- [x] Fund transfer, opening balances (opening_balance editable on money account, locked after first transaction)
+- [x] Account ledger / cash book (`GET /money-transactions/accounts/{id}/ledger` with running balance)
+- [x] Screens: expenses `/expenses`, incomes `/incomes`, fund transfers `/fund-transfers`
+- [x] Exit: account and due invariants pass (146 tests, 1 skipped)
 
 ## Phase 7 — Sales
 - [ ] Quotation, sales order (+ convert quotation → order)
