@@ -86,7 +86,7 @@ due at the original receipt cost. PO approval remains deferred to Phase 11.
 
 ## Phase 6 — Money & Simple Accounting
 **Build:** money ledger, accounts balances, customer collection, supplier payment, expense, income, fund transfer, opening balances, cash book.
-**Screens:** Account Balances, Customer Collection, Supplier Payment, Expense Entry, Income Entry, Fund Transfer, Opening Balances, Account Ledger / Cash Book.
+**Screens:** Account Balances & Ledger / Cash Book, Customer Collection, Supplier Payment, Expense Entry, Income Entry, Fund Transfer, Opening Balances (through money-account opening balances).
 **Exit:** account balance invariant; collections reduce customer due; payments reduce supplier due; transfer writes two linked rows.
 
 ## Phase 7 — Sales

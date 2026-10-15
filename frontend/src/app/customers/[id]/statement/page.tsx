@@ -47,8 +47,8 @@ export default function CustomerStatementPage() {
             <p className="mt-2 text-sm text-slate-600">Opening due: {Number(statement.opening_due).toFixed(2)}</p>
             <p className="text-sm font-semibold text-slate-900">Current balance: {Number(statement.balance).toFixed(2)}</p>
             <p className="mt-4 text-sm text-slate-600">
-              This Phase 3 statement currently includes the opening balance. Sales, returns, and
-              collections will be added when those transaction workflows are implemented.
+              This statement includes the opening balance and posted customer collections. Sales
+              and returns will appear when those workflows are implemented.
             </p>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-left text-sm">

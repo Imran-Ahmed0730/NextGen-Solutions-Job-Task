@@ -108,7 +108,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Expense, income
 - [x] Fund transfer, opening balances (opening_balance editable on money account, locked after first transaction)
 - [x] Account ledger / cash book (`GET /money-transactions/accounts/{id}/ledger` with running balance)
-- [x] Screens: expenses `/expenses`, incomes `/incomes`, fund transfers `/fund-transfers`
+- [x] Screens: account balances and ledger `/account-ledger`, collections `/customer-collections`, supplier payments `/supplier-payments`, expenses `/expenses`, incomes `/incomes`, fund transfers `/fund-transfers`
 - [x] Exit: account and due invariants pass (146 tests, 1 skipped)
 
 ## Phase 7 — Sales

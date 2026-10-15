@@ -1,5 +1,4 @@
 from collections.abc import Generator
-from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -15,10 +14,8 @@ from app.modules.auth.models import AuditLog, User
 from app.modules.auth.seed import seed_initial_admin
 from app.modules.document_numbering.models import DocumentSequence
 from app.modules.expense_categories.models import ExpenseCategory
-from app.modules.expenses.models import Expense
-from app.modules.fund_transfers.models import FundTransfer
+from app.modules.fund_transfers import repository as fund_transfer_repository
 from app.modules.income_categories.models import IncomeCategory
-from app.modules.incomes.models import Income
 from app.modules.money_accounts.models import MoneyAccount, MoneyAccountType
 from app.modules.money_transactions.models import MoneyTransaction, MoneyTransactionType
 
@@ -114,7 +111,9 @@ def _login(client: TestClient, username: str, password: str) -> dict[str, str]:
 def test_expense_flow_posts_money_and_updates_balance(
     client: TestClient,
     db_session: Session,
-    money_ops_fixture: tuple[User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount],
+    money_ops_fixture: tuple[
+        User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount
+    ],
 ) -> None:
     actor, password, exp_cat, _, account1, _ = money_ops_fixture
     headers = _login(client, actor.username, password)
@@ -174,7 +173,9 @@ def test_expense_flow_posts_money_and_updates_balance(
 
 def test_expense_fails_on_insufficient_balance(
     client: TestClient,
-    money_ops_fixture: tuple[User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount],
+    money_ops_fixture: tuple[
+        User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount
+    ],
 ) -> None:
     actor, password, exp_cat, _, account1, _ = money_ops_fixture
     headers = _login(client, actor.username, password)
@@ -195,7 +196,9 @@ def test_expense_fails_on_insufficient_balance(
 def test_income_flow_posts_money_and_updates_balance(
     client: TestClient,
     db_session: Session,
-    money_ops_fixture: tuple[User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount],
+    money_ops_fixture: tuple[
+        User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount
+    ],
 ) -> None:
     actor, password, _, inc_cat, account1, _ = money_ops_fixture
     headers = _login(client, actor.username, password)
@@ -221,9 +224,7 @@ def test_income_flow_posts_money_and_updates_balance(
 
     # Verify money transaction
     txns = list(
-        db_session.scalars(
-            select(MoneyTransaction).where(MoneyTransaction.source_type == "INCOME")
-        )
+        db_session.scalars(select(MoneyTransaction).where(MoneyTransaction.source_type == "INCOME"))
     )
     assert len(txns) == 1
     assert txns[0].amount_signed == Decimal("300.00")
@@ -240,7 +241,9 @@ def test_income_flow_posts_money_and_updates_balance(
 def test_fund_transfer_posts_paired_transactions_atomically(
     client: TestClient,
     db_session: Session,
-    money_ops_fixture: tuple[User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount],
+    money_ops_fixture: tuple[
+        User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount
+    ],
 ) -> None:
     actor, password, _, _, account1, account2 = money_ops_fixture
     headers = _login(client, actor.username, password)
@@ -298,12 +301,55 @@ def test_fund_transfer_posts_paired_transactions_atomically(
     assert txns[1].txn_type == MoneyTransactionType.TRANSFER_IN
 
 
+def test_reverse_direction_transfer_locks_accounts_in_id_order(
+    client: TestClient,
+    money_ops_fixture: tuple[
+        User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount
+    ],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    actor, password, _, _, lower_id_account, higher_id_account = money_ops_fixture
+    headers = _login(client, actor.username, password)
+    locked_ids: list[int] = []
+    original_lock = fund_transfer_repository.get_account_for_update
+
+    def track_lock(db: Session, account_id: int) -> MoneyAccount | None:
+        locked_ids.append(account_id)
+        return original_lock(db, account_id)
+
+    monkeypatch.setattr(fund_transfer_repository, "get_account_for_update", track_lock)
+    response = client.post(
+        "/api/v1/fund-transfers",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-15",
+            "from_account_id": higher_id_account.id,
+            "to_account_id": lower_id_account.id,
+            "amount": "25.00",
+        },
+    )
+
+    assert response.status_code == 201
+    assert locked_ids[:2] == sorted([lower_id_account.id, higher_id_account.id])
+
+
 def test_account_ledger_endpoint(
     client: TestClient,
-    money_ops_fixture: tuple[User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount],
+    money_ops_fixture: tuple[
+        User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount
+    ],
 ) -> None:
     actor, password, exp_cat, inc_cat, account1, _ = money_ops_fixture
     headers = _login(client, actor.username, password)
+
+    balances_res = client.get("/api/v1/money-transactions/accounts", headers=headers)
+    assert balances_res.status_code == 200
+    account_balance = next(
+        item for item in balances_res.json() if item["account_id"] == account1.id
+    )
+    assert account_balance["account_name"] == "Main Cash"
+    assert account_balance["opening_balance"] == "1000.00"
+    assert account_balance["balance"] == "1000.00"
 
     # Post an expense: -100
     client.post(
@@ -348,7 +394,9 @@ def test_account_ledger_endpoint(
 def test_money_operations_permissions(
     client: TestClient,
     db_session: Session,
-    money_ops_fixture: tuple[User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount],
+    money_ops_fixture: tuple[
+        User, str, ExpenseCategory, IncomeCategory, MoneyAccount, MoneyAccount
+    ],
 ) -> None:
     _, _, exp_cat, inc_cat, account1, account2 = money_ops_fixture
     unauth_user = User(

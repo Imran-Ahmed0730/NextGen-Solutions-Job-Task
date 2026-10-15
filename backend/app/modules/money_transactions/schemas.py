@@ -9,6 +9,14 @@ class MoneyAccountBalanceResponse(BaseModel):
     balance: Decimal
 
 
+class MoneyAccountBalanceItem(BaseModel):
+    account_id: int
+    account_name: str
+    account_type: str
+    opening_balance: Decimal
+    balance: Decimal
+
+
 class LedgerEntry(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

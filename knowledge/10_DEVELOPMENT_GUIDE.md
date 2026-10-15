@@ -129,6 +129,7 @@ The frontend route tree currently includes:
 | `/income-categories` | List, create, update, soft-delete, and restore income categories |
 | `/payment-methods` | List, create, update, soft-delete, and restore payment methods |
 | `/money-accounts` | List, create, update, soft-delete, and restore money accounts |
+| `/account-ledger` | Review current account balances and date-filtered money transactions with running balances |
 | `/customer-collections` | Post customer collections and view recent collection history |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/expenses` | Record operational expenses paid from any money account and browse expense history |
@@ -321,6 +322,7 @@ The implemented auth API is:
 | `PATCH /api/v1/money-accounts/{id}` | `master_data.money_accounts.update` | Update a money account |
 | `DELETE /api/v1/money-accounts/{id}` | `master_data.money_accounts.delete` | Soft-delete a money account |
 | `POST /api/v1/money-accounts/{id}/activate` | `master_data.money_accounts.update` | Restore a soft-deleted money account |
+| `GET /api/v1/money-transactions/accounts` | `money.transactions.read` | List active money accounts with opening and current balances |
 | `GET /api/v1/money-transactions/accounts/{id}/balance` | `money.transactions.read` | Read opening balance plus posted money transactions |
 | `GET /api/v1/price-lists` | `master_data.price_lists.read` | List price lists; `include_inactive=true` includes deleted lists |
 | `POST /api/v1/price-lists` | `master_data.price_lists.create` | Create a price list with optional validity range and default flag |
@@ -689,7 +691,8 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   Frontend: `/fund-transfers`.
 - **Account Ledger** — `GET /api/v1/money-transactions/accounts/{id}/ledger` returns a date-filtered
   list of transactions for a given account with a running balance per row and an opening-period balance
-  calculated from all prior transactions. Gated by `money.transactions.read`.
+  calculated from all prior transactions. The `/account-ledger` screen lists current balances and
+  provides a date-filtered cash-book view. Gated by `money.transactions.read`.
 - **Purchase Order lifecycle** — Purchase Orders now support `POST /{id}/submit` (DRAFT →
   PENDING_APPROVAL, requires `purchase.orders.submit`), `POST /{id}/approve`
   (PENDING_APPROVAL or DRAFT → APPROVED, requires `purchase.orders.approve`), and

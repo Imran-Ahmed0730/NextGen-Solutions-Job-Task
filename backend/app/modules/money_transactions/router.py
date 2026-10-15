@@ -9,10 +9,22 @@ from app.modules.auth.models import User
 from app.modules.money_transactions import service
 from app.modules.money_transactions.schemas import (
     AccountLedgerResponse,
+    MoneyAccountBalanceItem,
     MoneyAccountBalanceResponse,
 )
 
 router = APIRouter(prefix="/api/v1/money-transactions", tags=["money-transactions"])
+
+
+@router.get(
+    "/accounts",
+    response_model=list[MoneyAccountBalanceItem],
+)
+def list_money_account_balances(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("money.transactions.read")),
+) -> list[MoneyAccountBalanceItem]:
+    return service.list_account_balances(db)
 
 
 @router.get(

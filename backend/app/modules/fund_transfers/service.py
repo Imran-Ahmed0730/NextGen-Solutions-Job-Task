@@ -50,11 +50,18 @@ def create_transfer(
         )
 
     try:
-        from_account = repository.get_account_for_update(db, payload.from_account_id)
-        if from_account is None or not from_account.is_active or from_account.deleted_at is not None:
+        accounts = {
+            account_id: repository.get_account_for_update(db, account_id)
+            for account_id in sorted((payload.from_account_id, payload.to_account_id))
+        }
+        from_account = accounts[payload.from_account_id]
+        to_account = accounts[payload.to_account_id]
+        if (
+            from_account is None
+            or not from_account.is_active
+            or from_account.deleted_at is not None
+        ):
             raise HTTPException(status_code=404, detail="Source money account not found")
-
-        to_account = repository.get_account_for_update(db, payload.to_account_id)
         if to_account is None or not to_account.is_active or to_account.deleted_at is not None:
             raise HTTPException(status_code=404, detail="Destination money account not found")
 
@@ -132,4 +139,3 @@ def _snapshot(transfer: FundTransfer) -> dict[str, object]:
         "status": transfer.status,
         "note": transfer.note,
     }
-

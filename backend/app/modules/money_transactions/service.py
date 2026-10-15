@@ -6,9 +6,14 @@ from sqlalchemy.orm import Session
 
 from app.modules.auth.audit import record_audit
 from app.modules.auth.models import User
+from app.modules.money_accounts import service as money_account_service
 from app.modules.money_transactions import repository
 from app.modules.money_transactions.models import MoneyTransaction, MoneyTransactionType
-from app.modules.money_transactions.schemas import AccountLedgerResponse, LedgerEntry
+from app.modules.money_transactions.schemas import (
+    AccountLedgerResponse,
+    LedgerEntry,
+    MoneyAccountBalanceItem,
+)
 
 CENT = Decimal("0.01")
 MAX_AMOUNT = Decimal("9999999999999999.99")
@@ -35,6 +40,20 @@ def get_account_balance(db: Session, account_id: int) -> Decimal:
     if account is None:
         raise HTTPException(status_code=404, detail="Money account not found")
     return repository.get_account_balance(db, account)
+
+
+def list_account_balances(db: Session) -> list[MoneyAccountBalanceItem]:
+    accounts = money_account_service.list_money_accounts(db, limit=200)
+    return [
+        MoneyAccountBalanceItem(
+            account_id=account.id,
+            account_name=account.name,
+            account_type=account.type.value,
+            opening_balance=account.opening_balance,
+            balance=repository.get_account_balance(db, account),
+        )
+        for account in accounts
+    ]
 
 
 def get_account_balance_for_update(db: Session, account_id: int) -> Decimal:
@@ -218,4 +237,3 @@ def get_account_ledger(
         total_outflow=total_outflow,
         entries=entries,
     )
-

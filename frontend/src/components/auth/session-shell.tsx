@@ -219,6 +219,12 @@ const navigation = [
         icon: 'account',
         permissions: ['money.transfers.read'],
       },
+      {
+        href: '/account-ledger',
+        label: 'Account Balances & Ledger',
+        icon: 'account',
+        permissions: ['money.transactions.read'],
+      },
     ],
   },
 ] as const;
