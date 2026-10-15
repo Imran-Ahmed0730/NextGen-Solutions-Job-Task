@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import Base, get_db
 from app.core.security import hash_password
 from app.main import app
-from app.modules.auth.models import AuditLog, Permission, Role, User
+from app.modules.auth.models import AuditLog, Role, User
 from app.modules.customers.models import Customer
 from app.modules.document_numbering.models import DocumentSequence
 from app.modules.product_categories.models import ProductCategory
@@ -61,17 +61,6 @@ def quotation_fixture(db_session: Session) -> tuple[User, str, Customer, Product
     assert actor is not None
     admin_role = db_session.scalar(select(Role).where(Role.name == "Administrator"))
     assert admin_role is not None
-    quotation_permissions = [
-        Permission(code=code, module="sales", description=code)
-        for code in (
-            "sales.quotations.read",
-            "sales.quotations.create",
-            "sales.quotations.update",
-        )
-    ]
-    db_session.add_all(quotation_permissions)
-    admin_role.permissions.extend(quotation_permissions)
-
     customer = Customer(code="CUS-001", name="Quotation Customer")
     category = ProductCategory(name="Quotation Products")
     unit = Unit(name="Piece", code="pcs", allow_decimal=True)
