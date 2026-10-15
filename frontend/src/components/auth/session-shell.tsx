@@ -201,6 +201,12 @@ const navigation = [
         icon: 'customer',
         permissions: ['sales.orders.read'],
       },
+      {
+        href: '/sales-invoices',
+        label: 'Sales Invoices',
+        icon: 'customer',
+        permissions: ['sales.invoices.read'],
+      },
     ],
   },
   {

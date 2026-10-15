@@ -12,6 +12,7 @@ from app.core.security import hash_password
 from app.main import app
 from app.modules.auth.models import AuditLog, User
 from app.modules.auth.seed import seed_initial_admin
+from app.modules.company_settings.models import CompanySetting
 from app.modules.customers.models import Customer
 from app.modules.document_numbering.models import DocumentSequence
 from app.modules.inventory.models import (
@@ -97,6 +98,13 @@ def sales_order_fixture(
             DocumentSequence(
                 doc_type="DELIVERY",
                 prefix="DN-",
+                year=2026,
+                last_number=0,
+                padding=4,
+            ),
+            DocumentSequence(
+                doc_type="INVOICE",
+                prefix="INV-",
                 year=2026,
                 last_number=0,
                 padding=4,
@@ -532,6 +540,201 @@ def test_delivery_rejects_order_overage_and_rolls_back_insufficient_stock(
     assert over_order.status_code == 409
     assert over_order.json()["detail"] == "DELIVERY_EXCEEDS_ORDER_REMAINING"
     assert db_session.scalar(select(func.count(SalesDelivery.id))) == 0
+
+
+def test_invoice_posts_from_delivery_updates_due_and_preserves_cogs(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    customer.credit_limit = Decimal("20.00")
+    db_session.commit()
+    headers = _login(client, actor.username, password)
+    order_response = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json={
+            **_payload(customer, warehouse, product),
+            "discount": "1.00",
+            "lines": [{"product_id": product.id, "qty_ordered": "5.000", "unit_price": "5.00"}],
+        },
+    )
+    assert order_response.status_code == 201
+    order = order_response.json()
+    delivery_response = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": order["lines"][0]["id"], "qty": "3.000"}],
+        },
+    )
+    assert delivery_response.status_code == 201
+
+    response = client.post(
+        "/api/v1/sales/invoices",
+        headers=headers,
+        json={
+            "delivery_id": delivery_response.json()["id"],
+            "doc_date": "2026-10-25",
+            "due_date": "2026-11-05",
+        },
+    )
+
+    assert response.status_code == 201
+    result = response.json()
+    invoice = result["invoice"]
+    assert invoice["doc_no"] == "INV-20260001"
+    assert invoice["status"] == "POSTED"
+    assert invoice["subtotal"] == "15.00"
+    assert invoice["discount"] == "0.60"
+    assert invoice["total"] == "14.40"
+    assert invoice["cogs_total"] == "7.50"
+    assert invoice["lines"][0]["unit_cost_cogs"] == "2.5000"
+    assert result["credit_limit_warning"] is False
+    statement = client.get(f"/api/v1/customers/{customer.id}/statement", headers=headers)
+    assert statement.json()["balance"] == "14.40"
+    assert [item["type"] for item in statement.json()["entries"]] == [
+        "OPENING_BALANCE",
+        "INVOICE",
+    ]
+
+    second_delivery = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-26",
+            "lines": [{"order_line_id": order["lines"][0]["id"], "qty": "2.000"}],
+        },
+    )
+    second_invoice = client.post(
+        "/api/v1/sales/invoices",
+        headers=headers,
+        json={
+            "delivery_id": second_delivery.json()["id"],
+            "doc_date": "2026-10-26",
+            "due_date": "2026-11-06",
+        },
+    )
+    assert second_invoice.status_code == 201
+    assert second_invoice.json()["invoice"]["discount"] == "0.40"
+    assert second_invoice.json()["invoice"]["total"] == "9.60"
+    updated_statement = client.get(
+        f"/api/v1/customers/{customer.id}/statement", headers=headers
+    )
+    assert updated_statement.json()["balance"] == "24.00"
+
+
+def test_invoice_credit_limit_warns_or_blocks_without_partial_writes(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    customer.credit_limit = Decimal("10.00")
+    db_session.add(CompanySetting(key="credit_limit_mode", value="WARN"))
+    db_session.commit()
+    headers = _login(client, actor.username, password)
+    order_response = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json=_payload(customer, warehouse, product),
+    )
+    order = order_response.json()
+    delivery_response = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": order["lines"][0]["id"], "qty": "3.000"}],
+        },
+    )
+    invoice_payload = {
+        "delivery_id": delivery_response.json()["id"],
+        "doc_date": "2026-10-25",
+        "due_date": "2026-11-05",
+    }
+    warned = client.post("/api/v1/sales/invoices", headers=headers, json=invoice_payload)
+    assert warned.status_code == 201
+    assert warned.json()["credit_limit_warning"] is True
+
+    db_session.get(CompanySetting, "credit_limit_mode").value = "BLOCK"
+    next_order_response = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json=_payload(customer, warehouse, product),
+    )
+    next_order = next_order_response.json()
+    next_delivery = client.post(
+        f"/api/v1/sales/orders/{next_order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": next_order["lines"][0]["id"], "qty": "3.000"}],
+        },
+    )
+    blocked = client.post(
+        "/api/v1/sales/invoices",
+        headers=headers,
+        json={
+            "delivery_id": next_delivery.json()["id"],
+            "doc_date": "2026-10-25",
+            "due_date": "2026-11-05",
+        },
+    )
+    assert blocked.status_code == 409
+    assert blocked.json()["detail"] == "CREDIT_LIMIT_EXCEEDED"
+    audit_count = db_session.scalar(
+        select(func.count(AuditLog.id)).where(AuditLog.entity_type == "invoice")
+    )
+    assert audit_count == 1
+
+
+def test_invoice_requires_permission_and_rejects_duplicate_delivery_invoice(
+    client: TestClient,
+    db_session: Session,
+    sales_order_fixture: tuple[User, str, Customer, Warehouse, Product],
+) -> None:
+    actor, password, customer, warehouse, product = sales_order_fixture
+    headers = _login(client, actor.username, password)
+    order = client.post(
+        "/api/v1/sales/orders",
+        headers=headers,
+        json=_payload(customer, warehouse, product),
+    ).json()
+    delivery = client.post(
+        f"/api/v1/sales/orders/{order['id']}/deliveries",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-25",
+            "lines": [{"order_line_id": order["lines"][0]["id"], "qty": "1.000"}],
+        },
+    ).json()
+    payload = {
+        "delivery_id": delivery["id"],
+        "doc_date": "2026-10-25",
+        "due_date": "2026-11-05",
+    }
+    readonly = User(
+        username="sales_invoice_readonly",
+        full_name="Sales Invoice Readonly",
+        password_hash=hash_password("ReadOnly-Password-123"),
+    )
+    db_session.add(readonly)
+    db_session.commit()
+    denied = client.post(
+        "/api/v1/sales/invoices",
+        headers=_login(client, readonly.username, "ReadOnly-Password-123"),
+        json=payload,
+    )
+    assert denied.status_code == 403
+
+    posted = client.post("/api/v1/sales/invoices", headers=headers, json=payload)
+    assert posted.status_code == 201
+    duplicate = client.post("/api/v1/sales/invoices", headers=headers, json=payload)
+    assert duplicate.status_code == 409
+    assert duplicate.json()["detail"] == "DELIVERY_ALREADY_INVOICED"
 
 
 def test_delivery_route_requires_permission(

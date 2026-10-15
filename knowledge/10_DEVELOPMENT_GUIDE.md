@@ -133,6 +133,7 @@ The frontend route tree currently includes:
 | `/customer-collections` | Post customer collections and view recent collection history |
 | `/quotations` | Create, edit, and browse sales quotation drafts |
 | `/sales-orders` | Create, edit, browse, view draft sales order details, and post deliveries with COGS |
+| `/sales-invoices` | Post invoices from deliveries, apply credit-limit mode, and browse invoice/COGS history |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/expenses` | Record operational expenses paid from any money account and browse expense history |
 | `/incomes` | Record money received into any account from any income source and browse income history |
@@ -288,6 +289,9 @@ The implemented auth API is:
 | `POST /api/v1/sales/orders/{id}/lines/{line_id}/reservations` | `sales.orders.reserve` | Reserve available stock through the Phase 4 inventory service |
 | `DELETE /api/v1/sales/orders/{id}/reservations/{reservation_id}` | `sales.orders.reserve` | Release the remaining active reservation quantity |
 | `POST /api/v1/sales/orders/{id}/deliveries` | `sales.deliveries.create` | Post delivery through the stock service, consume reservations first, and store unit COGS |
+| `GET /api/v1/sales/invoices/options` | `sales.invoices.read` | List posted deliveries that have not yet been invoiced |
+| `GET /api/v1/sales/invoices` / `GET /api/v1/sales/invoices/{id}` | `sales.invoices.read` | List or view posted invoices and line snapshots |
+| `POST /api/v1/sales/invoices` | `sales.invoices.create` | Post one invoice per delivery, add customer due, and check credit-limit mode |
 | `GET/POST /api/v1/customers/{id}/contacts` | `master_data.customers.read/create` | List or add an additional contact |
 | `PATCH/DELETE /api/v1/customers/{id}/contacts/{contact_id}` | `master_data.customers.update/delete` | Update or remove an additional contact |
 | `GET /api/v1/suppliers?search=&offset=0&limit=50` | `master_data.suppliers.read` | Search and page through suppliers; `include_inactive=true` includes inactive/deleted records |
@@ -722,6 +726,14 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   Administrator role). Quotation conversion, invoicing, returns, and credit-limit enforcement remain
   later slices. Permissions: `sales.orders.read`, `sales.orders.create`, `sales.orders.update`,
   `sales.orders.reserve`, and `sales.deliveries.create`. Frontend: `/sales-orders`.
+- **Sales Invoices** — An invoice is posted from one posted delivery and cannot be edited or posted
+  twice. Its lines snapshot the linked order's unit price and the delivery's stored COGS. Header
+  totals include the proportionate Sales Order discount and COGS. Customer statements include
+  posted invoice totals; the current due plus the invoice total is compared with the customer's
+  credit limit. `credit_limit_mode=BLOCK` rejects an over-limit invoice; `WARN` posts it and returns a
+  visible warning. Configure an `INVOICE` document-number sequence before posting. Permissions:
+  `sales.invoices.read` and `sales.invoices.create` (both included in the Administrator role).
+  Frontend: `/sales-invoices`.
 - **Account Ledger** — `GET /api/v1/money-transactions/accounts/{id}/ledger` returns a date-filtered
   list of transactions for a given account with a running balance per row and an opening-period balance
   calculated from all prior transactions. The `/account-ledger` screen lists current balances and

@@ -104,7 +104,7 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
    order cannot be edited after reservation history exists. Shortage can raise a Production Order.
 3. Order Details shows Ordered / Available / Reserved / Produced / Delivered / Remaining.
 4. Delivery (partial allowed) → Post → stock ↓, COGS stored per line, reservation released.
-5. Invoice from delivery → Post → customer due ↑ (credit-limit check).
+5. Invoice from delivery → Post once per delivery → customer due ↑; credit-limit mode warns or blocks.
 6. Sales Return → qty ≤ delivered → Post → stock ↑ at original COGS, customer due ↓ (or credit note).
 
 Current delivery includes draft quotation and draft Sales Order create/edit/list/detail workflows.
@@ -112,8 +112,10 @@ Sales Order reservation, release, and delivery posting call the Phase 4 inventor
 stock-posting service. Deliveries consume reservations first, reserve-and-consume any remaining
 available quantity in the same transaction, and store the transaction's unit cost as line-level COGS.
 Partial deliveries leave the Sales Order status unchanged; delivered quantities and delivery history
-show progress. Quotation lifecycle/conversion, invoices, and returns are not yet implemented;
-quotation status transitions and credit-limit behavior remain open decisions in `06_TODO.md`.
+show progress. A posted delivery can be invoiced once. Invoices snapshot delivered quantities,
+order prices, and delivery COGS; posting updates the customer statement and checks the configured
+credit-limit mode. Quotation lifecycle/conversion and sales returns are not yet implemented;
+quotation status transitions remain open decisions in `06_TODO.md`.
 
 ### 5.5 Money
 - **Customer Collection:** customer, account, amount, optional reference → Post → customer due ↓,

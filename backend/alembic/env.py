@@ -31,6 +31,7 @@ from app.modules.sales.models import (  # noqa: F401
     SalesOrder,
     SalesOrderLine,
 )
+from app.modules.sales_invoices.models import SalesInvoice, SalesInvoiceLine  # noqa: F401
 from app.modules.stock_adjustments.models import StockAdjustment, StockAdjustmentLine  # noqa: F401
 from app.modules.stock_transfers.models import StockTransfer, StockTransferLine  # noqa: F401
 from app.modules.supplier_payments.models import (  # noqa: F401

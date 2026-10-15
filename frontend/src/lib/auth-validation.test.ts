@@ -15,6 +15,7 @@ import {
   resetPasswordSchema,
   roleSchema,
   salesDeliverySchema,
+  salesInvoiceSchema,
   salesOrderSchema,
   salesOrderReservationSchema,
   stockAdjustmentSchema,
@@ -72,6 +73,19 @@ describe('auth-validation schemas', () => {
           { order_line_id: 1, qty: '1.000' },
         ],
       }).success,
+    ).toBe(false);
+  });
+
+  it('validates invoice delivery selection and due-date order', () => {
+    const valid = {
+      delivery_id: 3,
+      doc_date: '2026-10-25',
+      due_date: '2026-11-05',
+    };
+    expect(salesInvoiceSchema.safeParse(valid).success).toBe(true);
+    expect(salesInvoiceSchema.safeParse({ ...valid, delivery_id: 0 }).success).toBe(false);
+    expect(
+      salesInvoiceSchema.safeParse({ ...valid, due_date: '2026-10-24' }).success,
     ).toBe(false);
   });
 

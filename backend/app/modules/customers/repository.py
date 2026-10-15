@@ -38,5 +38,14 @@ def get_customer(db: Session, customer_id: int) -> Customer | None:
     return db.get(Customer, customer_id)
 
 
+def get_customer_for_update(db: Session, customer_id: int) -> Customer | None:
+    return db.scalar(
+        select(Customer)
+        .where(Customer.id == customer_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+
+
 def get_customer_by_code(db: Session, code: str) -> Customer | None:
     return db.scalar(select(Customer).where(Customer.code == code))

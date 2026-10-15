@@ -79,8 +79,8 @@ their respective transaction workflows.
 **sales_order_lines**: id, order_id(FK), product_id, qty_ordered, unit_price, line_total, qty_reserved, qty_produced, qty_delivered
 **deliveries**: id, doc_no, doc_date, order_id(FK), customer_id(FK), warehouse_id(FK), status(POSTED), created_by(FK), created_at
 **delivery_lines**: id, delivery_id(FK), order_line_id(FK), product_id(FK), qty, unit_cost_cogs (weighted-average cost captured at posting)
-**invoices**: id, doc_no, doc_date, customer_id, delivery_id(FK, null), order_id(FK, null), due_date, status, subtotal, discount, total, paid_amount, cogs_total
-**invoice_lines**: id, invoice_id(FK), product_id, qty, unit_price, line_total, unit_cost_cogs
+**invoices**: id, doc_no, doc_date, due_date, customer_id(FK), delivery_id(FK, unique), status(POSTED), subtotal, discount, total, cogs_total, created_by(FK), created_at
+**invoice_lines**: id, invoice_id(FK), product_id(FK), qty, unit_price, line_total, unit_cost_cogs
 **sales_returns**: id, doc_no, doc_date, customer_id, invoice_id(FK), warehouse_id, status, total
 **sales_return_lines**: id, return_id(FK), invoice_line_id(FK), product_id, qty, unit_price, unit_cost_cogs
 
@@ -94,6 +94,11 @@ updates. Draft edits are rejected once any reservation history exists, including
 reservations. Delivery lines consume active reservations first and reserve/consume any remaining
 available quantity through the same inventory service. Delivery and stock changes are atomic;
 delivery status is `POSTED`, and partial deliveries do not change the Sales Order status.
+Each posted delivery can have at most one posted invoice. Invoice lines snapshot the sales-order
+unit price and delivery COGS; the invoice header stores the delivery's sales subtotal, its
+proportional share of any Sales Order discount, and total COGS. The invoice increases customer due
+in the statement calculation; the configured `credit_limit_mode` controls whether exceeding the
+customer credit limit warns or blocks posting.
 
 ## 8. Money
 **money_transactions** (ledger, append-only): id, txn_date, account_id(FK), amount_signed, txn_type(COLLECTION/PAYMENT/EXPENSE/INCOME/TRANSFER_OUT/TRANSFER_IN/OPENING/PURCHASE_PAYMENT/SALARY), source_type, source_id, party_type, party_id, note, created_by, created_at. `money_accounts.opening_balance` is the pre-ledger baseline; `OPENING` transactions are later signed adjustments included in the sum, and the baseline is immutable after the first ledger transaction.

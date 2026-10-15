@@ -475,6 +475,17 @@ export const salesDeliverySchema = z.object({
     ),
 });
 
+export const salesInvoiceSchema = z
+  .object({
+    delivery_id: z.number().int().positive('Select a delivery'),
+    doc_date: z.string().date('Enter a valid invoice date'),
+    due_date: z.string().date('Enter a valid due date'),
+  })
+  .refine((value) => value.due_date >= value.doc_date, {
+    message: 'Due date cannot precede invoice date',
+    path: ['due_date'],
+  });
+
 export const purchaseReturnSchema = z.object({
   doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid return date'),
   receipt_id: z.number().int().positive('Select a goods receipt'),

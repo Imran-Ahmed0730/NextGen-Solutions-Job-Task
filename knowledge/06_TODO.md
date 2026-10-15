@@ -120,7 +120,8 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Reserve/release order-line quantities through the Phase 4 reservation service; reserved orders
       cannot be edited
 - [x] Delivery posting from reserved/available stock with stored line-level COGS and order history
-- [ ] Invoice, customer due, credit-limit check
+- [x] Post invoice per delivery, add invoice totals to customer statements, and enforce configured
+      credit-limit WARN/BLOCK mode
 - [ ] Sales return
 - [ ] Order tracking (Ordered/Available/Reserved/Produced/Delivered/Remaining)
 - [ ] Screens: 9 Sales screens

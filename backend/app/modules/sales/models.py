@@ -22,6 +22,7 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.modules.inventory.models import StockReservation
+    from app.modules.sales_invoices.models import SalesInvoice
 
 ID_TYPE = (
     BigInteger().with_variant(BIGINT(unsigned=True), "mysql").with_variant(Integer(), "sqlite")
@@ -154,6 +155,7 @@ class SalesDelivery(Base):
         order_by="SalesDeliveryLine.id",
     )
     sales_order: Mapped[SalesOrder] = relationship(back_populates="deliveries")
+    invoice: Mapped["SalesInvoice | None"] = relationship(back_populates="delivery", uselist=False)
 
 
 class SalesDeliveryLine(Base):
@@ -176,3 +178,4 @@ class SalesDeliveryLine(Base):
     qty: Mapped[Decimal] = mapped_column(Numeric(18, 3), nullable=False)
     unit_cost_cogs: Mapped[Decimal] = mapped_column(Numeric(18, 4), nullable=False)
     delivery: Mapped[SalesDelivery] = relationship(back_populates="lines")
+    order_line: Mapped[SalesOrderLine] = relationship()
