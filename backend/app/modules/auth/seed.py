@@ -122,6 +122,15 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("money.incomes.create", "money", "Create incomes"),
     PermissionDefinition("money.transfers.read", "money", "View fund transfers"),
     PermissionDefinition("money.transfers.create", "money", "Create fund transfers"),
+    PermissionDefinition("sales.quotations.read", "sales", "View quotations"),
+    PermissionDefinition("sales.quotations.create", "sales", "Create quotations"),
+    PermissionDefinition("sales.quotations.update", "sales", "Update draft quotations"),
+    PermissionDefinition("sales.orders.read", "sales", "View sales orders"),
+    PermissionDefinition("sales.orders.create", "sales", "Create sales orders"),
+    PermissionDefinition("sales.orders.update", "sales", "Update draft sales orders"),
+    PermissionDefinition(
+        "sales.orders.reserve", "sales", "Reserve and release sales order stock"
+    ),
     PermissionDefinition("master_data.price_lists.read", "master_data", "View price lists"),
     PermissionDefinition("master_data.price_lists.create", "master_data", "Create price lists"),
     PermissionDefinition("master_data.price_lists.update", "master_data", "Update price lists"),

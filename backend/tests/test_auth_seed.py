@@ -44,9 +44,19 @@ def test_seed_creates_admin_and_grants_catalog_permissions(session: Session) -> 
     assert result.password != admin.password_hash
     assert role is not None
     assert role in admin.roles
-    assert {permission.code for permission in role.permissions} == {
-        item.code for item in ADMIN_PERMISSION_CATALOG
+    seeded_codes = {permission.code for permission in role.permissions}
+    catalog_codes = {item.code for item in ADMIN_PERMISSION_CATALOG}
+    expected_sales_codes = {
+        "sales.quotations.read",
+        "sales.quotations.create",
+        "sales.quotations.update",
+        "sales.orders.read",
+        "sales.orders.create",
+        "sales.orders.update",
+        "sales.orders.reserve",
     }
+    assert seeded_codes == catalog_codes
+    assert expected_sales_codes <= catalog_codes
 
 
 def test_seed_is_idempotent_and_does_not_reset_existing_password(session: Session) -> None:
