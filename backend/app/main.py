@@ -18,6 +18,7 @@ from app.modules.goods_receipts.router import router as goods_receipts_router
 from app.modules.income_categories.router import router as income_categories_router
 from app.modules.inventory.router import router as inventory_router
 from app.modules.money_accounts.router import router as money_accounts_router
+from app.modules.money_collections.router import router as money_collections_router
 from app.modules.money_transactions.router import router as money_transactions_router
 from app.modules.payment_methods.router import router as payment_methods_router
 from app.modules.physical_counts.router import router as physical_counts_router
@@ -28,6 +29,7 @@ from app.modules.purchase_orders.router import router as purchase_orders_router
 from app.modules.purchase_returns.router import router as purchase_returns_router
 from app.modules.stock_adjustments.router import router as stock_adjustments_router
 from app.modules.stock_transfers.router import router as stock_transfers_router
+from app.modules.supplier_payments.router import router as supplier_payments_router
 from app.modules.suppliers.router import router as suppliers_router
 from app.modules.units.router import router as units_router
 from app.modules.warehouses.router import router as warehouses_router
@@ -65,7 +67,9 @@ app.include_router(expense_categories_router)
 app.include_router(income_categories_router)
 app.include_router(payment_methods_router)
 app.include_router(money_accounts_router)
+app.include_router(money_collections_router)
 app.include_router(money_transactions_router)
+app.include_router(supplier_payments_router)
 app.include_router(price_lists_router)
 
 

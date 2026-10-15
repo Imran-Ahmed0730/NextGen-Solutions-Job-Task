@@ -186,6 +186,23 @@ const navigation = [
       },
     ],
   },
+  {
+    label: 'Money',
+    items: [
+      {
+        href: '/customer-collections',
+        label: 'Customer Collections',
+        icon: 'customer',
+        permissions: ['money.collections.read'],
+      },
+      {
+        href: '/supplier-payments',
+        label: 'Supplier Payments',
+        icon: 'supplier',
+        permissions: ['money.supplier_payments.read'],
+      },
+    ],
+  },
 ] as const;
 
 const iconPaths = {

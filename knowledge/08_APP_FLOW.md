@@ -74,9 +74,8 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 2. Maintain additional named contacts from the Contacts action on the party list.
 3. Open the party statement to review its opening-balance entry and current opening balance.
 4. Search and page through party records; permissions are checked by the API for every operation.
-5. Purchase, sales, returns, collections, and supplier payments are added to these statements only
-   when their posting workflows are delivered in later phases. Until then, do not present the
-   opening-balance statement as a complete transaction ledger.
+5. Posted purchases, purchase returns, customer collections, and supplier payments are included in
+   the applicable party statement. Sales and sales returns will be added with the sales workflows.
 
 ### 5.1 Purchase
 1. Create PO (supplier, warehouse, lines) → Save Draft → Submit.
@@ -108,8 +107,11 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 6. Sales Return → qty ≤ delivered → Post → stock ↑ at original COGS, customer due ↓ (or credit note).
 
 ### 5.5 Money
-- **Customer Collection:** customer, account, amount, allocate to invoices → Post → customer due ↓, account ↑.
-- **Supplier Payment:** supplier, account, amount, allocate to bills → Post → supplier due ↓, account ↓.
+- **Customer Collection:** customer, account, amount, optional reference → Post → customer due ↓,
+  account ↑. Customer collections are party-level until invoices are implemented in Phase 7.
+- **Supplier Payment:** supplier, account, amount, optional allocation to outstanding Goods Receipts
+  or Direct Purchases → Post → supplier due ↓, account ↓. Any unallocated amount remains against
+  the supplier balance.
 - **Expense / Income:** category, account, amount (approval if over threshold) → Post → account ↓/↑.
 - **Fund Transfer:** from account → to account → two linked ledger rows.
 - **Opening Balances:** one-time per account/party at go-live.

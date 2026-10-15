@@ -112,6 +112,10 @@ ADMIN_PERMISSION_CATALOG = (
         "master_data.money_accounts.delete", "master_data", "Delete money accounts"
     ),
     PermissionDefinition("money.transactions.read", "money", "View money account balances"),
+    PermissionDefinition("money.collections.read", "money", "View customer collections"),
+    PermissionDefinition("money.collections.create", "money", "Post customer collections"),
+    PermissionDefinition("money.supplier_payments.read", "money", "View supplier payments"),
+    PermissionDefinition("money.supplier_payments.create", "money", "Post supplier payments"),
     PermissionDefinition("master_data.price_lists.read", "master_data", "View price lists"),
     PermissionDefinition("master_data.price_lists.create", "master_data", "Create price lists"),
     PermissionDefinition("master_data.price_lists.update", "master_data", "Update price lists"),

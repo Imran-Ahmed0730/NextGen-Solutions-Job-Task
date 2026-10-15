@@ -410,20 +410,45 @@ def delete_contact(
 
 
 def get_customer_statement(db: Session, customer: Customer) -> dict[str, object]:
-    balance = customer.opening_due
+    balance = Decimal("0.00")
+    entries: list[dict[str, object]] = [
+        {
+            "date": customer.created_at.isoformat(),
+            "type": "OPENING_BALANCE",
+            "description": "Opening balance",
+            "amount": customer.opening_due,
+        }
+    ]
+    from app.modules.money_collections import repository as collection_repository
+    from app.modules.money_collections.service import due_entry_data
+
+    entries.extend(
+        due_entry_data(collection)
+        for collection in collection_repository.list_customer_collections(db, customer.id)
+    )
+    opening_entry, *due_entries = entries
+    due_entries.sort(key=lambda entry: (str(entry["date"]), str(entry["description"])))
+    entries = [opening_entry, *due_entries]
+    statement_entries: list[dict[str, str]] = []
+    for entry in entries:
+        amount = entry["amount"]
+        if not isinstance(amount, Decimal):
+            raise TypeError("Customer statement amount must be a Decimal")
+        balance += amount
+        statement_entries.append(
+            {
+                "date": str(entry["date"]),
+                "type": str(entry["type"]),
+                "description": str(entry["description"]),
+                "amount": str(amount),
+                "balance": str(balance),
+            }
+        )
     return {
         "customer_id": customer.id,
         "customer_name": customer.name,
         "opening_due": str(customer.opening_due),
-        "entries": [
-            {
-                "date": customer.created_at.isoformat(),
-                "type": "OPENING_BALANCE",
-                "description": "Opening balance",
-                "amount": str(customer.opening_due),
-                "balance": str(balance),
-            }
-        ],
+        "entries": statement_entries,
         "balance": str(balance),
     }
 

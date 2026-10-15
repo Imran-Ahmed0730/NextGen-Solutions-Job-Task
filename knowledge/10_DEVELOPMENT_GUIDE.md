@@ -65,6 +65,8 @@ is protected.
 │   │   ├── modules/payment_methods/    # CASH/BANK/MFS/ONLINE payment methods
 │   │   ├── modules/money_accounts/     # Cash/bank/MFS accounts for money movements
 │   │   ├── modules/money_transactions/ # Append-only money ledger and balance service
+│   │   ├── modules/money_collections/  # Customer collection documents and ledger postings
+│   │   ├── modules/supplier_payments/  # Supplier payment documents and bill allocations
 │   │   ├── modules/price_lists/        # Price lists and product prices
 │   │   ├── modules/company_settings/    # Flexible key/value company settings
 │   │   └── main.py              # FastAPI app and router registration
@@ -124,6 +126,8 @@ The frontend route tree currently includes:
 | `/income-categories` | List, create, update, soft-delete, and restore income categories |
 | `/payment-methods` | List, create, update, soft-delete, and restore payment methods |
 | `/money-accounts` | List, create, update, soft-delete, and restore money accounts |
+| `/customer-collections` | Post customer collections and view recent collection history |
+| `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/price-lists` | List, create, update, soft-delete, and restore price lists and their product prices |
 | `/company-settings` | Manage flexible key/value company settings |
 
@@ -616,8 +620,7 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   ledger entries and balances, weighted-average product costs, PO received quantities/status, and
   audit records. The `GOODS_RECEIPT` sequence must be configured before posting.
 - Supplier statements include posted Goods Receipts and Direct Purchases in the running due
-  balance. Posted Purchase Returns are included as negative due entries; supplier payments remain
-  unimplemented until the Phase 6 money workflows.
+  balance. Posted Purchase Returns and Supplier Payments are included as negative due entries.
 - The `/goods-receipts` screen supports choosing an eligible PO, entering received quantities and
   unit costs, posting, and viewing paginated receipt history. Access is gated by
   `purchase.receipts.read` and `purchase.receipts.create`.
@@ -628,9 +631,8 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   stocked products, then atomically records the immutable purchase, `PURCHASE_RECEIPT` stock ledger
   entries and balances, weighted-average product costs, and audit records.
 - Direct Purchases are credit-only in this phase: `paid_amount` is zero and no money account is
-  recorded. Supplier statements include both posted Goods Receipts and Direct Purchases; supplier
-  payments and purchase returns remain unimplemented. Payments belong to the Phase 6 money
-  workflows.
+  recorded. Supplier statements include both posted Goods Receipts and Direct Purchases; purchase
+  returns and supplier payments are handled by their respective modules.
 - Configure the `DIRECT_PURCHASE` sequence before posting. The `/direct-purchases` screen is gated
   by `purchase.direct_purchases.read` and `purchase.direct_purchases.create`.
 
@@ -647,7 +649,7 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   screen provides eligible Goods Receipt lines, quantity validation, posting, and paginated history;
   access is gated by `purchase.returns.read` and `purchase.returns.create`.
 
-### Phase 6 in progress — Money transaction ledger
+### Phase 6 in progress — Money ledger, customer collections, and supplier payments
 
 - The `money_transactions` table is an append-only signed ledger with transaction type, account,
   source, party, date, and audit fields. The balance service calculates each account as
@@ -659,14 +661,19 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   database transaction; the service does not commit independently.
 - The account's `opening_balance` is the pre-ledger baseline. `OPENING` entries represent later
   signed adjustments, and account maintenance rejects changing the baseline after the first ledger
-  transaction. Collections, supplier payments, expenses, income, transfers, and ledger screens will
-  call this shared service in their respective Phase 6 slices. The balance read endpoint is gated by
-  `money.transactions.read`; arbitrary transaction posting is intentionally available only through
-  the service so document workflows can post the money effect atomically.
+  transaction. Customer Collections and Supplier Payments call the shared service so their
+  documents, signed money-ledger entries, and audit rows post atomically. Collections reduce the
+  customer statement due and increase the chosen account; payments reduce supplier due and the
+  chosen account. Supplier payments can be allocated to outstanding Goods Receipts or Direct
+  Purchases; customer collections remain party-level until invoices are implemented in Phase 7.
+  Both screens use permission-gated searchable party/account selectors. The balance read endpoint
+  is gated by `money.transactions.read`; arbitrary transaction posting is intentionally available
+  only through the service so document workflows can post the money effect atomically. Configure
+  the `CUSTOMER_COLLECTION` and `SUPPLIER_PAYMENT` document sequences before posting.
 
 ### Planned, not yet implemented
 
-The remaining roadmap includes the rest of purchase and money, sales, production, assets, employees,
+The remaining roadmap includes the rest of money, sales, production, assets, employees,
 approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens

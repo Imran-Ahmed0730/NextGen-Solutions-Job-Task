@@ -427,11 +427,18 @@ def get_supplier_statement(db: Session, supplier: Supplier) -> dict[str, object]
     purchase_entries = goods_receipt_service.list_supplier_due_entries(db, supplier.id)
     purchase_entries.extend(direct_purchase_service.list_supplier_due_entries(db, supplier.id))
     purchase_entries.extend(purchase_return_service.list_supplier_due_entries(db, supplier.id))
+    from app.modules.supplier_payments import repository as supplier_payment_repository
+    from app.modules.supplier_payments.service import due_entry_data
+
+    purchase_entries.extend(
+        due_entry_data(payment)
+        for payment in supplier_payment_repository.list_supplier_payments(db, supplier.id)
+    )
     purchase_entries.sort(key=lambda entry: (str(entry["date"]), str(entry["description"])))
     for purchase in purchase_entries:
         amount = purchase["amount"]
         if not isinstance(amount, Decimal):
-            raise TypeError("Goods receipt amount must be a Decimal")
+            raise TypeError("Supplier statement amount must be a Decimal")
         balance += amount
         entries.append(
             {

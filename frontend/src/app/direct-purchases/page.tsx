@@ -213,8 +213,8 @@ function DirectPurchasesContent() {
       <header>
         <h1 className="text-2xl font-semibold text-slate-900">Direct Purchases</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Post a purchase without a purchase order. Purchases are recorded on supplier credit;
-          supplier payments will be available with the Phase 6 money workflows.
+          Post a purchase without a purchase order. Purchases are recorded on supplier credit and
+          can be paid from the Supplier Payments screen.
         </p>
       </header>
 

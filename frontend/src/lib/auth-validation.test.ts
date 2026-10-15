@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   changePasswordSchema,
+  customerCollectionSchema,
   expenseCategorySchema,
   forgotPasswordSchema,
   incomeCategorySchema,
@@ -14,12 +15,58 @@ import {
   resetPasswordSchema,
   roleSchema,
   stockAdjustmentSchema,
+  supplierPaymentSchema,
   unitSchema,
   userSchema,
   warehouseSchema,
 } from './auth-validation';
 
 describe('auth-validation schemas', () => {
+  it('validates customer collections', () => {
+    const valid = {
+      doc_date: '2026-10-15',
+      customer_id: 1,
+      account_id: 2,
+      amount: '25.50',
+      method_ref: '',
+      note: '',
+    };
+    expect(customerCollectionSchema.safeParse(valid).success).toBe(true);
+    expect(customerCollectionSchema.safeParse({ ...valid, amount: '0.00' }).success).toBe(false);
+    expect(customerCollectionSchema.safeParse({ ...valid, customer_id: 0 }).success).toBe(false);
+  });
+
+  it('validates supplier payments and allocation totals', () => {
+    const valid = {
+      doc_date: '2026-10-15',
+      supplier_id: 1,
+      account_id: 2,
+      amount: '40.00',
+      note: '',
+      allocations: [
+        { ref_type: 'DIRECT_PURCHASE' as const, ref_id: 3, amount: '25.00' },
+      ],
+    };
+    expect(supplierPaymentSchema.safeParse(valid).success).toBe(true);
+    expect(
+      supplierPaymentSchema.safeParse({
+        ...valid,
+        amount: '0.30',
+        allocations: [
+          { ref_type: 'RECEIPT' as const, ref_id: 1, amount: '0.10' },
+          { ref_type: 'DIRECT_PURCHASE' as const, ref_id: 2, amount: '0.20' },
+        ],
+      }).success,
+    ).toBe(true);
+    expect(
+      supplierPaymentSchema.safeParse({
+        ...valid,
+        allocations: [{ ...valid.allocations[0], amount: '40.01' }],
+      }).success,
+    ).toBe(false);
+    expect(supplierPaymentSchema.safeParse({ ...valid, amount: '1.001' }).success).toBe(false);
+  });
+
   it('validates login input length constraints', () => {
     expect(loginSchema.safeParse({ username: 'admin', password: 'password123' }).success).toBe(true);
     expect(loginSchema.safeParse({ username: '', password: 'password' }).success).toBe(false);

@@ -63,9 +63,10 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Customer/supplier contact management screens
 - [x] Search, pagination, input validation, and permission denial coverage
 - [x] Exit: party/contact CRUD, audit, permissions, and opening-balance statement behavior tested
-- [ ] Extend customer statements with posted invoices, returns, and collections (Phase 6/7)
+- [ ] Extend customer statements with posted invoices and returns (Phase 7)
+- [x] Extend customer statements with posted collections (Phase 6)
 - [x] Extend supplier statements with posted Purchase Returns (Phase 5)
-- [ ] Extend supplier statements with supplier payments (Phase 6)
+- [x] Extend supplier statements with supplier payments (Phase 6)
 - [x] Extend supplier statements with posted Goods Receipts and Direct Purchases (Phase 5)
 
 ## Phase 4 — Inventory Engine
@@ -102,11 +103,12 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 
 ## Phase 6 — Money
 - [x] `money_transactions` + balance service (append-only ledger, account locking, overdraft enforcement, and opening-balance invariant)
-- [ ] Customer collection, supplier payment
+- [x] Customer collection (party-level until invoices are implemented in Phase 7)
+- [x] Supplier payment (optional allocation to Goods Receipts and Direct Purchases)
 - [ ] Expense, income
 - [ ] Fund transfer, opening balances
 - [ ] Account ledger / cash book
-- [ ] Screens: 8 Money screens
+- [ ] Screens: remaining Money screens (expenses, income, transfers, opening balances, ledger/cash book)
 - [ ] Exit: account and due invariants pass
 
 ## Phase 7 — Sales

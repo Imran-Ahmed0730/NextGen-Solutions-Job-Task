@@ -14,6 +14,7 @@ from app.modules.goods_receipts.models import GoodsReceipt, GoodsReceiptLine  # 
 from app.modules.income_categories.models import IncomeCategory  # noqa: F401
 from app.modules.inventory.models import StockBalance, StockTransaction  # noqa: F401
 from app.modules.money_accounts.models import MoneyAccount  # noqa: F401
+from app.modules.money_collections.models import CustomerCollection  # noqa: F401
 from app.modules.money_transactions.models import MoneyTransaction  # noqa: F401
 from app.modules.parties.models import PartyContact  # noqa: F401
 from app.modules.payment_methods.models import PaymentMethod  # noqa: F401
@@ -26,6 +27,10 @@ from app.modules.purchase_returns.models import PurchaseReturn, PurchaseReturnLi
 from app.modules.sales.models import SalesOrder, SalesOrderLine  # noqa: F401
 from app.modules.stock_adjustments.models import StockAdjustment, StockAdjustmentLine  # noqa: F401
 from app.modules.stock_transfers.models import StockTransfer, StockTransferLine  # noqa: F401
+from app.modules.supplier_payments.models import (  # noqa: F401
+    SupplierPayment,
+    SupplierPaymentAllocation,
+)
 from app.modules.suppliers.models import Supplier  # noqa: F401
 from app.modules.units.models import Unit  # noqa: F401
 from app.modules.warehouses.models import Warehouse  # noqa: F401

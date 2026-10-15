@@ -422,6 +422,59 @@ export const purchaseReturnSchema = z.object({
     .max(500, 'A purchase return can have at most 500 lines'),
 });
 
+export function moneyAmountToCents(value: string): bigint | null {
+  const match = /^(\d{1,16})(?:\.(\d{1,2}))?$/.exec(value);
+  if (!match) return null;
+  return BigInt(match[1]) * 100n + BigInt((match[2] ?? '').padEnd(2, '0') || '0');
+}
+
+const moneyAmount = z
+  .string()
+  .regex(/^\d{1,16}(?:\.\d{1,2})?$/, 'Enter an amount with up to 2 decimal places')
+  .refine((value) => /[1-9]/.test(value), 'Amount must be greater than zero');
+
+export const customerCollectionSchema = z.object({
+  doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid collection date'),
+  customer_id: z.number().int().positive('Select a customer'),
+  account_id: z.number().int().positive('Select a money account'),
+  amount: moneyAmount,
+  method_ref: z.string().trim().max(100, 'Use at most 100 characters').optional(),
+  note: z.string().max(2000, 'Use at most 2000 characters').optional(),
+});
+
+export const supplierPaymentSchema = z.object({
+  doc_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid payment date'),
+  supplier_id: z.number().int().positive('Select a supplier'),
+  account_id: z.number().int().positive('Select a money account'),
+  amount: moneyAmount,
+  note: z.string().max(2000, 'Use at most 2000 characters').optional(),
+  allocations: z
+    .array(
+      z.object({
+        ref_type: z.enum(['RECEIPT', 'DIRECT_PURCHASE'] as const),
+        ref_id: z.number().int().positive(),
+        amount: moneyAmount,
+      }),
+    )
+    .max(100, 'A payment can be allocated to at most 100 bills'),
+}).superRefine((value, context) => {
+  const paymentCents = moneyAmountToCents(value.amount);
+  const allocationCents = value.allocations.map((allocation) =>
+    moneyAmountToCents(allocation.amount),
+  );
+  if (
+    paymentCents !== null &&
+    allocationCents.every((amount) => amount !== null) &&
+    allocationCents.reduce((total, amount) => total + (amount ?? 0n), 0n) > paymentCents
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Bill allocations cannot exceed the payment amount',
+      path: ['allocations'],
+    });
+  }
+});
+
 const optionalPartyBangladeshMobile = z
   .string()
   .trim()
