@@ -66,6 +66,9 @@ function PurchaseOrdersContent() {
   const canRead = profile?.permissions.includes('purchase.orders.read') ?? false;
   const canCreate = profile?.permissions.includes('purchase.orders.create') ?? false;
   const canUpdate = profile?.permissions.includes('purchase.orders.update') ?? false;
+  const canSubmit = profile?.permissions.includes('purchase.orders.submit') ?? false;
+  const canApprove = profile?.permissions.includes('purchase.orders.approve') ?? false;
+  const canCancel = profile?.permissions.includes('purchase.orders.cancel') ?? false;
   const [options, setOptions] = useState<PurchaseOrderOptions>({
     suppliers: [],
     warehouses: [],
@@ -205,6 +208,40 @@ function PurchaseOrdersContent() {
       showErrorToast(message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function submitOrder(id: number) {
+    try {
+      await apiRequest(`/api/v1/purchase/orders/${id}/submit`, { method: 'POST' });
+      showSuccessToast('Purchase order submitted');
+      await reload(offset);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not submit purchase order';
+      showErrorToast(message);
+    }
+  }
+
+  async function approveOrder(id: number) {
+    try {
+      await apiRequest(`/api/v1/purchase/orders/${id}/approve`, { method: 'POST' });
+      showSuccessToast('Purchase order approved');
+      await reload(offset);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not approve purchase order';
+      showErrorToast(message);
+    }
+  }
+
+  async function cancelOrder(id: number) {
+    if (!confirm('Are you sure you want to cancel this purchase order?')) return;
+    try {
+      await apiRequest(`/api/v1/purchase/orders/${id}/cancel`, { method: 'POST' });
+      showSuccessToast('Purchase order cancelled');
+      await reload(offset);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not cancel purchase order';
+      showErrorToast(message);
     }
   }
 
@@ -471,6 +508,33 @@ function PurchaseOrdersContent() {
                           className="font-medium text-emerald-800 hover:underline"
                         >
                           Edit draft
+                        </button>
+                      )}
+                      {order.status === 'DRAFT' && canSubmit && (
+                        <button
+                          type="button"
+                          onClick={() => void submitOrder(order.id)}
+                          className="font-medium text-blue-800 hover:underline"
+                        >
+                          Submit
+                        </button>
+                      )}
+                      {(order.status === 'DRAFT' || order.status === 'PENDING_APPROVAL') && canApprove && (
+                        <button
+                          type="button"
+                          onClick={() => void approveOrder(order.id)}
+                          className="font-medium text-emerald-800 hover:underline"
+                        >
+                          Approve
+                        </button>
+                      )}
+                      {['DRAFT', 'PENDING_APPROVAL', 'APPROVED'].includes(order.status) && canCancel && (
+                        <button
+                          type="button"
+                          onClick={() => void cancelOrder(order.id)}
+                          className="font-medium text-rose-800 hover:underline"
+                        >
+                          Cancel
                         </button>
                       )}
                     </td>

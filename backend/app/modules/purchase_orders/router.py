@@ -67,3 +67,36 @@ def update_purchase_order(
 ) -> PurchaseOrder:
     ip = request.client.host if request.client else None
     return service.update_purchase_order(db, purchase_order_id, payload, actor, ip)
+
+
+@router.post("/{purchase_order_id}/submit", response_model=PurchaseOrderResponse)
+def submit_purchase_order(
+    purchase_order_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    actor: User = Depends(require_permission("purchase.orders.submit")),
+) -> PurchaseOrder:
+    ip = request.client.host if request.client else None
+    return service.submit_purchase_order(db, purchase_order_id, actor, ip)
+
+
+@router.post("/{purchase_order_id}/approve", response_model=PurchaseOrderResponse)
+def approve_purchase_order(
+    purchase_order_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    actor: User = Depends(require_permission("purchase.orders.approve")),
+) -> PurchaseOrder:
+    ip = request.client.host if request.client else None
+    return service.approve_purchase_order(db, purchase_order_id, actor, ip)
+
+
+@router.post("/{purchase_order_id}/cancel", response_model=PurchaseOrderResponse)
+def cancel_purchase_order(
+    purchase_order_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    actor: User = Depends(require_permission("purchase.orders.cancel")),
+) -> PurchaseOrder:
+    ip = request.client.host if request.client else None
+    return service.cancel_purchase_order(db, purchase_order_id, actor, ip)

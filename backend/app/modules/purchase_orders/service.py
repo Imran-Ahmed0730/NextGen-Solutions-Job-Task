@@ -161,6 +161,111 @@ def update_purchase_order(
         raise
 
 
+def submit_purchase_order(
+    db: Session,
+    purchase_order_id: int,
+    actor: User,
+    ip: str | None = None,
+) -> PurchaseOrder:
+    try:
+        purchase_order = repository.get_purchase_order(db, purchase_order_id, for_update=True)
+        if purchase_order is None:
+            raise HTTPException(status_code=404, detail="Purchase order not found")
+        if purchase_order.status != "DRAFT":
+            raise HTTPException(status_code=409, detail="Only draft purchase orders can be submitted")
+        before = _snapshot(purchase_order)
+        purchase_order.status = "PENDING_APPROVAL"
+        purchase_order.updated_at = datetime.now(UTC)
+        db.flush()
+        record_audit(
+            db,
+            actor_id=actor.id,
+            entity_type="purchase_order",
+            entity_id=purchase_order.id,
+            action="SUBMIT",
+            before=before,
+            after=_snapshot(purchase_order),
+            ip=ip,
+        )
+        db.commit()
+        return repository.get_purchase_order(db, purchase_order.id) or purchase_order
+    except Exception:
+        db.rollback()
+        raise
+
+
+def approve_purchase_order(
+    db: Session,
+    purchase_order_id: int,
+    actor: User,
+    ip: str | None = None,
+) -> PurchaseOrder:
+    try:
+        purchase_order = repository.get_purchase_order(db, purchase_order_id, for_update=True)
+        if purchase_order is None:
+            raise HTTPException(status_code=404, detail="Purchase order not found")
+        if purchase_order.status not in ("DRAFT", "PENDING_APPROVAL"):
+            raise HTTPException(
+                status_code=409, detail="Only draft or pending purchase orders can be approved"
+            )
+        before = _snapshot(purchase_order)
+        purchase_order.status = "APPROVED"
+        purchase_order.updated_at = datetime.now(UTC)
+        db.flush()
+        record_audit(
+            db,
+            actor_id=actor.id,
+            entity_type="purchase_order",
+            entity_id=purchase_order.id,
+            action="APPROVE",
+            before=before,
+            after=_snapshot(purchase_order),
+            ip=ip,
+        )
+        db.commit()
+        return repository.get_purchase_order(db, purchase_order.id) or purchase_order
+    except Exception:
+        db.rollback()
+        raise
+
+
+def cancel_purchase_order(
+    db: Session,
+    purchase_order_id: int,
+    actor: User,
+    ip: str | None = None,
+) -> PurchaseOrder:
+    try:
+        purchase_order = repository.get_purchase_order(db, purchase_order_id, for_update=True)
+        if purchase_order is None:
+            raise HTTPException(status_code=404, detail="Purchase order not found")
+        if purchase_order.status in ("CLOSED", "CANCELLED"):
+            raise HTTPException(status_code=409, detail="Purchase order is already closed or cancelled")
+        if any(line.received_qty > 0 for line in purchase_order.lines):
+            raise HTTPException(
+                status_code=409, detail="Cannot cancel a purchase order with received goods"
+            )
+        before = _snapshot(purchase_order)
+        purchase_order.status = "CANCELLED"
+        purchase_order.updated_at = datetime.now(UTC)
+        db.flush()
+        record_audit(
+            db,
+            actor_id=actor.id,
+            entity_type="purchase_order",
+            entity_id=purchase_order.id,
+            action="CANCEL",
+            before=before,
+            after=_snapshot(purchase_order),
+            ip=ip,
+        )
+        db.commit()
+        return repository.get_purchase_order(db, purchase_order.id) or purchase_order
+    except Exception:
+        db.rollback()
+        raise
+
+
 def _validate_lines(db: Session, payload: PurchaseOrderCreate | PurchaseOrderUpdate) -> None:
     products: dict[int, Product] = {}
     for product_id in sorted({line.product_id for line in payload.lines}):

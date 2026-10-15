@@ -255,3 +255,44 @@ def test_purchase_order_routes_require_permissions(
     assert client.get("/api/v1/purchase/orders", headers=headers).status_code == 403
     assert client.get("/api/v1/purchase/orders/options", headers=headers).status_code == 403
     assert client.post("/api/v1/purchase/orders", headers=headers, json=payload).status_code == 403
+    assert client.post("/api/v1/purchase/orders/1/submit", headers=headers).status_code == 403
+    assert client.post("/api/v1/purchase/orders/1/approve", headers=headers).status_code == 403
+    assert client.post("/api/v1/purchase/orders/1/cancel", headers=headers).status_code == 403
+
+
+def test_purchase_order_lifecycle_transitions(
+    client: TestClient,
+    db_session: Session,
+    purchase_order_fixture: tuple[User, str, Supplier, Warehouse, Product],
+) -> None:
+    actor, password, supplier, warehouse, product = purchase_order_fixture
+    headers = _login(client, actor.username, password)
+    payload = _payload(supplier, warehouse, product)
+
+    created = client.post("/api/v1/purchase/orders", headers=headers, json=payload)
+    assert created.status_code == 201
+    po_id = created.json()["id"]
+    assert created.json()["status"] == "DRAFT"
+
+    # Submit
+    submitted = client.post(f"/api/v1/purchase/orders/{po_id}/submit", headers=headers)
+    assert submitted.status_code == 200
+    assert submitted.json()["status"] == "PENDING_APPROVAL"
+
+    # Cannot submit again
+    invalid_submit = client.post(f"/api/v1/purchase/orders/{po_id}/submit", headers=headers)
+    assert invalid_submit.status_code == 409
+
+    # Approve
+    approved = client.post(f"/api/v1/purchase/orders/{po_id}/approve", headers=headers)
+    assert approved.status_code == 200
+    assert approved.json()["status"] == "APPROVED"
+
+    # Cancel approved PO
+    cancelled = client.post(f"/api/v1/purchase/orders/{po_id}/cancel", headers=headers)
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == "CANCELLED"
+
+    # Cannot cancel again
+    invalid_cancel = client.post(f"/api/v1/purchase/orders/{po_id}/cancel", headers=headers)
+    assert invalid_cancel.status_code == 409
