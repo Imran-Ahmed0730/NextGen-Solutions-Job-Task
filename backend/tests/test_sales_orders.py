@@ -173,6 +173,8 @@ def test_sales_order_draft_create_edit_details_and_options(
     assert [line["qty_reserved"] for line in order["lines"]] == ["0.000", "0.000"]
     assert [line["reservations"] for line in order["lines"]] == [[], []]
     assert [line["qty_delivered"] for line in order["lines"]] == ["0.000", "0.000"]
+    assert [line["qty_available"] for line in order["lines"]] == ["10.000", "10.000"]
+    assert [line["qty_remaining"] for line in order["lines"]] == ["3.250", "2.000"]
 
     changed = _payload(customer, warehouse, product)
     changed["discount"] = "0.00"
@@ -319,6 +321,8 @@ def test_reserve_and_release_order_line_stock_and_lock_draft_edits(
     assert reserved.status_code == 200
     reserved_line = reserved.json()["lines"][0]
     assert reserved_line["qty_reserved"] == "3.000"
+    assert reserved_line["qty_available"] == "7.000"
+    assert reserved_line["qty_remaining"] == "4.000"
     assert reserved_line["reservations"][0]["status"] == "ACTIVE"
     balance = db_session.get(StockBalance, (product.id, warehouse.id))
     assert balance is not None
@@ -346,6 +350,8 @@ def test_reserve_and_release_order_line_stock_and_lock_draft_edits(
     assert released.status_code == 200
     released_line = released.json()["lines"][0]
     assert released_line["qty_reserved"] == "0.000"
+    assert released_line["qty_available"] == "10.000"
+    assert released_line["qty_remaining"] == "4.000"
     assert released_line["reservations"][0]["status"] == "RELEASED"
     assert balance.qty_on_hand == Decimal("10.000")
     assert balance.qty_reserved == Decimal("0.000")

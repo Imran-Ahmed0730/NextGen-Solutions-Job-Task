@@ -65,6 +65,25 @@ def get_product_total_on_hand(db: Session, product_id: int) -> Decimal:
     return repository.get_total_on_hand(db, product_id)
 
 
+def get_available_quantities(
+    db: Session, stock_items: set[tuple[int, int]]
+) -> dict[tuple[int, int], Decimal]:
+    if not stock_items:
+        return {}
+    product_ids = sorted({product_id for product_id, _ in stock_items})
+    warehouse_ids = sorted({warehouse_id for _, warehouse_id in stock_items})
+    balances = repository.list_balances_for_products(
+        db, product_ids=product_ids, warehouse_ids=warehouse_ids
+    )
+    balance_by_pair = {(balance.product_id, balance.warehouse_id): balance for balance in balances}
+    return {
+        pair: balance_by_pair[pair].available
+        if pair in balance_by_pair
+        else Decimal("0.000")
+        for pair in stock_items
+    }
+
+
 def post_stock_movement(
     db: Session,
     *,

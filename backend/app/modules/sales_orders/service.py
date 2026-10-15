@@ -20,6 +20,7 @@ from app.modules.sales_orders.schemas import (
     SalesOrderCustomerOption,
     SalesOrderOptionsResponse,
     SalesOrderProductOption,
+    SalesOrderResponse,
     SalesOrderUpdate,
     SalesOrderWarehouseOption,
 )
@@ -37,6 +38,33 @@ def list_sales_orders(db: Session, *, offset: int = 0, limit: int = 50) -> list[
 
 def get_sales_order(db: Session, sales_order_id: int) -> SalesOrder | None:
     return repository.get_sales_order(db, sales_order_id)
+
+
+def serialize_sales_orders(db: Session, orders: list[SalesOrder]) -> list[SalesOrderResponse]:
+    stock_items = {
+        (line.product_id, order.warehouse_id) for order in orders for line in order.lines
+    }
+    available_by_item = inventory_service.get_available_quantities(db, stock_items)
+    responses: list[SalesOrderResponse] = []
+    for order in orders:
+        response = SalesOrderResponse.model_validate(order)
+        tracked_lines = [
+            line.model_copy(
+                update={
+                    "qty_available": available_by_item.get(
+                        (line.product_id, order.warehouse_id), Decimal("0.000")
+                    ),
+                    "qty_remaining": line.qty_ordered - line.qty_delivered,
+                }
+            )
+            for line in response.lines
+        ]
+        responses.append(response.model_copy(update={"lines": tracked_lines}))
+    return responses
+
+
+def serialize_sales_order(db: Session, order: SalesOrder) -> SalesOrderResponse:
+    return serialize_sales_orders(db, [order])[0]
 
 
 def reserve_order_line(

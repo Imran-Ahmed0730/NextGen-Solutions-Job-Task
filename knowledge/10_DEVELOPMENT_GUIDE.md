@@ -725,10 +725,11 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   reservation history exists, even after release. Draft creation itself does not reserve stock.
   Delivery posting consumes reservations first, reserves and immediately consumes any additional
   available quantity in the same transaction, and stores the stock transaction's unit cost on each
-  delivery line. Partial delivery leaves the Sales Order status unchanged; the page shows delivered
-  quantities and delivery/COGS history. Permission: `sales.deliveries.create` (included in the
-  Administrator role). Quotation conversion, invoicing, returns, and credit-limit enforcement remain
-  later slices. Permissions: `sales.orders.read`, `sales.orders.create`, `sales.orders.update`,
+  delivery line. Partial delivery leaves the Sales Order status unchanged; order details show
+  Ordered, Available stock (on-hand minus reserved), Reserved, Produced, Delivered, and Remaining
+  (ordered minus delivered) quantities along with delivery/COGS history. Permission:
+  `sales.deliveries.create` (included in the Administrator role). Quotation conversion remains a
+  later slice. Permissions: `sales.orders.read`, `sales.orders.create`, `sales.orders.update`,
   `sales.orders.reserve`, and `sales.deliveries.create`. Frontend: `/sales-orders`.
 - **Sales Invoices** — An invoice is posted from one posted delivery and cannot be edited or posted
   twice. Its lines snapshot the linked order's unit price and the delivery's stored COGS. Header

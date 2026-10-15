@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import require_permission
 from app.modules.auth.models import User
-from app.modules.sales.models import SalesDelivery, SalesOrder
+from app.modules.sales.models import SalesDelivery
 from app.modules.sales_orders import service
 from app.modules.sales_orders.schemas import (
     SalesDeliveryCreate,
@@ -33,8 +33,9 @@ def list_sales_orders(
     limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("sales.orders.read")),
-) -> list[SalesOrder]:
-    return service.list_sales_orders(db, offset=offset, limit=limit)
+) -> list[SalesOrderResponse]:
+    orders = service.list_sales_orders(db, offset=offset, limit=limit)
+    return service.serialize_sales_orders(db, orders)
 
 
 @router.post("", response_model=SalesOrderResponse, status_code=status.HTTP_201_CREATED)
@@ -43,9 +44,10 @@ def create_sales_order(
     request: Request,
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("sales.orders.create")),
-) -> SalesOrder:
+) -> SalesOrderResponse:
     ip = request.client.host if request.client else None
-    return service.create_sales_order(db, payload, actor, ip)
+    order = service.create_sales_order(db, payload, actor, ip)
+    return service.serialize_sales_order(db, order)
 
 
 @router.get("/{sales_order_id}", response_model=SalesOrderResponse)
@@ -53,11 +55,11 @@ def get_sales_order(
     sales_order_id: int,
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("sales.orders.read")),
-) -> SalesOrder:
+) -> SalesOrderResponse:
     order = service.get_sales_order(db, sales_order_id)
     if order is None:
         raise HTTPException(status_code=404, detail="Sales order not found")
-    return order
+    return service.serialize_sales_order(db, order)
 
 
 @router.put("/{sales_order_id}", response_model=SalesOrderResponse)
@@ -67,9 +69,10 @@ def update_sales_order(
     request: Request,
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("sales.orders.update")),
-) -> SalesOrder:
+) -> SalesOrderResponse:
     ip = request.client.host if request.client else None
-    return service.update_sales_order(db, sales_order_id, payload, actor, ip)
+    order = service.update_sales_order(db, sales_order_id, payload, actor, ip)
+    return service.serialize_sales_order(db, order)
 
 
 @router.post("/{sales_order_id}/lines/{line_id}/reservations", response_model=SalesOrderResponse)
@@ -80,9 +83,9 @@ def reserve_sales_order_line(
     request: Request,
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("sales.orders.reserve")),
-) -> SalesOrder:
+) -> SalesOrderResponse:
     ip = request.client.host if request.client else None
-    return service.reserve_order_line(
+    order = service.reserve_order_line(
         db,
         sales_order_id=sales_order_id,
         line_id=line_id,
@@ -90,6 +93,7 @@ def reserve_sales_order_line(
         actor=actor,
         ip=ip,
     )
+    return service.serialize_sales_order(db, order)
 
 
 @router.delete(
@@ -102,15 +106,16 @@ def release_sales_order_reservation(
     request: Request,
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("sales.orders.reserve")),
-) -> SalesOrder:
+) -> SalesOrderResponse:
     ip = request.client.host if request.client else None
-    return service.release_order_reservation(
+    order = service.release_order_reservation(
         db,
         sales_order_id=sales_order_id,
         reservation_id=reservation_id,
         actor=actor,
         ip=ip,
     )
+    return service.serialize_sales_order(db, order)
 
 
 @router.post(

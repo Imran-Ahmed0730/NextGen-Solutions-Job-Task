@@ -35,6 +35,8 @@ type SalesOrderLine = DraftLine & {
   qty_reserved: string;
   qty_produced: string;
   qty_delivered: string;
+  qty_available: string;
+  qty_remaining: string;
   reservations: {
     id: number;
     qty: string;
@@ -624,15 +626,16 @@ function SalesOrdersContent() {
                           className="bg-slate-50 px-5 py-3"
                         >
                           <p className="mb-2 text-xs text-slate-600">
-                            Ordered / Reserved / Produced / Delivered
+                            Ordered / Available stock / Reserved / Produced / Delivered / Remaining
                           </p>
                           <ul className="space-y-1 text-sm">
                             {order.lines.map((line) => (
                               <li key={line.id} className="space-y-2 py-2">
                                 {options.products.find((item) => item.id === Number(line.product_id))
                                   ?.name ?? `Product ${line.product_id}`}
-                                : {line.qty_ordered} / {line.qty_reserved} / {line.qty_produced} /{' '}
-                                {line.qty_delivered} · {line.line_total}
+                                : {line.qty_ordered} / {line.qty_available} / {line.qty_reserved} /{' '}
+                                {line.qty_produced} / {line.qty_delivered} / {line.qty_remaining} ·{' '}
+                                {line.line_total}
                                 {canReserve && order.status === 'DRAFT' && (
                                   <div className="flex flex-wrap items-center gap-2">
                                     <label className="text-xs text-slate-600">

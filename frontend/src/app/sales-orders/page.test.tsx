@@ -100,6 +100,7 @@ describe('SalesOrdersPage', () => {
           ...current,
           lines: current.lines.map((line) => ({
             ...line,
+            qty_available: '9.000',
             qty_reserved: '1.000',
             reservations: [
               ...line.reservations,
@@ -142,6 +143,8 @@ describe('SalesOrdersPage', () => {
             qty_reserved: '0.000',
             qty_produced: '0.000',
             qty_delivered: '0.000',
+            qty_available: '10.000',
+            qty_remaining: line.qty_ordered,
             reservations: [],
           })),
         };
@@ -188,6 +191,10 @@ describe('SalesOrdersPage', () => {
     await waitFor(() => {
       expect(mocks.apiRequest).toHaveBeenCalledWith('/api/v1/sales/orders?offset=0&limit=51');
     });
+    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+    expect(
+      await screen.findByText(/2\.500 \/ 10\.000 \/ 0\.000 \/ 0\.000 \/ 0\.000 \/ 2\.500/),
+    ).toBeInTheDocument();
   });
 
   it('reserves stock through the Sales Order action', async () => {

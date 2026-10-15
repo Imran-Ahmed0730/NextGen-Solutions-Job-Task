@@ -97,6 +97,8 @@ class SalesOrderLineResponse(BaseModel):
     qty_reserved: Decimal
     qty_produced: Decimal
     qty_delivered: Decimal
+    qty_available: Decimal = Decimal("0.000")
+    qty_remaining: Decimal = Decimal("0.000")
     reservations: list[SalesOrderReservationResponse]
 
 

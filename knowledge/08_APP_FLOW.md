@@ -109,7 +109,9 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 6. Sales Return → qty ≤ delivered → Post → stock ↑ at original COGS, customer due ↓ (or credit note).
 
 Current delivery includes draft quotation and draft Sales Order create/edit/list/detail workflows.
-Sales Order reservation, release, and delivery posting call the Phase 4 inventory reservation and
+Order details show ordered quantity, current available warehouse stock (on-hand minus reserved),
+reserved quantity, produced quantity, delivered quantity, and remaining quantity (ordered minus
+delivered). Sales Order reservation, release, and delivery posting call the Phase 4 inventory reservation and
 stock-posting service. Deliveries consume reservations first, reserve-and-consume any remaining
 available quantity in the same transaction, and store the transaction's unit cost as line-level COGS.
 Partial deliveries leave the Sales Order status unchanged; delivered quantities and delivery history
