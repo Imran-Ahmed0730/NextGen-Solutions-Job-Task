@@ -100,7 +100,9 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 5. Linked sales order updates its *Produced* quantity.
 
 ### 5.4 Sales
-1. Quotation → Send → Accept → Convert to Sales Order (or create order directly).
+1. Quotation draft → Send → customer response → Accept or Reject. Only Accepted quotations can be
+   converted, and each can create one linked Sales Order; direct Sales Order creation remains
+   available.
 2. Sales Order → Reserve: reserves available stock through the Phase 4 reservation service; a draft
    order cannot be edited after reservation history exists. Shortage can raise a Production Order.
 3. Order Details shows Ordered / Available / Reserved / Produced / Delivered / Remaining.
@@ -108,7 +110,13 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 5. Invoice from delivery → Post once per delivery → customer due ↑; credit-limit mode warns or blocks.
 6. Sales Return → qty ≤ delivered → Post → stock ↑ at original COGS, customer due ↓ (or credit note).
 
-Current delivery includes draft quotation and draft Sales Order create/edit/list/detail workflows.
+Quotation statuses follow `DRAFT → SENT → ACCEPTED` or `REJECTED`. Only DRAFT quotations can be
+edited; SENT quotations can be accepted or rejected. Conversion copies the accepted quotation's
+customer, product quantities, prices, discount, and note into a new Sales Order and requires an
+order date and warehouse. A unique Sales Order quotation reference enforces one-time conversion.
+
+Current delivery includes quotation lifecycle and conversion, and draft Sales Order
+create/edit/list/detail workflows.
 Order details show ordered quantity, current available warehouse stock (on-hand minus reserved),
 reserved quantity, produced quantity, delivered quantity, and remaining quantity (ordered minus
 delivered). Sales Order reservation, release, and delivery posting call the Phase 4 inventory reservation and
@@ -119,9 +127,8 @@ show progress. A posted delivery can be invoiced once. Invoices snapshot deliver
 order prices, and delivery COGS; posting updates the customer statement and checks the configured
 credit-limit mode. Sales Returns reference invoice lines and cap returns at remaining invoiced
 quantity. Posting creates an immutable document, restores stock at the invoice line's stored COGS,
-and reduces customer due using the invoice's discount-adjusted value. Quotation lifecycle/conversion
-and order tracking remain open slices; quotation status transitions remain open decisions in
-`06_TODO.md`.
+and reduces customer due using the invoice's discount-adjusted value. Order tracking is included in
+Sales Order details.
 
 ### 5.5 Money
 - **Customer Collection:** customer, account, amount, optional reference → Post → customer due ↓,

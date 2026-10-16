@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -19,6 +20,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
+if TYPE_CHECKING:
+    from app.modules.sales.models import SalesOrder
+
 ID_TYPE = (
     BigInteger().with_variant(BIGINT(unsigned=True), "mysql").with_variant(Integer(), "sqlite")
 )
@@ -31,6 +35,10 @@ class Quotation(Base):
         CheckConstraint("subtotal >= 0", name="ck_quotations_nonnegative_subtotal"),
         CheckConstraint("discount >= 0", name="ck_quotations_nonnegative_discount"),
         CheckConstraint("total >= 0", name="ck_quotations_nonnegative_total"),
+        CheckConstraint(
+            "status IN ('DRAFT', 'SENT', 'ACCEPTED', 'REJECTED')",
+            name="ck_quotations_valid_status",
+        ),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)
@@ -69,6 +77,13 @@ class Quotation(Base):
         lazy="selectin",
         order_by="QuotationLine.id",
     )
+    sales_order: Mapped["SalesOrder | None"] = relationship(
+        back_populates="quotation", uselist=False
+    )
+
+    @property
+    def sales_order_id(self) -> int | None:
+        return self.sales_order.id if self.sales_order is not None else None
 
 
 class QuotationLine(Base):

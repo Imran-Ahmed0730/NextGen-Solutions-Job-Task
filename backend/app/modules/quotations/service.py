@@ -18,7 +18,9 @@ from app.modules.quotations.schemas import (
     QuotationOptionsResponse,
     QuotationProductOption,
     QuotationUpdate,
+    QuotationWarehouseOption,
 )
+from app.modules.warehouses import service as warehouse_service
 
 DOCUMENT_TYPE = "QUOTATION"
 CENT = Decimal("0.01")
@@ -33,9 +35,80 @@ def get_quotation(db: Session, quotation_id: int) -> Quotation | None:
     return repository.get_quotation(db, quotation_id)
 
 
+def transition_quotation(
+    db: Session,
+    *,
+    quotation_id: int,
+    target_status: str,
+    actor: User,
+    ip: str | None = None,
+) -> Quotation:
+    allowed_transitions = {"DRAFT": {"SENT"}, "SENT": {"ACCEPTED", "REJECTED"}}
+    try:
+        quotation = repository.get_quotation(db, quotation_id, for_update=True)
+        if quotation is None:
+            raise HTTPException(status_code=404, detail="Quotation not found")
+        if target_status not in allowed_transitions.get(quotation.status, set()):
+            raise HTTPException(
+                status_code=409,
+                detail=f"QUOTATION_CANNOT_TRANSITION_FROM_{quotation.status}",
+            )
+        before = _snapshot(quotation)
+        quotation.status = target_status
+        quotation.updated_at = datetime.now(UTC)
+        db.flush()
+        record_audit(
+            db,
+            actor_id=actor.id,
+            entity_type="quotation",
+            entity_id=quotation.id,
+            action="STATUS",
+            before=before,
+            after=_snapshot(quotation),
+            ip=ip,
+        )
+        db.commit()
+        return repository.get_quotation(db, quotation.id) or quotation
+    except Exception:
+        db.rollback()
+        raise
+
+
+def get_accepted_quotation_for_conversion(db: Session, quotation_id: int) -> Quotation:
+    quotation = repository.get_accepted_quotation_for_update(db, quotation_id)
+    if quotation is None:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+    if quotation.status != "ACCEPTED":
+        raise HTTPException(status_code=409, detail="QUOTATION_NOT_ACCEPTED")
+    if quotation.sales_order is not None:
+        raise HTTPException(status_code=409, detail="QUOTATION_ALREADY_CONVERTED")
+    return quotation
+
+
+def record_quotation_conversion(
+    db: Session,
+    *,
+    quotation: Quotation,
+    sales_order_id: int,
+    actor: User,
+    ip: str | None = None,
+) -> None:
+    record_audit(
+        db,
+        actor_id=actor.id,
+        entity_type="quotation",
+        entity_id=quotation.id,
+        action="UPDATE",
+        before=_snapshot(quotation),
+        after={**_snapshot(quotation), "sales_order_id": sales_order_id},
+        ip=ip,
+    )
+
+
 def get_quotation_options(db: Session) -> QuotationOptionsResponse:
     customers = customer_service.list_customers(db, limit=200)
     products = product_service.list_products(db, limit=200)
+    warehouses = warehouse_service.list_warehouses(db, limit=200)
     return QuotationOptionsResponse(
         customers=[
             QuotationCustomerOption(id=item.id, code=item.code, name=item.name)
@@ -50,6 +123,10 @@ def get_quotation_options(db: Session) -> QuotationOptionsResponse:
                 allow_decimal=item.unit.allow_decimal,
             )
             for item in products
+        ],
+        warehouses=[
+            QuotationWarehouseOption(id=item.id, code=item.code, name=item.name)
+            for item in warehouses
         ],
     )
 

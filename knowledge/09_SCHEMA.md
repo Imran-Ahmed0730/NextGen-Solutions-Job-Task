@@ -73,9 +73,9 @@ their respective transaction workflows.
 **production_outputs**: id, production_order_id(FK), product_id, qty, unit_cost
 
 ## 7. Sales
-**quotations**: id, doc_no, doc_date, customer_id(FK), valid_until, status(DRAFT initially), subtotal, discount, total, note, created_by(FK), created_at, updated_at
+**quotations**: id, doc_no, doc_date, customer_id(FK), valid_until, status(DRAFT/SENT/ACCEPTED/REJECTED), subtotal, discount, total, note, created_by(FK), created_at, updated_at
 **quotation_lines**: id, quotation_id(FK), product_id, qty, unit_price, line_total
-**sales_orders**: id, doc_no, doc_date, customer_id(FK), quotation_id(FK, null), warehouse_id, status, delivery_date, subtotal, discount, total, note, created_by(FK), created_at, updated_at
+**sales_orders**: id, doc_no, doc_date, customer_id(FK), quotation_id(FK, null, unique), warehouse_id, status, delivery_date, subtotal, discount, total, note, created_by(FK), created_at, updated_at
 **sales_order_lines**: id, order_id(FK), product_id, qty_ordered, unit_price, line_total, qty_reserved, qty_produced, qty_delivered
 **deliveries**: id, doc_no, doc_date, order_id(FK), customer_id(FK), warehouse_id(FK), status(POSTED), created_by(FK), created_at
 **delivery_lines**: id, delivery_id(FK), order_line_id(FK), product_id(FK), qty, unit_cost_cogs (weighted-average cost captured at posting)
@@ -86,8 +86,9 @@ their respective transaction workflows.
 
 The Phase 4 reservation prerequisite migration creates only the `sales_orders` and
 `sales_order_lines` columns needed for valid reservation references. Phase 7 adds quotation linkage
-and completes the Sales Order document fields. Quotation send/accept/convert status transitions are
-not yet specified in the implemented workflow.
+and completes the Sales Order document fields. Quotations transition from DRAFT to SENT, then to
+ACCEPTED or REJECTED. Only ACCEPTED quotations can be converted; a unique `sales_orders.quotation_id`
+allows at most one linked order.
 
 Sales Order reserve/release actions reuse the Phase 4 `stock_reservations` service and balance
 updates. Draft edits are rejected once any reservation history exists, including fully released

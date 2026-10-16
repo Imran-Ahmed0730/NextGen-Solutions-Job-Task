@@ -51,6 +51,7 @@ class QuotationResponse(BaseModel):
     discount: Decimal
     total: Decimal
     note: str | None
+    sales_order_id: int | None = None
     lines: list[QuotationLineResponse]
 
 
@@ -68,6 +69,13 @@ class QuotationProductOption(BaseModel):
     allow_decimal: bool
 
 
+class QuotationWarehouseOption(BaseModel):
+    id: int
+    code: str
+    name: str
+
+
 class QuotationOptionsResponse(BaseModel):
     customers: list[QuotationCustomerOption]
     products: list[QuotationProductOption]
+    warehouses: list[QuotationWarehouseOption]

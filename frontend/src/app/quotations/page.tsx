@@ -7,10 +7,11 @@ import { useSessionProfile } from '@/components/auth/session-shell';
 import { RequiredMark, FieldError } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { apiRequest } from '@/lib/auth-api';
-import { quotationSchema } from '@/lib/auth-validation';
+import { quotationConversionSchema, quotationSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
 type CustomerOption = { id: number; code: string; name: string };
+type WarehouseOption = { id: number; code: string; name: string };
 type ProductOption = {
   id: number;
   sku: string;
@@ -18,7 +19,11 @@ type ProductOption = {
   unit_code: string;
   allow_decimal: boolean;
 };
-type QuotationOptions = { customers: CustomerOption[]; products: ProductOption[] };
+type QuotationOptions = {
+  customers: CustomerOption[];
+  products: ProductOption[];
+  warehouses: WarehouseOption[];
+};
 type DraftLine = { product_id: string; qty: string; unit_price: string };
 type QuotationLine = {
   id: number;
@@ -38,6 +43,7 @@ type Quotation = {
   discount: string;
   total: string;
   note: string | null;
+  sales_order_id: number | null;
   lines: QuotationLine[];
 };
 
@@ -56,7 +62,12 @@ function QuotationsContent() {
   const canRead = profile?.permissions.includes('sales.quotations.read') ?? false;
   const canCreate = profile?.permissions.includes('sales.quotations.create') ?? false;
   const canUpdate = profile?.permissions.includes('sales.quotations.update') ?? false;
-  const [options, setOptions] = useState<QuotationOptions>({ customers: [], products: [] });
+  const canConvert = profile?.permissions.includes('sales.orders.create') ?? false;
+  const [options, setOptions] = useState<QuotationOptions>({
+    customers: [],
+    products: [],
+    warehouses: [],
+  });
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [docDate, setDocDate] = useState(today);
   const [customerId, setCustomerId] = useState('');
@@ -69,6 +80,11 @@ function QuotationsContent() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [actionBusyId, setActionBusyId] = useState<number | null>(null);
+  const [conversionQuotationId, setConversionQuotationId] = useState<number | null>(null);
+  const [conversionDocDate, setConversionDocDate] = useState(today);
+  const [conversionWarehouseId, setConversionWarehouseId] = useState('');
+  const [conversionDeliveryDate, setConversionDeliveryDate] = useState('');
   const [error, setError] = useState('');
 
   const reload = useCallback(async (nextOffset = 0) => {
@@ -202,6 +218,77 @@ function QuotationsContent() {
     }
   }
 
+  async function transitionQuotation(quotation: Quotation, action: 'send' | 'accept' | 'reject') {
+    setActionBusyId(quotation.id);
+    setError('');
+    try {
+      const updated = await apiRequest<Quotation>(
+        `/api/v1/sales/quotations/${quotation.id}/${action}`,
+        { method: 'POST' },
+      );
+      showSuccessToast(`Quotation ${updated.doc_no} ${updated.status.toLowerCase()}.`);
+      try {
+        await reload(offset);
+      } catch (cause) {
+        const message =
+          cause instanceof Error
+            ? `Quotation status updated, but the list could not be refreshed: ${cause.message}`
+            : 'Quotation status updated, but the list could not be refreshed.';
+        setError(message);
+        showErrorToast(message);
+      }
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not update quotation status';
+      setError(message);
+      showErrorToast(message);
+    } finally {
+      setActionBusyId(null);
+    }
+  }
+
+  async function convertQuotation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (conversionQuotationId === null) return;
+    const parsed = quotationConversionSchema.safeParse({
+      doc_date: conversionDocDate,
+      warehouse_id: Number(conversionWarehouseId),
+      delivery_date: conversionDeliveryDate,
+    });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'Check the sales order details.');
+      return;
+    }
+    setError('');
+    setSaving(true);
+    try {
+      const order = await apiRequest<{ doc_no: string }>(
+        `/api/v1/sales/quotations/${conversionQuotationId}/convert`,
+        { method: 'POST', body: JSON.stringify(parsed.data) },
+      );
+      showSuccessToast(`Sales order ${order.doc_no} created from the accepted quotation.`);
+      setConversionQuotationId(null);
+      setConversionDocDate(today());
+      setConversionWarehouseId('');
+      setConversionDeliveryDate('');
+      try {
+        await reload(offset);
+      } catch (cause) {
+        const message =
+          cause instanceof Error
+            ? `Sales order created, but the list could not be refreshed: ${cause.message}`
+            : 'Sales order created, but the list could not be refreshed.';
+        setError(message);
+        showErrorToast(message);
+      }
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not convert quotation';
+      setError(message);
+      showErrorToast(message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (!canRead) {
     return (
       <section className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
@@ -215,8 +302,8 @@ function QuotationsContent() {
       <header>
         <h1 className="text-2xl font-semibold text-slate-900">Quotations</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Create and update draft quotations. Sending and converting quotations will be added with
-          the sales-order workflow.
+          Create drafts, send them for customer review, record acceptance or rejection, and convert
+          accepted quotations into a Sales Order once.
         </p>
       </header>
 
@@ -366,6 +453,73 @@ function QuotationsContent() {
         </form>
       )}
 
+      {conversionQuotationId !== null && canConvert && (
+        <form
+          onSubmit={(event) => void convertQuotation(event)}
+          className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+        >
+          <h2 className="text-lg font-semibold text-slate-900">
+            Convert quotation to Sales Order
+          </h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="text-sm font-medium text-slate-700">
+              Order date<RequiredMark />
+              <input
+                aria-label="Order date"
+                required
+                type="date"
+                value={conversionDocDate}
+                onChange={(event) => setConversionDocDate(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
+              />
+            </label>
+            <label className="text-sm font-medium text-slate-700">
+              Warehouse<RequiredMark />
+              <SearchableSelect
+                aria-label="Conversion warehouse"
+                required
+                placeholder="Search or select warehouse"
+                value={conversionWarehouseId}
+                onChange={setConversionWarehouseId}
+                options={options.warehouses.map((warehouse) => ({
+                  value: String(warehouse.id),
+                  label: `${warehouse.code} - ${warehouse.name}`,
+                }))}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
+              />
+            </label>
+            <label className="text-sm font-medium text-slate-700">
+              Requested delivery date
+              <input
+                aria-label="Requested delivery date"
+                type="date"
+                value={conversionDeliveryDate}
+                onChange={(event) => setConversionDeliveryDate(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
+              />
+            </label>
+          </div>
+          {error && <FieldError id="quotation-error" message={error} />}
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            >
+              {saving ? 'Converting…' : 'Create Sales Order'}
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => setConversionQuotationId(null)}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <h2 className="font-semibold text-slate-900">Quotation History</h2>
@@ -385,7 +539,7 @@ function QuotationsContent() {
                   <th className="px-4 py-3">Customer</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Total</th>
-                  {canUpdate && <th className="px-4 py-3">Action</th>}
+                  {(canUpdate || canConvert) && <th className="px-4 py-3">Action</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -399,17 +553,67 @@ function QuotationsContent() {
                     </td>
                     <td className="px-4 py-3">{quotation.status}</td>
                     <td className="px-4 py-3 text-right">{quotation.total}</td>
-                    {canUpdate && (
+                    {(canUpdate || canConvert) && (
                       <td className="px-4 py-3">
-                        {quotation.status === 'DRAFT' && (
-                          <button
-                            type="button"
-                            onClick={() => editQuotation(quotation)}
-                            className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700"
-                          >
-                            Edit
-                          </button>
-                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {canUpdate && quotation.status === 'DRAFT' && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => editQuotation(quotation)}
+                                className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                disabled={actionBusyId === quotation.id}
+                                onClick={() => void transitionQuotation(quotation, 'send')}
+                                className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 disabled:opacity-50"
+                              >
+                                Send
+                              </button>
+                            </>
+                          )}
+                          {canUpdate && quotation.status === 'SENT' && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={actionBusyId === quotation.id}
+                                onClick={() => void transitionQuotation(quotation, 'accept')}
+                                className="rounded-md border border-emerald-300 px-2 py-1 text-xs text-emerald-800 disabled:opacity-50"
+                              >
+                                Accept
+                              </button>
+                              <button
+                                type="button"
+                                disabled={actionBusyId === quotation.id}
+                                onClick={() => void transitionQuotation(quotation, 'reject')}
+                                className="rounded-md border border-rose-300 px-2 py-1 text-xs text-rose-800 disabled:opacity-50"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                          {canConvert && quotation.status === 'ACCEPTED' && (
+                            quotation.sales_order_id ? (
+                              <span className="text-xs text-slate-600">
+                                Converted to Sales Order {quotation.sales_order_id}
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setConversionQuotationId(quotation.id);
+                                  setError('');
+                                }}
+                                className="rounded-md border border-emerald-300 px-2 py-1 text-xs text-emerald-800"
+                              >
+                                Convert
+                              </button>
+                            )
+                          )}
+                        </div>
                       </td>
                     )}
                   </tr>

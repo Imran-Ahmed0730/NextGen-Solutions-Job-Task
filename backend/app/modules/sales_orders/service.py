@@ -12,12 +12,14 @@ from app.modules.inventory import service as inventory_service
 from app.modules.inventory.models import StockReservation, StockTransaction
 from app.modules.products import service as product_service
 from app.modules.products.models import Product
+from app.modules.quotations import service as quotation_service
 from app.modules.sales.models import SalesDelivery, SalesDeliveryLine, SalesOrder, SalesOrderLine
 from app.modules.sales_orders import repository
 from app.modules.sales_orders.schemas import (
     SalesDeliveryCreate,
     SalesOrderCreate,
     SalesOrderCustomerOption,
+    SalesOrderFromQuotationCreate,
     SalesOrderOptionsResponse,
     SalesOrderProductOption,
     SalesOrderResponse,
@@ -354,6 +356,80 @@ def create_sales_order(
             entity_id=order.id,
             action="CREATE",
             after=_snapshot(order),
+            ip=ip,
+        )
+        db.commit()
+        return repository.get_sales_order(db, order.id) or order
+    except Exception:
+        db.rollback()
+        raise
+
+
+def convert_accepted_quotation(
+    db: Session,
+    *,
+    quotation_id: int,
+    payload: SalesOrderFromQuotationCreate,
+    actor: User,
+    ip: str | None = None,
+) -> SalesOrder:
+    try:
+        quotation = quotation_service.get_accepted_quotation_for_conversion(db, quotation_id)
+        customer = customer_service.get_customer(db, quotation.customer_id)
+        if customer is None or not customer.is_active or customer.deleted_at is not None:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        warehouse = warehouse_service.get_active_warehouse(db, payload.warehouse_id)
+        if warehouse is None:
+            raise HTTPException(status_code=404, detail="Warehouse not found")
+        order_payload = SalesOrderCreate(
+            doc_date=payload.doc_date,
+            customer_id=customer.id,
+            warehouse_id=warehouse.id,
+            delivery_date=payload.delivery_date,
+            discount=quotation.discount,
+            note=quotation.note,
+            lines=[
+                {
+                    "product_id": line.product_id,
+                    "qty_ordered": line.qty,
+                    "unit_price": line.unit_price,
+                }
+                for line in quotation.lines
+            ],
+        )
+        _validate_products(db, order_payload)
+        lines, subtotal, discount, total = _build_lines(order_payload)
+        order = SalesOrder(
+            doc_no=generate_next_number(db, DOCUMENT_TYPE, payload.doc_date.year),
+            doc_date=payload.doc_date,
+            customer_id=customer.id,
+            quotation_id=quotation.id,
+            warehouse_id=warehouse.id,
+            status="DRAFT",
+            delivery_date=payload.delivery_date,
+            subtotal=subtotal,
+            discount=discount,
+            total=total,
+            note=quotation.note,
+            created_by=actor.id,
+            lines=lines,
+        )
+        db.add(order)
+        db.flush()
+        record_audit(
+            db,
+            actor_id=actor.id,
+            entity_type="sales_order",
+            entity_id=order.id,
+            action="CREATE",
+            after=_snapshot(order),
+            ip=ip,
+        )
+        quotation_service.record_quotation_conversion(
+            db,
+            quotation=quotation,
+            sales_order_id=order.id,
+            actor=actor,
             ip=ip,
         )
         db.commit()

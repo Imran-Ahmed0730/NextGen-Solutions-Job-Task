@@ -15,7 +15,9 @@ from app.modules.document_numbering.models import DocumentSequence
 from app.modules.product_categories.models import ProductCategory
 from app.modules.products.models import Product, ProductType
 from app.modules.quotations.models import Quotation
+from app.modules.sales.models import SalesOrder
 from app.modules.units.models import Unit
+from app.modules.warehouses.models import Warehouse
 
 
 @pytest.fixture
@@ -52,7 +54,7 @@ def _login(client: TestClient, username: str, password: str) -> dict[str, str]:
 
 
 @pytest.fixture
-def quotation_fixture(db_session: Session) -> tuple[User, str, Customer, Product]:
+def quotation_fixture(db_session: Session) -> tuple[User, str, Customer, Product, Warehouse]:
     from app.modules.auth.seed import seed_initial_admin
 
     result = seed_initial_admin(db_session)
@@ -64,7 +66,8 @@ def quotation_fixture(db_session: Session) -> tuple[User, str, Customer, Product
     customer = Customer(code="CUS-001", name="Quotation Customer")
     category = ProductCategory(name="Quotation Products")
     unit = Unit(name="Piece", code="pcs", allow_decimal=True)
-    db_session.add_all([customer, category, unit])
+    warehouse = Warehouse(name="Quotation Warehouse", code="QUOTE-WH")
+    db_session.add_all([customer, category, unit, warehouse])
     db_session.flush()
     product = Product(
         sku="QUOTE-001",
@@ -84,12 +87,20 @@ def quotation_fixture(db_session: Session) -> tuple[User, str, Customer, Product
                 last_number=0,
                 padding=4,
             ),
+            DocumentSequence(
+                doc_type="SALES_ORDER",
+                prefix="SO-",
+                year=2026,
+                last_number=0,
+                padding=4,
+            ),
         ]
     )
     db_session.commit()
     db_session.refresh(customer)
     db_session.refresh(product)
-    return actor, result.password, customer, product
+    db_session.refresh(warehouse)
+    return actor, result.password, customer, product, warehouse
 
 
 def _payload(customer: Customer, product: Product) -> dict[str, object]:
@@ -109,9 +120,9 @@ def _payload(customer: Customer, product: Product) -> dict[str, object]:
 def test_quotation_draft_create_update_and_list(
     client: TestClient,
     db_session: Session,
-    quotation_fixture: tuple[User, str, Customer, Product],
+    quotation_fixture: tuple[User, str, Customer, Product, Warehouse],
 ) -> None:
-    actor, password, customer, product = quotation_fixture
+    actor, password, customer, product, _ = quotation_fixture
     headers = _login(client, actor.username, password)
 
     created = client.post(
@@ -161,9 +172,9 @@ def test_quotation_draft_create_update_and_list(
 def test_quotation_rejects_excessive_discount_and_invalid_product(
     client: TestClient,
     db_session: Session,
-    quotation_fixture: tuple[User, str, Customer, Product],
+    quotation_fixture: tuple[User, str, Customer, Product, Warehouse],
 ) -> None:
-    actor, password, customer, product = quotation_fixture
+    actor, password, customer, product, _ = quotation_fixture
     headers = _login(client, actor.username, password)
 
     excessive_discount = _payload(customer, product)
@@ -233,9 +244,9 @@ def test_quotation_rejects_excessive_discount_and_invalid_product(
 def test_quotation_routes_require_permissions(
     client: TestClient,
     db_session: Session,
-    quotation_fixture: tuple[User, str, Customer, Product],
+    quotation_fixture: tuple[User, str, Customer, Product, Warehouse],
 ) -> None:
-    _, _, customer, product = quotation_fixture
+    _, _, customer, product, _ = quotation_fixture
     assert client.get("/api/v1/sales/quotations").status_code == 401
     assert client.get("/api/v1/sales/quotations/options").status_code == 401
 
@@ -251,3 +262,108 @@ def test_quotation_routes_require_permissions(
     assert client.get("/api/v1/sales/quotations", headers=headers).status_code == 403
     assert client.get("/api/v1/sales/quotations/options", headers=headers).status_code == 403
     assert client.post("/api/v1/sales/quotations", headers=headers, json=payload).status_code == 403
+    assert client.post("/api/v1/sales/quotations/1/send", headers=headers).status_code == 403
+    assert (
+        client.post(
+            "/api/v1/sales/quotations/1/convert",
+            headers=headers,
+            json={"doc_date": "2026-10-24", "warehouse_id": 1},
+        ).status_code
+        == 403
+    )
+
+
+def test_quotation_lifecycle_and_single_conversion(
+    client: TestClient,
+    db_session: Session,
+    quotation_fixture: tuple[User, str, Customer, Product, Warehouse],
+) -> None:
+    actor, password, customer, product, warehouse = quotation_fixture
+    headers = _login(client, actor.username, password)
+    created = client.post(
+        "/api/v1/sales/quotations",
+        headers=headers,
+        json=_payload(customer, product),
+    )
+    quotation = created.json()
+    quotation_path = f"/api/v1/sales/quotations/{quotation['id']}"
+
+    cannot_accept_draft = client.post(f"{quotation_path}/accept", headers=headers)
+    assert cannot_accept_draft.status_code == 409
+    sent = client.post(f"{quotation_path}/send", headers=headers)
+    assert sent.status_code == 200
+    assert sent.json()["status"] == "SENT"
+    cannot_edit_sent = client.put(
+        quotation_path,
+        headers=headers,
+        json=_payload(customer, product),
+    )
+    assert cannot_edit_sent.status_code == 409
+    accepted = client.post(f"{quotation_path}/accept", headers=headers)
+    assert accepted.status_code == 200
+    assert accepted.json()["status"] == "ACCEPTED"
+    cannot_reject_accepted = client.post(f"{quotation_path}/reject", headers=headers)
+    assert cannot_reject_accepted.status_code == 409
+
+    converted = client.post(
+        f"{quotation_path}/convert",
+        headers=headers,
+        json={"doc_date": "2026-10-24", "warehouse_id": warehouse.id},
+    )
+    assert converted.status_code == 201
+    order = converted.json()
+    assert order["doc_no"] == "SO-20260001"
+    assert order["quotation_id"] == quotation["id"]
+    assert order["customer_id"] == customer.id
+    assert order["warehouse_id"] == warehouse.id
+    assert order["subtotal"] == quotation["subtotal"]
+    assert order["discount"] == quotation["discount"]
+    assert order["total"] == quotation["total"]
+    assert [
+        (line["qty_ordered"], line["unit_price"], line["line_total"])
+        for line in order["lines"]
+    ] == [
+        (line["qty"], line["unit_price"], line["line_total"])
+        for line in quotation["lines"]
+    ]
+
+    duplicate = client.post(
+        f"{quotation_path}/convert",
+        headers=headers,
+        json={"doc_date": "2026-10-24", "warehouse_id": warehouse.id},
+    )
+    assert duplicate.status_code == 409
+    assert duplicate.json()["detail"] == "QUOTATION_ALREADY_CONVERTED"
+    refreshed_quotation = client.get(quotation_path, headers=headers)
+    assert refreshed_quotation.json()["status"] == "ACCEPTED"
+    assert refreshed_quotation.json()["sales_order_id"] == order["id"]
+    assert db_session.scalar(select(func.count(SalesOrder.id))) == 1
+    assert db_session.scalar(
+        select(func.count(AuditLog.id)).where(AuditLog.entity_type == "quotation")
+    ) == 4
+
+
+def test_sent_quotation_can_be_rejected_and_cannot_be_converted(
+    client: TestClient,
+    quotation_fixture: tuple[User, str, Customer, Product, Warehouse],
+) -> None:
+    actor, password, customer, product, warehouse = quotation_fixture
+    headers = _login(client, actor.username, password)
+    created = client.post(
+        "/api/v1/sales/quotations",
+        headers=headers,
+        json=_payload(customer, product),
+    )
+    quotation_path = f"/api/v1/sales/quotations/{created.json()['id']}"
+    assert client.post(f"{quotation_path}/send", headers=headers).json()["status"] == "SENT"
+    rejected = client.post(f"{quotation_path}/reject", headers=headers)
+    assert rejected.status_code == 200
+    assert rejected.json()["status"] == "REJECTED"
+    cannot_accept_rejected = client.post(f"{quotation_path}/accept", headers=headers)
+    assert cannot_accept_rejected.status_code == 409
+    cannot_convert_rejected = client.post(
+        f"{quotation_path}/convert",
+        headers=headers,
+        json={"doc_date": "2026-10-24", "warehouse_id": warehouse.id},
+    )
+    assert cannot_convert_rejected.status_code == 409

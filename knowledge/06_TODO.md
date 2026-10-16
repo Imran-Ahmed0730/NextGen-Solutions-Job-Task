@@ -4,7 +4,6 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 
 ## Open questions (do not let AI guess; decide and record)
 - [ ] Credit-limit check: warn or block?
-- [ ] Define quotation status transitions and which statuses allow conversion to a Sales Order.
 - [ ] Receiving tolerance over PO qty (percent)?
 - [ ] Payroll scope: salary + deductions only, or allowances/overtime too?
 - [ ] Invoice/report language: English only or English + Bangla?
@@ -12,6 +11,8 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Password minimum length/complexity policy? (Current implementation requires at least 8 characters.)
 
 ## Decisions made
+- Quotations transition `DRAFT → SENT → ACCEPTED` or `REJECTED`; only ACCEPTED quotations can be
+  converted, and each quotation can create at most one Sales Order.
 - Password recovery uses one-time reset links sent to the user's registered email address.
 - Lock an account for 15 minutes after 5 consecutive failed login attempts.
 - A money account's `opening_balance` is the pre-ledger baseline; later opening adjustments use signed `OPENING` ledger rows. The baseline is immutable after the first money transaction.
@@ -114,9 +115,9 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 
 ## Phase 7 — Sales
 - [x] Quotation draft create/edit/list, customer/product validation, totals, audit, permissions, and screen
-- [ ] Quotation send/accept/convert lifecycle (define status transitions during Sales Order design)
+- [x] Quotation status lifecycle `DRAFT → SENT → ACCEPTED/REJECTED`, with audit and status guards
 - [x] Sales Order draft create/edit/list/details, totals, audit, permissions, and screen
-- [ ] Convert accepted quotations → Sales Orders (after quotation lifecycle decision)
+- [x] Convert accepted quotations to one linked Sales Order, preserving customer, lines, and totals
 - [x] Reserve/release order-line quantities through the Phase 4 reservation service; reserved orders
       cannot be edited
 - [x] Delivery posting from reserved/available stock with stored line-level COGS and order history

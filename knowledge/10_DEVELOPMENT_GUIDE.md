@@ -283,6 +283,9 @@ The implemented auth API is:
 | `GET /api/v1/sales/quotations/options` | `sales.quotations.read` | Read active customers and products for quotation entry |
 | `POST /api/v1/sales/quotations` | `sales.quotations.create` | Create a numbered quotation draft and audit snapshot |
 | `PUT /api/v1/sales/quotations/{id}` | `sales.quotations.update` | Update a quotation while it remains a draft |
+| `POST /api/v1/sales/quotations/{id}/send` | `sales.quotations.update` | Transition a draft quotation to SENT |
+| `POST /api/v1/sales/quotations/{id}/accept` / `reject` | `sales.quotations.update` | Record a customer response to a sent quotation |
+| `POST /api/v1/sales/quotations/{id}/convert` | `sales.orders.create` | Convert an accepted quotation into one linked Sales Order |
 | `GET /api/v1/sales/orders` / `GET /api/v1/sales/orders/{id}` | `sales.orders.read` | List or view sales order drafts and their tracking quantities |
 | `GET /api/v1/sales/orders/options` | `sales.orders.read` | Read active customers, warehouses, and products for order entry |
 | `POST /api/v1/sales/orders` | `sales.orders.create` | Create a numbered draft sales order and audit snapshot |
@@ -710,11 +713,14 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   enforces the overdraft guard on the source account. The `FUND_TRANSFER` document sequence must
   be configured before posting. Permissions: `money.transfers.read`, `money.transfers.create`.
   Frontend: `/fund-transfers`.
-- **Quotation drafts** — Quotations are created with status `DRAFT`; the service validates active
+- **Quotations** — Quotations are created with status `DRAFT`; the service validates active
   customers and products, calculates line totals and subtotal using decimal arithmetic, checks that
   the discount does not exceed subtotal, allocates the central `QUOTATION` number, and writes audit
-  snapshots in the same transaction. Drafts can be edited; no send/accept/convert transitions are
-  exposed until those lifecycle rules are defined with Sales Orders. Permissions:
+  snapshots in the same transaction. Only DRAFT quotations can be edited. Transitions are
+  `DRAFT → SENT → ACCEPTED` or `REJECTED`; invalid transitions return a conflict. Conversion is
+  allowed only from ACCEPTED, copies customer, lines, prices, discount, and note into a draft Sales
+  Order, and asks for order date and warehouse. The locked quotation row and unique
+  `sales_orders.quotation_id` enforce one-time conversion transactionally. Permissions:
   `sales.quotations.read`, `sales.quotations.create`, and `sales.quotations.update`. Frontend:
   `/quotations`.
 - **Sales Orders** — Orders are created with status `DRAFT`; the service validates active customer,
@@ -728,8 +734,8 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   delivery line. Partial delivery leaves the Sales Order status unchanged; order details show
   Ordered, Available stock (on-hand minus reserved), Reserved, Produced, Delivered, and Remaining
   (ordered minus delivered) quantities along with delivery/COGS history. Permission:
-  `sales.deliveries.create` (included in the Administrator role). Quotation conversion remains a
-  later slice. Permissions: `sales.orders.read`, `sales.orders.create`, `sales.orders.update`,
+  `sales.deliveries.create` (included in the Administrator role). Permissions:
+  `sales.orders.read`, `sales.orders.create`, `sales.orders.update`,
   `sales.orders.reserve`, and `sales.deliveries.create`. Frontend: `/sales-orders`.
 - **Sales Invoices** — An invoice is posted from one posted delivery and cannot be edited or posted
   twice. Its lines snapshot the linked order's unit price and the delivery's stored COGS. Header

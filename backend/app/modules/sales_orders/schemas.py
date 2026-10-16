@@ -86,6 +86,12 @@ class SalesOrderUpdate(SalesOrderCreate):
     pass
 
 
+class SalesOrderFromQuotationCreate(BaseModel):
+    doc_date: date
+    warehouse_id: int = Field(ge=1)
+    delivery_date: date | None = None
+
+
 class SalesOrderLineResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

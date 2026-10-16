@@ -22,6 +22,7 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.modules.inventory.models import StockReservation
+    from app.modules.quotations.models import Quotation
     from app.modules.sales_invoices.models import SalesInvoice
 
 ID_TYPE = (
@@ -33,6 +34,7 @@ class SalesOrder(Base):
     __tablename__ = "sales_orders"
     __table_args__ = (
         UniqueConstraint("doc_no", name="uq_sales_orders_doc_no"),
+        UniqueConstraint("quotation_id", name="uq_sales_orders_quotation_id"),
         CheckConstraint("subtotal >= 0", name="ck_sales_orders_nonnegative_subtotal"),
         CheckConstraint("discount >= 0", name="ck_sales_orders_nonnegative_discount"),
         CheckConstraint("total >= 0", name="ck_sales_orders_nonnegative_total"),
@@ -79,6 +81,9 @@ class SalesOrder(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
         order_by="SalesOrderLine.id",
+    )
+    quotation: Mapped["Quotation | None"] = relationship(
+        "Quotation", back_populates="sales_order"
     )
     deliveries: Mapped[list["SalesDelivery"]] = relationship(
         back_populates="sales_order",

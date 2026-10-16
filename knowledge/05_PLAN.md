@@ -101,8 +101,9 @@ cannot be edited after reservation history exists. Delivery posting now consumes
 stock through the Phase 4 service, stores line-level COGS, and preserves the Sales Order status while
 tracking delivered quantities. Invoices can now be posted once per delivery; they snapshot sales
 prices and delivery COGS, increase customer due, and warn/block according to `credit_limit_mode`.
-Quotation send/accept/convert remains an open separate slice, with lifecycle decisions recorded in
-`06_TODO.md`. Sales Returns are posted against invoice lines, limited to the remaining invoiced
+Quotations now transition from DRAFT to SENT and then to ACCEPTED or REJECTED. An ACCEPTED
+quotation converts into one linked Sales Order; database uniqueness and row locking prevent a
+second conversion. Sales Returns are posted against invoice lines, limited to the remaining invoiced
 quantity, and atomically restock at the original COGS while reducing customer due by the
 invoice-discounted return value. Order details expose Ordered, Available stock, Reserved, Produced,
 Delivered, and Remaining quantities; available stock follows the inventory on-hand-minus-reserved
