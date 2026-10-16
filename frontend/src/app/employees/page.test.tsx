@@ -123,6 +123,14 @@ describe('EmployeesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create employee' }));
 
     await waitFor(() => expect(screen.getByText('Ayesha Rahman')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Edit Ayesha Rahman' })).toHaveAttribute(
+      'title',
+      'Edit Ayesha Rahman',
+    );
+    expect(screen.getByRole('button', { name: 'Delete Ayesha Rahman' })).toHaveAttribute(
+      'title',
+      'Delete Ayesha Rahman',
+    );
     expect(mocks.apiRequest).toHaveBeenCalledWith(
       '/api/v1/employees',
       expect.objectContaining({

@@ -12,6 +12,7 @@ import {
   RequiredMark,
   type FieldErrors,
 } from '@/components/forms/field-error';
+import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { employeeSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -344,37 +345,34 @@ function EmployeesContent() {
                   {Number(employee.base_salary).toFixed(2)}
                 </td>
                 <td className="px-4 py-3">{employee.is_active ? 'Active' : 'Deleted'}</td>
-                <td className="space-x-2 px-4 py-3">
+                <td className="px-4 py-3">
                   {employee.is_active && profile?.permissions.includes('employees.update') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="edit"
+                      label={`Edit ${employee.name}`}
                       onClick={() => {
                         setErrors({});
                         setSelected(employee);
                         setFormOpen(true);
                       }}
-                      className="text-emerald-800 underline"
-                    >
-                      Edit
-                    </button>
+                      className="mr-1 p-2 text-emerald-800 hover:bg-emerald-50"
+                    />
                   )}
                   {employee.is_active && profile?.permissions.includes('employees.delete') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="delete"
+                      label={`Delete ${employee.name}`}
                       onClick={() => void setDeleted(employee, false)}
-                      className="text-rose-700 underline"
-                    >
-                      Delete
-                    </button>
+                      className="p-2 text-rose-700 hover:bg-rose-50"
+                    />
                   )}
                   {!employee.is_active && profile?.permissions.includes('employees.update') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="restore"
+                      label={`Restore ${employee.name}`}
                       onClick={() => void setDeleted(employee, true)}
-                      className="text-emerald-800 underline"
-                    >
-                      Restore
-                    </button>
+                      className="p-2 text-emerald-800 hover:bg-emerald-50"
+                    />
                   )}
                 </td>
               </tr>
