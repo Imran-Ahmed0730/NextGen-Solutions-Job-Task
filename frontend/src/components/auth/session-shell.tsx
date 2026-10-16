@@ -114,6 +114,12 @@ const navigation = [
         icon: 'box',
         permissions: ['assets.read'],
       },
+      {
+        href: '/employees',
+        label: 'Employees',
+        icon: 'users',
+        permissions: ['employees.read'],
+      },
     ],
   },
   {

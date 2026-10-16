@@ -146,7 +146,10 @@ Sales Order details.
 - **Opening Balances:** one-time per account/party at go-live.
 
 ### 5.5b Employees
-Employee master → daily/monthly Attendance → Payroll run (salary, deductions) → Approve → Pay via Money (account ↓, expense recorded) → payslip.
+Maintain employee code, contact and job details, joining date, and monthly base salary in Employee
+List/Add/Edit. Employees are soft-deleted and can be restored. User-account linking, attendance, and
+payroll are separate Phase 10 slices; salary deductions and other payroll details remain subject to
+the open scope decision in `06_TODO.md`.
 
 ### 5.6 Assets
 Register asset → assign to a location → return to store → log maintenance → review assignment and

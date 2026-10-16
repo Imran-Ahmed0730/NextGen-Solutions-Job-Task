@@ -193,6 +193,26 @@ export const assetMaintenanceSchema = z.object({
   next_due_date: z.string().optional(),
 });
 
+export const employeeSchema = z.object({
+  code: z.string().trim().min(1, 'Employee code is required').max(50),
+  name: z.string().trim().min(1, 'Employee name is required').max(150),
+  mobile: z.string().trim().max(30).optional(),
+  email: z
+    .string()
+    .trim()
+    .max(255, 'Use at most 255 characters')
+    .email('Enter a valid email address')
+    .or(z.literal(''))
+    .nullable()
+    .optional(),
+  designation: z.string().trim().max(100).optional(),
+  department: z.string().trim().max(100).optional(),
+  join_date: z.string().date('Enter a valid joining date'),
+  base_salary: z
+    .string()
+    .regex(/^(?:0|[1-9]\d{0,15})(?:\.\d{1,2})?$/, 'Salary must be nonnegative with at most 2 decimals'),
+});
+
 export const bomSchema = z.object({
   code: z.string().trim().min(1, 'BOM code is required').max(50, 'Use at most 50 characters'),
   finished_product_id: z.number().int().positive('Choose a finished product'),

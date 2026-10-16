@@ -56,6 +56,7 @@ is protected.
 │   │   ├── modules/auth/        # Authentication and user/role administration
 │   │   ├── modules/boms/        # BOM master data and material components
 │   │   ├── modules/production_orders/ # Production orders, posting, and costing
+│   │   ├── modules/employees/   # Employee master data (Phase 10)
 │   │   ├── modules/inventory/   # Stock ledger, balances, posting service, read APIs
 │   │   ├── modules/stock_transfers/ # Atomic inter-warehouse transfers
 │   │   ├── modules/units/       # Measurement-unit master-data reference module
@@ -142,6 +143,7 @@ The frontend route tree currently includes:
 | `/sales-returns` | Return remaining invoiced quantities, restore stock at original COGS, and reduce customer due |
 | `/boms` | Create, edit, browse, soft-delete, and restore Bills of Materials |
 | `/assets` | Register/edit assets, assign/return locations, and review maintenance history |
+| `/employees` | Search, create, edit, soft-delete, and restore employee records |
 | `/production-orders` | Create/edit drafts, start/cancel orders, post actual production, and review costs |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/expenses` | Record operational expenses paid from any money account and browse expense history |
@@ -305,6 +307,9 @@ The implemented auth API is:
 | `POST /api/v1/assets/{id}/assignments` | `assets.assign` | Assign an asset to a location and add assignment history |
 | `POST /api/v1/assets/{id}/assignments/{assignment_id}/return` | `assets.assign` | Return an active location assignment to store |
 | `POST /api/v1/assets/{id}/maintenance` | `assets.maintain` | Record maintenance cost, description, and optional next due date |
+| `GET /api/v1/employees?search=&include_inactive=false&offset=0&limit=50` | `employees.read` | Search and page active employees; optionally include deleted records |
+| `POST /api/v1/employees` / `PATCH /api/v1/employees/{id}` | `employees.create/update` | Create or update employee master details and base salary |
+| `DELETE /api/v1/employees/{id}` / `POST /api/v1/employees/{id}/restore` | `employees.delete/update` | Soft-delete or restore an employee record |
 | `GET /api/v1/sales/quotations` / `GET /api/v1/sales/quotations/{id}` | `sales.quotations.read` | List or view quotation drafts |
 | `GET /api/v1/sales/quotations/options` | `sales.quotations.read` | Read active customers and products for quotation entry |
 | `POST /api/v1/sales/quotations` | `sales.quotations.create` | Create a numbered quotation draft and audit snapshot |
@@ -809,8 +814,6 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   blocked if any quantity has been received). The frontend `/purchase-orders` screen exposes these
   actions based on the caller's permissions and the order's current status.
 
-### Planned, not yet implemented
-
 ### Implemented Phase 9 — Assets
 
 - Asset register with code uniqueness, nonnegative purchase cost, status, update, soft-delete, and
@@ -819,11 +822,26 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 - Maintenance records capture date, description, cost, and optional next due date.
 - Six `assets.*` permissions are included in the migration and administrator seed.
 - The `/assets` screen is permission-aware and shows assignment and maintenance history.
-- Employee-linked assignments remain deferred until Phase 10 because the employee master is not
-  yet available. Backend lifecycle, audit, validation, and permission-denial tests are in
-  `backend/tests/test_assets.py`.
+- Employee-linked assignments were deferred until the Phase 10 employee master; integration is
+  still a separate pending slice. Backend lifecycle, audit, validation, and permission-denial tests
+  are in `backend/tests/test_assets.py`.
 
-The remaining roadmap includes employees, approvals, reports/dashboard, and full-cycle hardening. Consult
+### Implemented Phase 10 slice — Employee master
+
+- Employee records include unique code, name, optional contact/job details, joining date, and
+  monthly base salary using `DECIMAL(18,2)`.
+- The module supports search, pagination, update, soft-delete/restore, audit, and four
+  `employees.*` permissions. Employee activity uses the shared `is_active`/`deleted_at` fields;
+  no separate employment-status field is introduced.
+- `/employees` provides permission-aware list, create, edit, delete, restore, and search.
+- User-account linkage, employee-linked asset assignment, attendance, and payroll are not included
+  in this slice. Backend lifecycle, validation, audit, and permission-denial tests are in
+  `backend/tests/test_employees.py`.
+
+### Planned, not yet implemented
+
+The remaining roadmap includes user-account and asset assignment links, attendance, payroll,
+approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens
 are actually delivered.

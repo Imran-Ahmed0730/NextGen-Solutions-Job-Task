@@ -10,6 +10,7 @@ from app.modules.company_settings.models import CompanySetting  # noqa: F401
 from app.modules.customers.models import Customer  # noqa: F401
 from app.modules.direct_purchases.models import DirectPurchase, DirectPurchaseLine  # noqa: F401
 from app.modules.document_numbering.models import DocumentSequence  # noqa: F401
+from app.modules.employees.models import Employee  # noqa: F401
 from app.modules.expense_categories.models import ExpenseCategory  # noqa: F401
 from app.modules.goods_receipts.models import GoodsReceipt, GoodsReceiptLine  # noqa: F401
 from app.modules.income_categories.models import IncomeCategory  # noqa: F401

@@ -130,7 +130,9 @@ is deferred until Phase 10 because the employee master does not exist yet.
 **Exit:** CRUD, location and maintenance history, permissions, audit, and validation tests pass.
 
 ## Phase 10 — Employees
-**Build:** employee master, attendance, basic payroll, salary payment through Money.
+**Build:** employee master (first slice), attendance, basic payroll, salary payment through Money.
+Use the shared `is_active`/`deleted_at` soft-delete behavior for employee status; defer user account
+linkage, attendance, and payroll to their own slices.
 **Screens:** Employee List, Employee Add/Edit, Attendance, Basic Payroll.
 **Exit:** payroll totals correct; salary payment posts to money ledger.
 

@@ -149,11 +149,14 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Employee-linked asset assignment (deferred until Phase 10 employee master)
 
 ## Phase 10 — Employees
-- [ ] Employee master
+- [x] Employee master: code, contact/job details, joining date, monthly base salary, search,
+      permissions, audit, and soft-delete/restore
 - [ ] Add `users.employee_id` foreign key to `employees.id`
+- [ ] Complete Phase 9 employee-linked asset assignment now that employee master exists
 - [ ] Attendance
 - [ ] Payroll + salary payment via Money
-- [ ] Screens: Employee List, Add/Edit, Attendance, Basic Payroll
+- [x] Screens: Employee List and Add/Edit
+- [ ] Screens: Attendance, Basic Payroll
 
 ## Phase 11 — Approvals
 - [ ] Rules, requests, actions

@@ -17,7 +17,7 @@ export function getApiFieldErrors(cause: unknown): FieldErrors {
   if (!(cause instanceof ApiError)) return {};
 
   const duplicate = cause.message.match(
-    /^(username|email|mobile|role name|unit code|product sku|customer code|supplier code) is already in use$/i,
+    /^(username|email|mobile|role name|unit code|product sku|customer code|supplier code|employee code) is already in use$/i,
   );
   if (cause.status === 409 && duplicate) {
     const field = duplicate[1]
@@ -26,7 +26,8 @@ export function getApiFieldErrors(cause: unknown): FieldErrors {
       .replace('unit code', 'code')
       .replace('product sku', 'sku')
       .replace('customer code', 'code')
-      .replace('supplier code', 'code');
+      .replace('supplier code', 'code')
+      .replace('employee code', 'code');
     return { [field]: `${duplicate[1]} is already in use` };
   }
   if (/^current password is incorrect$/i.test(cause.message)) {

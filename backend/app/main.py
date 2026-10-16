@@ -15,6 +15,7 @@ from app.modules.company_settings.storage import MEDIA_ROOT
 from app.modules.customers.router import router as customers_router
 from app.modules.direct_purchases.router import router as direct_purchases_router
 from app.modules.document_numbering.router import router as document_numbering_router
+from app.modules.employees.router import router as employees_router
 from app.modules.expense_categories.router import router as expense_categories_router
 from app.modules.expenses.router import router as expenses_router
 from app.modules.fund_transfers.router import router as fund_transfers_router
@@ -68,6 +69,7 @@ app.include_router(physical_counts_router)
 app.include_router(purchase_orders_router)
 app.include_router(goods_receipts_router)
 app.include_router(direct_purchases_router)
+app.include_router(employees_router)
 app.include_router(purchase_returns_router)
 app.include_router(quotations_router)
 app.include_router(sales_orders_router)

@@ -208,6 +208,10 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("assets.delete", "assets", "Delete assets"),
     PermissionDefinition("assets.assign", "assets", "Assign assets to locations"),
     PermissionDefinition("assets.maintain", "assets", "Record asset maintenance"),
+    PermissionDefinition("employees.read", "employees", "View employees"),
+    PermissionDefinition("employees.create", "employees", "Create employees"),
+    PermissionDefinition("employees.update", "employees", "Update and restore employees"),
+    PermissionDefinition("employees.delete", "employees", "Delete employees"),
 )
 
 
