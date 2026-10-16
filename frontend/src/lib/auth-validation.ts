@@ -93,6 +93,7 @@ export const userSchema = z.object({
     .max(255, 'Use at most 255 characters'),
   email: optionalEmail,
   mobile: optionalBangladeshMobile,
+  employee_id: z.number().int().positive().nullable().optional(),
   password: z
     .string()
     .max(256, 'Use at most 256 characters')
@@ -191,6 +192,7 @@ export const assetSchema = z.object({
 export const assetAssignmentSchema = z.object({
   location: z.string().trim().min(1, 'Location is required').max(150),
   assigned_on: z.string().min(1, 'Assigned date is required'),
+  employee_id: z.number().int().positive().nullable().optional(),
 });
 
 export const assetMaintenanceSchema = z.object({

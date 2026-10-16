@@ -17,10 +17,14 @@ import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
 type Assignment = {
   id: number;
+  employee_id: number | null;
+  employee: { id: number; code: string; name: string } | null;
   location: string;
   assigned_on: string;
   returned_on: string | null;
 };
+
+type EmployeeOption = { id: number; code: string; name: string };
 
 type Maintenance = {
   id: number;
@@ -48,9 +52,11 @@ type AssetAction = { type: 'assign' | 'maintenance'; asset: AssetRecord } | null
 
 function AssetsContent() {
   const profile = useSessionProfile();
+  const canReadEmployees = profile?.permissions.includes('employees.read') ?? false;
   const [assets, setAssets] = useState<AssetRecord[]>([]);
   const [selected, setSelected] = useState<AssetRecord | null>(null);
   const [action, setAction] = useState<AssetAction>(null);
+  const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [includeInactive, setIncludeInactive] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
 
@@ -64,6 +70,15 @@ function AssetsContent() {
       showErrorToast(cause instanceof Error ? cause.message : 'Could not load assets'),
     );
   }, [reload]);
+
+  useEffect(() => {
+    if (action?.type !== 'assign' || !canReadEmployees) return;
+    void apiRequest<EmployeeOption[]>('/api/v1/employees?limit=200')
+      .then(setEmployees)
+      .catch((cause: unknown) =>
+        showErrorToast(cause instanceof Error ? cause.message : 'Could not load employees'),
+      );
+  }, [action, canReadEmployees]);
 
   async function submitAsset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -112,6 +127,9 @@ function AssetsContent() {
         ? assetAssignmentSchema.safeParse({
             location: form.get('location'),
             assigned_on: form.get('assigned_on'),
+            employee_id: form.get('employee_id')
+              ? Number(form.get('employee_id'))
+              : null,
           })
         : assetMaintenanceSchema.safeParse({
             maintenance_date: form.get('maintenance_date'),
@@ -437,6 +455,24 @@ function AssetsContent() {
                         />
                         <FieldError id="assignment-date-error" message={errors.assigned_on} />
                       </label>
+                      {profile?.permissions.includes('employees.read') && (
+                        <label className="text-sm font-medium">
+                          Assigned employee
+                          <select
+                            name="employee_id"
+                            defaultValue=""
+                            className="mt-1 w-full rounded border px-3 py-2"
+                          >
+                            <option value="">Location only</option>
+                            {employees.map((employee) => (
+                              <option key={employee.id} value={employee.id}>
+                                {employee.code} — {employee.name}
+                              </option>
+                            ))}
+                          </select>
+                          <FieldError id="assignment-employee-error" message={errors.employee_id} />
+                        </label>
+                      )}
                     </>
                   ) : (
                     <>
@@ -524,6 +560,9 @@ function AssetsContent() {
                         >
                           {assignment.location}: {assignment.assigned_on} –{' '}
                           {assignment.returned_on ?? 'Current'}
+                          {assignment.employee
+                            ? ` · ${assignment.employee.code} — ${assignment.employee.name}`
+                            : ''}
                           {!assignment.returned_on && profile?.permissions.includes('assets.assign') && (
                             <IconActionButton
                               icon="return"

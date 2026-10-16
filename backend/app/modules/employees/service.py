@@ -29,6 +29,13 @@ def list_employees(
     )
 
 
+def get_active_employee(db: Session, employee_id: int) -> Employee:
+    employee = repository.get_employee(db, employee_id)
+    if employee is None or not employee.is_active or employee.deleted_at is not None:
+        raise HTTPException(status_code=422, detail="Employee must be active")
+    return employee
+
+
 def create_employee(
     db: Session, data: dict[str, object], actor: User, ip: str | None = None
 ) -> Employee:

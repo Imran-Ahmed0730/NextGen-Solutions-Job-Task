@@ -9,6 +9,7 @@ from app.modules.assets import repository
 from app.modules.assets.models import Asset, AssetAssignment, AssetMaintenance
 from app.modules.auth.audit import record_audit
 from app.modules.auth.models import User
+from app.modules.employees import service as employee_service
 
 
 def list_assets(
@@ -180,8 +181,19 @@ def assign_asset(
             )
         if any(assignment.returned_on is None for assignment in asset.assignments):
             raise HTTPException(status_code=409, detail="ASSET_ALREADY_ASSIGNED")
+        employee_id = payload.get("employee_id")
+        if employee_id is not None and (
+            not isinstance(employee_id, int) or isinstance(employee_id, bool) or employee_id <= 0
+        ):
+            raise HTTPException(status_code=422, detail="Employee must be active")
+        employee = (
+            employee_service.get_active_employee(db, employee_id)
+            if isinstance(employee_id, int)
+            else None
+        )
         assignment = AssetAssignment(
             asset_id=asset.id,
+            employee_id=employee.id if employee else None,
             location=_text(payload.get("location"), "Location", 150),
             assigned_on=_date(payload.get("assigned_on"), "Assigned date"),
         )
@@ -352,6 +364,7 @@ def _asset_snapshot(asset: Asset) -> dict[str, object]:
 def _assignment_snapshot(assignment: AssetAssignment) -> dict[str, object]:
     return {
         "asset_id": assignment.asset_id,
+        "employee_id": assignment.employee_id,
         "location": assignment.location,
         "assigned_on": assignment.assigned_on.isoformat(),
         "returned_on": (

@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -22,6 +23,9 @@ from app.core.database import Base
 ID_TYPE = (
     BigInteger().with_variant(BIGINT(unsigned=True), "mysql").with_variant(Integer(), "sqlite")
 )
+
+if TYPE_CHECKING:
+    from app.modules.employees.models import Employee
 
 
 class Asset(Base):
@@ -78,6 +82,9 @@ class AssetAssignment(Base):
     asset_id: Mapped[int] = mapped_column(
         ID_TYPE, ForeignKey("assets.id", ondelete="RESTRICT"), nullable=False, index=True
     )
+    employee_id: Mapped[int] = mapped_column(
+        ID_TYPE, ForeignKey("employees.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
     location: Mapped[str] = mapped_column(String(150), nullable=False)
     assigned_on: Mapped[date] = mapped_column(Date, nullable=False)
     returned_on: Mapped[date] = mapped_column(Date, nullable=True)
@@ -85,6 +92,7 @@ class AssetAssignment(Base):
         DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
     asset: Mapped[Asset] = relationship(back_populates="assignments")
+    employee: Mapped["Employee | None"] = relationship(lazy="joined")
 
 
 class AssetMaintenance(Base):

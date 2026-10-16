@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import { useSessionProfile } from '@/components/auth/session-shell';
 import {
   FieldError,
   getApiFieldErrors,
@@ -18,20 +19,25 @@ import { userSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
 type RoleOption = { id: number; name: string; is_active: boolean };
+type EmployeeOption = { id: number; code: string; name: string };
 type UserRecord = {
   id: number;
   username: string;
   full_name: string;
   email: string | null;
   mobile: string | null;
+  employee_id: number | null;
   is_active: boolean;
   roles: string[];
 };
 
 export function UserForm({ userId }: { userId: number | null }) {
   const router = useRouter();
+  const profile = useSessionProfile();
+  const canReadEmployees = profile?.permissions.includes('employees.read') ?? false;
   const [record, setRecord] = useState<UserRecord | null>(null);
   const [roles, setRoles] = useState<RoleOption[]>([]);
+  const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
   const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -41,9 +47,13 @@ export function UserForm({ userId }: { userId: number | null }) {
     Promise.all([
       apiRequest<RoleOption[]>('/api/v1/auth/roles'),
       userId ? apiRequest<UserRecord>(`/api/v1/auth/users/${userId}`) : Promise.resolve(null),
+      canReadEmployees
+        ? apiRequest<EmployeeOption[]>('/api/v1/employees?limit=200')
+        : Promise.resolve([]),
     ])
-      .then(([availableRoles, user]) => {
+      .then(([availableRoles, user, availableEmployees]) => {
         setRoles(availableRoles.filter((role) => role.is_active));
+        setEmployees(availableEmployees);
         if (user) {
           setRecord(user);
           setSelectedRoleIds(
@@ -55,7 +65,7 @@ export function UserForm({ userId }: { userId: number | null }) {
         setLoadFailed(true);
         showErrorToast(cause instanceof Error ? cause.message : 'Could not load user data');
       });
-  }, [userId]);
+  }, [canReadEmployees, userId]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,6 +74,7 @@ export function UserForm({ userId }: { userId: number | null }) {
       ...values,
       email: String(values.email ?? ''),
       mobile: String(values.mobile ?? ''),
+      employee_id: values.employee_id ? Number(values.employee_id) : null,
       role_ids: selectedRoleIds,
     });
     if (!parsed.success) {
@@ -86,6 +97,7 @@ export function UserForm({ userId }: { userId: number | null }) {
       email: parsed.data.email || null,
       mobile: parsed.data.mobile || null,
       role_ids: parsed.data.role_ids,
+      ...(canReadEmployees ? { employee_id: parsed.data.employee_id ?? null } : {}),
       ...(userId ? {} : { password: parsed.data.password }),
     };
     setBusy(true);
@@ -153,6 +165,29 @@ export function UserForm({ userId }: { userId: number | null }) {
             <input name="mobile" type="tel" inputMode="numeric" pattern="01[3-9][0-9]{8}" maxLength={11} placeholder="e.g. 01712345678" defaultValue={record?.mobile ?? ''} aria-invalid={Boolean(errors.mobile)} aria-describedby={errors.mobile ? 'user-mobile-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="user-mobile-error" message={errors.mobile} />
           </label>
+          {canReadEmployees && (
+            <label className="block text-sm font-medium">
+              Linked employee
+              <select
+                name="employee_id"
+                defaultValue={record?.employee_id?.toString() ?? ''}
+                className="mt-1 w-full rounded-md border px-3 py-2"
+              >
+                <option value="">No employee linked</option>
+                {record?.employee_id &&
+                  !employees.some((employee) => employee.id === record.employee_id) && (
+                    <option value={record.employee_id}>
+                      Employee #{record.employee_id} (currently linked)
+                    </option>
+                  )}
+                {employees.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.code} — {employee.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           {!userId && (
             <label className="block text-sm font-medium">
               Initial password<RequiredMark />

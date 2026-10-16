@@ -51,6 +51,90 @@ def _admin(db: Session) -> tuple[User, str]:
     return user, result.password
 
 
+def test_user_employee_link_is_validated_and_audited(
+    client: TestClient, db_session: Session
+) -> None:
+    admin, password = _admin(db_session)
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"username": admin.username, "password": password},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    employee = client.post(
+        "/api/v1/employees",
+        headers=headers,
+        json={
+            "code": "EMP-USER-LINK",
+            "name": "Linked Employee",
+            "mobile": "01712345678",
+            "join_date": "2025-01-01",
+            "base_salary": "30000.00",
+        },
+    )
+    assert employee.status_code == 201
+
+    created = client.post(
+        "/api/v1/auth/users",
+        headers=headers,
+        json={
+            "username": "linked-user",
+            "full_name": "Linked User",
+            "password": "Staff-Password-123",
+            "employee_id": employee.json()["id"],
+        },
+    )
+    assert created.status_code == 201
+    assert created.json()["employee_id"] == employee.json()["id"]
+
+    inactive = client.delete(
+        f"/api/v1/employees/{employee.json()['id']}", headers=headers
+    )
+    assert inactive.status_code == 200
+    updated = client.patch(
+        f"/api/v1/auth/users/{created.json()['id']}",
+        headers=headers,
+        json={
+            "full_name": "Linked User Updated",
+            "employee_id": employee.json()["id"],
+        },
+    )
+    assert updated.status_code == 200
+    assert updated.json()["employee_id"] == employee.json()["id"]
+
+    unlinked = client.patch(
+        f"/api/v1/auth/users/{created.json()['id']}",
+        headers=headers,
+        json={"employee_id": None},
+    )
+    assert unlinked.status_code == 200
+    assert unlinked.json()["employee_id"] is None
+
+    employee_audits = list(
+        db_session.scalars(
+            select(AuditLog).where(
+                AuditLog.entity_type == "user",
+                AuditLog.entity_id == str(created.json()["id"]),
+            ).order_by(AuditLog.id)
+        )
+    )
+    assert employee_audits[0].after_json is not None
+    assert employee_audits[0].after_json["employee_id"] == employee.json()["id"]
+    assert employee_audits[-1].before_json is not None
+    assert employee_audits[-1].before_json["employee_id"] == employee.json()["id"]
+
+    rejected = client.post(
+        "/api/v1/auth/users",
+        headers=headers,
+        json={
+            "username": "inactive-link",
+            "full_name": "Inactive Link",
+            "password": "Staff-Password-123",
+            "employee_id": employee.json()["id"],
+        },
+    )
+    assert rejected.status_code == 422
+
+
 def test_refresh_rotates_tokens_and_logout_revokes_session(
     client: TestClient, db_session: Session
 ) -> None:

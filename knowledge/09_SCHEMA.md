@@ -126,12 +126,11 @@ returns reduce customer due in the statement calculation.
 
 ## 9. Assets
 **assets**: id, asset_code(U), name, category, purchase_date, purchase_cost(DECIMAL 18,2), location, status(IN_USE/IN_STORE/UNDER_MAINTENANCE/DISPOSED), is_active, deleted_at, created_by, created_at, updated_at
-**asset_assignments**: id, asset_id(FK), location, assigned_on, returned_on, created_at
+**asset_assignments**: id, asset_id(FK), employee_id(FK→employees, null), location, assigned_on, returned_on, created_at
 **asset_maintenance**: id, asset_id(FK), maintenance_date, description, cost(DECIMAL 18,2), next_due_date, created_by, created_at
 
-Assets use soft deletion. Assignment history is location-only in Phase 9; the nullable
-`employee_id` from the target design is deferred until the Phase 10 employee master and will be
-added by a later migration.
+Assets use soft deletion. Assignment history records the location and optionally the assigned
+employee; the linked employee must be active when the assignment is created.
 
 ## 10. Employees
 **employees**: id, code(U), name, mobile(nullable for legacy rows; all writes require a valid 11-digit Bangladesh number), email(null), designation(null), department(null), join_date, base_salary(DECIMAL 18,2), is_active, deleted_at, created_at, updated_at
@@ -140,8 +139,9 @@ added by a later migration.
 **payroll_lines**: id, run_id(FK), employee_id(FK), base_salary(snapshot), deductions, net_pay, paid_txn_id(FK→money_transactions, null)
 
 The employee master uses `is_active` and `deleted_at` for status/soft deletion; it does not add a
-second status field. `users.employee_id` remains nullable and will receive its FK in a later Phase
-10 migration.
+second status field. `users.employee_id` is a nullable FK to `employees.id` and links a user account
+to an active employee when provided. Employee references use restrictive foreign keys; employee
+records are soft-deleted rather than hard-deleted.
 
 Payroll snapshots eligible active employees' base salaries when a monthly draft is created.
 Deductions are entered on the draft and cannot exceed base salary; the selected scope has no

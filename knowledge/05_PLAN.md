@@ -124,24 +124,27 @@ updates the line's Produced quantity with audit in the same completion transacti
 output beyond the order line's unreserved, undelivered remaining quantity. Phase 8 exit checks pass.
 
 ## Phase 9 — Assets
-**Build:** asset register, location assignment history, maintenance log. Employee-linked assignment
-is deferred until Phase 10 because the employee master does not exist yet.
+**Build:** asset register, location assignment history with optional Phase 10 employee linkage,
+maintenance log.
 **Screens:** Asset List, Add/Edit, Location Assignment/Return, Maintenance History.
-**Exit:** CRUD, location and maintenance history, permissions, audit, and validation tests pass.
+**Exit:** CRUD, employee/location assignment and maintenance history, permissions, audit, and
+validation tests pass.
 
 ## Phase 10 — Employees
-**Build:** employee master (first slice), attendance, basic payroll, salary payment through Money.
-Use the shared `is_active`/`deleted_at` soft-delete behavior for employee status; defer user account
-linkage and employee-linked asset assignment to separate integration slices.
+**Build:** employee master, user-account linkage, employee-linked asset assignment, attendance,
+basic payroll, salary payment through Money. Use the shared `is_active`/`deleted_at` soft-delete
+behavior for employee status.
 **Screens:** Employee List, Employee Add/Edit, Attendance, Basic Payroll.
-**Exit:** payroll totals correct; salary payment posts to money ledger.
+**Exit:** user accounts and asset assignments link only to valid employees; payroll totals are
+correct and salary payment posts to the money ledger.
 
-**Progress:** Employee Master is implemented. Attendance now records one audited status per
+**Progress:** Employee Master and user-account linkage are implemented, with an optional employee
+foreign key on user accounts. Phase 9 asset assignment history now optionally records the assigned
+employee alongside its location. Attendance records one audited status per
 employee/date, supports corrections, and provides `.xlsx` template, import, and date-range export.
 Imports match employees by code, reject existing employee/date rows, and import valid rows while
 reporting invalid or duplicate rows. Basic Payroll now snapshots active employees' monthly base
 salaries, permits draft deductions, and posts each nonzero net salary to the Money ledger atomically.
-User-account linkage and employee-linked asset assignment remain separate pending integrations.
 
 ## Phase 11 — Approvals
 **Build:** approval rules, requests, actions, pending inbox, hooks on PO / expense / adjustment / (optionally invoice, payroll).

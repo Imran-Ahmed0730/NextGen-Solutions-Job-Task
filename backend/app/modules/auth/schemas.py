@@ -85,6 +85,7 @@ class UserCreate(BaseModel):
     full_name: FullName
     password: str = Field(min_length=8, max_length=256)
     role_ids: list[PositiveId] = Field(default_factory=list)
+    employee_id: PositiveId | None = None
 
 
 class UserUpdate(BaseModel):
@@ -92,6 +93,7 @@ class UserUpdate(BaseModel):
     mobile: MobileNumber | None = None
     full_name: FullName | None = None
     role_ids: list[PositiveId] | None = None
+    employee_id: PositiveId | None = None
 
 
 class UserResponse(BaseModel):
@@ -102,6 +104,7 @@ class UserResponse(BaseModel):
     email: str | None
     mobile: str | None
     full_name: str
+    employee_id: int | None
     is_active: bool
     last_login_at: datetime | None
     roles: list[str]

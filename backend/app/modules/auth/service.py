@@ -28,6 +28,7 @@ from app.modules.auth.repository import (
     get_user,
     user_has_active_admin_role,
 )
+from app.modules.employees import service as employee_service
 
 settings = get_settings()
 
@@ -312,6 +313,16 @@ def create_user(
     db: Session, data: dict[str, object], actor: User, ip: str | None = None
 ) -> User:
     _ensure_unique_contact(db, data)
+    employee_id = data.get("employee_id")
+    if employee_id is not None and (
+        not isinstance(employee_id, int) or isinstance(employee_id, bool) or employee_id <= 0
+    ):
+        raise HTTPException(status_code=422, detail="Employee must be active")
+    employee = (
+        employee_service.get_active_employee(db, employee_id)
+        if isinstance(employee_id, int)
+        else None
+    )
     role_ids = data.get("role_ids", [])
     roles = get_roles(db, role_ids if isinstance(role_ids, list) else [])
     if len(roles) != len(set(role_ids if isinstance(role_ids, list) else [])):
@@ -325,6 +336,7 @@ def create_user(
         full_name=str(data["full_name"]).strip(),
         password_hash=hash_password(str(data["password"])),
         roles=roles,
+        employee_id=employee.id if employee else None,
     )
     if not user.username or not user.full_name:
         raise HTTPException(status_code=422, detail="Username and full name are required")
@@ -353,6 +365,18 @@ def update_user(
 ) -> User:
     before = _user_snapshot(target)
     _ensure_unique_contact(db, data, target.id)
+    if "employee_id" in data:
+        employee_id = data["employee_id"]
+        if employee_id is None:
+            setattr(target, "employee_id", None)
+        elif (
+            not isinstance(employee_id, int)
+            or isinstance(employee_id, bool)
+            or employee_id <= 0
+        ):
+            raise HTTPException(status_code=422, detail="Employee must be active")
+        elif employee_id != target.employee_id:
+            target.employee_id = employee_service.get_active_employee(db, employee_id).id
     for field in ("email", "mobile", "full_name"):
         if field in data:
             setattr(target, field, data[field])
@@ -596,6 +620,7 @@ def _user_snapshot(user: User) -> dict[str, object]:
         "email": user.email,
         "mobile": user.mobile,
         "full_name": user.full_name,
+        "employee_id": user.employee_id,
         "is_active": user.is_active,
         "role_ids": sorted(role.id for role in user.roles),
     }

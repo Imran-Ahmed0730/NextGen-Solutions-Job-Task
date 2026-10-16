@@ -314,9 +314,18 @@ describe('auth-validation schemas', () => {
         username: 'john.doe_01',
         full_name: 'John Doe',
         email: 'john@example.com',
+        employee_id: 2,
         role_ids: [1, 2],
       }).success,
-    ).toBe(true);
+    ).toBe(true    );
+    expect(
+      userSchema.safeParse({
+        username: 'john.doe_01',
+        full_name: 'John Doe',
+        employee_id: 0,
+        role_ids: [],
+      }).success,
+    ).toBe(false);
 
     // Spaces or invalid characters in username
     expect(

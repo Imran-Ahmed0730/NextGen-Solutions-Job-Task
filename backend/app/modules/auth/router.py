@@ -39,6 +39,7 @@ def _user_response(user: User) -> dict[str, object]:
         "email": user.email,
         "mobile": user.mobile,
         "full_name": user.full_name,
+        "employee_id": user.employee_id,
         "is_active": user.is_active,
         "last_login_at": user.last_login_at,
         "roles": sorted(role.name for role in user.roles),

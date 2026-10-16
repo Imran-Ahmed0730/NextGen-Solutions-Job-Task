@@ -151,13 +151,13 @@ List/Add/Edit. Employees are soft-deleted and can be restored. The Attendance sc
 status per employee/date, supports corrections, imports valid rows from `.xlsx` while reporting
 invalid rows, and exports a selected date range. Basic Payroll creates one draft per month from
 active eligible employees' salary snapshots, allows deductions up to base salary, and posts nonzero
-net salaries as append-only Money transactions. Posted payroll is immutable. User-account linking
-and employee-linked asset assignment remain separate pending integration slices.
+net salaries as append-only Money transactions. Posted payroll is immutable. User accounts can
+optionally link to active employees; the user form exposes this when the operator has employee-read
+permission.
 
 ### 5.6 Assets
-Register asset → assign to a location → return to store → log maintenance → review assignment and
-maintenance history. Employee-linked assignment remains deferred; current assignment history
-records locations only.
+Register asset → assign to a location and optionally an active employee → return to store → log
+maintenance → review assignment and maintenance history.
 
 ### 5.7 Approvals
 Approval Rules are configured by document type, inclusive amount range, and approver role at

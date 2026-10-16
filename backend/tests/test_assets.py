@@ -180,3 +180,90 @@ def test_asset_validation_and_permission_denial(
         json={**_asset_payload("AST-BAD"), "purchase_cost": "-1.00"},
     )
     assert invalid.status_code == 422
+
+
+def test_asset_assignment_links_active_employee_and_audits_relationship(
+    client: TestClient,
+    db_session: Session,
+    admin: tuple[User, str],
+) -> None:
+    actor, password = admin
+    headers = _login(client, actor, password)
+    employee = client.post(
+        "/api/v1/employees",
+        headers=headers,
+        json={
+            "code": "EMP-ASSET-001",
+            "name": "Asset Custodian",
+            "mobile": "01712345678",
+            "join_date": "2025-01-01",
+            "base_salary": "30000.00",
+        },
+    )
+    assert employee.status_code == 201
+    asset = client.post("/api/v1/assets", headers=headers, json=_asset_payload())
+    assert asset.status_code == 201
+
+    assigned = client.post(
+        f"/api/v1/assets/{asset.json()['id']}/assignments",
+        headers=headers,
+        json={
+            "location": "Accounts office",
+            "assigned_on": "2025-02-01",
+            "employee_id": employee.json()["id"],
+        },
+    )
+    assert assigned.status_code == 201
+    assignment = assigned.json()["assignments"][0]
+    assert assignment["employee_id"] == employee.json()["id"]
+    assert assignment["employee"] == {
+        "id": employee.json()["id"],
+        "code": "EMP-ASSET-001",
+        "name": "Asset Custodian",
+    }
+
+    audit = db_session.scalar(
+        select(AuditLog).where(AuditLog.entity_type == "asset_assignment")
+    )
+    assert audit is not None
+    assert audit.after_json is not None
+    assert audit.after_json["employee_id"] == employee.json()["id"]
+
+
+def test_asset_assignment_rejects_inactive_employee(
+    client: TestClient,
+    admin: tuple[User, str],
+) -> None:
+    actor, password = admin
+    headers = _login(client, actor, password)
+    employee = client.post(
+        "/api/v1/employees",
+        headers=headers,
+        json={
+            "code": "EMP-ASSET-002",
+            "name": "Inactive Custodian",
+            "mobile": "01712345678",
+            "join_date": "2025-01-01",
+            "base_salary": "30000.00",
+        },
+    )
+    assert employee.status_code == 201
+    assert (
+        client.delete(
+            f"/api/v1/employees/{employee.json()['id']}", headers=headers
+        ).status_code
+        == 200
+    )
+    asset = client.post("/api/v1/assets", headers=headers, json=_asset_payload())
+    assert asset.status_code == 201
+
+    assignment = client.post(
+        f"/api/v1/assets/{asset.json()['id']}/assignments",
+        headers=headers,
+        json={
+            "location": "Accounts office",
+            "assigned_on": "2025-02-01",
+            "employee_id": employee.json()["id"],
+        },
+    )
+    assert assignment.status_code == 422

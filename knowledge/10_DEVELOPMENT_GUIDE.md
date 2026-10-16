@@ -828,8 +828,10 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 - Six `assets.*` permissions are included in the migration and administrator seed.
 - The `/assets` screen is permission-aware and shows assignment and maintenance history.
 - Employee-linked assignments were deferred until the Phase 10 employee master; integration is
-  still a separate pending slice. Backend lifecycle, audit, validation, and permission-denial tests
-  are in `backend/tests/test_assets.py`.
+  now implemented as an optional employee link on assignment history. Selected employees must be
+  active and non-deleted; assignment history continues to support location-only records.
+  Backend lifecycle, audit, validation, and permission-denial tests are in
+  `backend/tests/test_assets.py`.
 
 ### Implemented Phase 10 slice — Employee master
 
@@ -840,9 +842,10 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   `employees.*` permissions. Employee activity uses the shared `is_active`/`deleted_at` fields;
   no separate employment-status field is introduced.
 - `/employees` provides permission-aware list, create, edit, delete, restore, and search.
-- User-account linkage, employee-linked asset assignment, attendance, and payroll are not included
-  in this slice. Backend lifecycle, validation, audit, and permission-denial tests are in
-  `backend/tests/test_employees.py`.
+- User accounts can link to an active employee through nullable `users.employee_id`; the User
+  create/edit form exposes the link to users with employee-read permission. Employee-linked asset
+  assignment is covered in the Assets section. Backend lifecycle, validation, audit, and
+  permission-denial tests are in `backend/tests/test_employees.py`.
 
 ### Implemented Phase 10 slice — Attendance
 
@@ -869,7 +872,7 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   Permissions are `employees.payroll.read/create/update/post`; backend tests cover calculations,
   duplicate periods, insufficient-funds rollback, ledger links, immutable posting, and permissions.
 - The approved scope is monthly base salary less manual deductions; allowances and overtime are not
-  included. User-account linkage and employee-linked asset assignment remain pending integrations.
+  included.
 
 ### Phase 11 slice — Approval Rules
 
@@ -882,9 +885,8 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 
 ### Planned, not yet implemented
 
-The remaining roadmap includes user-account and asset assignment links, approval requests and
-workflow hooks,
-reports/dashboard, and full-cycle hardening. Consult
+The remaining roadmap includes approval requests and workflow hooks, reports/dashboard, and
+full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens
 are actually delivered.

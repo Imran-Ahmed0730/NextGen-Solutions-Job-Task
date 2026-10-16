@@ -146,13 +146,15 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
       permissions, and audit
 - [x] Screens: Asset List, Add/Edit, Location Assignment/Return, Maintenance History
 - [x] Exit: CRUD, validation, history, permission denial, and audit tests pass
-- [ ] Employee-linked asset assignment (deferred until Phase 10 employee master)
+- [x] Employee-linked asset assignment history, optional employee selection, active-employee
+      validation, API/UI coverage, and audit
 
 ## Phase 10 — Employees
 - [x] Employee master: code, contact/job details, joining date, monthly base salary, search,
       permissions, audit, and soft-delete/restore
-- [ ] Add `users.employee_id` foreign key to `employees.id`
-- [ ] Complete Phase 9 employee-linked asset assignment now that employee master exists
+- [x] Add nullable `users.employee_id` foreign key to `employees.id`, user create/update support,
+      active-employee validation, user-form selection, audit, and API coverage
+- [x] Complete Phase 9 employee-linked asset assignment integration
 - [x] Attendance register with employee/date uniqueness, status/time validation, audit, and permissions
 - [x] Attendance screen with edit/update, `.xlsx` template/import, and date-range export
 - [x] Basic payroll: monthly base salary snapshots, draft deductions, immutable posted runs,

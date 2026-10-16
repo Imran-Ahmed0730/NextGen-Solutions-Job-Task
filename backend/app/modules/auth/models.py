@@ -57,7 +57,12 @@ class User(Base):
     mobile: Mapped[str] = mapped_column(String(30), nullable=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    employee_id: Mapped[int] = mapped_column(ID_TYPE, nullable=True)
+    employee_id: Mapped[int] = mapped_column(
+        ID_TYPE,
+        ForeignKey("employees.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default=text("1")
     )

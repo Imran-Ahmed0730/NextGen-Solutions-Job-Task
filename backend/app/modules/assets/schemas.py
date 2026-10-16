@@ -39,6 +39,15 @@ class AssetUpdate(BaseModel):
 class AssetAssignmentCreate(BaseModel):
     location: AssetLocation
     assigned_on: date
+    employee_id: int | None = Field(default=None, gt=0)
+
+
+class EmployeeSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    code: str
+    name: str
 
 
 class AssetAssignmentResponse(BaseModel):
@@ -46,6 +55,8 @@ class AssetAssignmentResponse(BaseModel):
 
     id: int
     asset_id: int
+    employee_id: int | None
+    employee: EmployeeSummary | None
     location: str
     assigned_on: date
     returned_on: date | None
