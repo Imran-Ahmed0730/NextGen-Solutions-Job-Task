@@ -160,6 +160,11 @@ maintenance history. Employee-linked assignment remains deferred; current assign
 records locations only.
 
 ### 5.7 Approvals
+Approval Rules are configured by document type, inclusive amount range, and approver role at
+`/approval-rules`. Active amount ranges for a document type cannot overlap. Rules are currently
+configuration only; submission matching, approval requests/actions, and the pending inbox are still
+pending.
+
 ```
 Document submitted → engine finds rule (type + amount) → creates approval request
 → approver role sees it in Pending Approvals → Approve / Reject (with note)

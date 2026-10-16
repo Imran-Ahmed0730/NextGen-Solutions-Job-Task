@@ -229,6 +229,11 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "employees.payroll.post", "employees", "Post payroll salary payments"
     ),
+    PermissionDefinition("approvals.rules.read", "approvals", "View approval rules"),
+    PermissionDefinition("approvals.rules.create", "approvals", "Create approval rules"),
+    PermissionDefinition(
+        "approvals.rules.update", "approvals", "Update and activate approval rules"
+    ),
 )
 
 

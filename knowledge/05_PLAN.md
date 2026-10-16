@@ -148,6 +148,10 @@ User-account linkage and employee-linked asset assignment remain separate pendin
 **Screens:** Approval Rules, Pending Approvals.
 **Exit:** matching document blocked until approved; self-approval blocked.
 
+**Progress:** Approval rule configuration is implemented with role selection, validated
+non-overlapping inclusive amount ranges, audit history, and permissions. Approval requests/actions,
+the pending inbox, and document workflow hooks remain pending.
+
 ## Phase 12 — Reports & Dashboard
 **Build:** database views, report services, Report Center + Report Viewer, PDF/CSV export, management dashboard.
 **Screens:** Dashboard, Report Center, Report Viewer, Audit Log.

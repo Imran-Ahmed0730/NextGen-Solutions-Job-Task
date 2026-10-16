@@ -6,6 +6,7 @@ from app.api.health import router as health_router
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.security import require_permission
+from app.modules.approvals.router import router as approvals_router
 from app.modules.assets.router import router as assets_router
 from app.modules.attendance.router import router as attendance_router
 from app.modules.auth.models import User
@@ -61,6 +62,7 @@ register_exception_handlers(app)
 app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(assets_router)
+app.include_router(approvals_router)
 app.include_router(attendance_router)
 app.include_router(payroll_router)
 app.include_router(company_settings_router)

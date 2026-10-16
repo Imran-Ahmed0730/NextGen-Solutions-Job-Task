@@ -103,6 +103,12 @@ const navigation = [
         icon: 'number',
         permissions: ['master_data.document_numbering.read'],
       },
+      {
+        href: '/approval-rules',
+        label: 'Approval Rules',
+        icon: 'settings',
+        permissions: ['approvals.rules.read'],
+      },
     ],
   },
   {

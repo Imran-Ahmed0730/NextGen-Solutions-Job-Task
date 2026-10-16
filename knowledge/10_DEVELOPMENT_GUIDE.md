@@ -868,9 +868,19 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 - The approved scope is monthly base salary less manual deductions; allowances and overtime are not
   included. User-account linkage and employee-linked asset assignment remain pending integrations.
 
+### Phase 11 slice — Approval Rules
+
+- Approval rules select a document type, inclusive minimum/optional maximum amount, and active
+  approver role. Active amount ranges for one document type cannot overlap.
+- `/approval-rules` supports create, update, activate/deactivate, role options, and status visibility.
+  Every change is audited and protected by `approvals.rules.read/create/update`.
+- Rules are configuration only in this slice. Approval requests, decisions, the pending inbox, and
+  purchase/expense/adjustment workflow hooks have not been implemented yet.
+
 ### Planned, not yet implemented
 
-The remaining roadmap includes user-account and asset assignment links, approvals,
+The remaining roadmap includes user-account and asset assignment links, approval requests and
+workflow hooks,
 reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens

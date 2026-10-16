@@ -161,9 +161,11 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Screen: Basic Payroll
 
 ## Phase 11 — Approvals
-- [ ] Rules, requests, actions
+- [x] Approval rule configuration with approver roles, amount ranges, permissions, and audit
+- [ ] Approval requests, actions
 - [ ] Hooks: PO, expense, adjustment
-- [ ] Screens: Approval Rules, Pending Approvals
+- [x] Screen: Approval Rules
+- [ ] Screen: Pending Approvals
 - [ ] Exit: block-until-approved and self-approval tests
 
 ## Phase 12 — Reports & Dashboard

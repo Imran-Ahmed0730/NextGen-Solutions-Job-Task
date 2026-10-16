@@ -158,6 +158,10 @@ report invalid rows while allowing valid rows in the same workbook to be saved.
 **approval_requests**: id, doc_type, doc_id, requested_by, rule_id(FK), status(PENDING/APPROVED/REJECTED), requested_at, decided_at
 **approval_actions**: id, request_id(FK), user_id, action(APPROVE/REJECT), note, acted_at
 
+Approval rule ranges are inclusive and active ranges for the same document type cannot overlap.
+Rule configuration is implemented; requests/actions and hooks into document posting workflows remain
+pending.
+
 ---
 ## Views (read-only)
 | View | Purpose |
