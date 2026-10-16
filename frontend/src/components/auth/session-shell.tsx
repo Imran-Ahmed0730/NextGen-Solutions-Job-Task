@@ -120,6 +120,12 @@ const navigation = [
         icon: 'users',
         permissions: ['employees.read'],
       },
+      {
+        href: '/attendance',
+        label: 'Attendance',
+        icon: 'users',
+        permissions: ['employees.attendance.read'],
+      },
     ],
   },
   {

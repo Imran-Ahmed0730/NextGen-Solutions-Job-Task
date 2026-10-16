@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.core.config import get_settings
 from app.modules.assets.models import Asset, AssetAssignment, AssetMaintenance  # noqa: F401
+from app.modules.attendance.models import Attendance  # noqa: F401
 from app.modules.auth.models import User
 from app.modules.company_settings.models import CompanySetting  # noqa: F401
 from app.modules.customers.models import Customer  # noqa: F401

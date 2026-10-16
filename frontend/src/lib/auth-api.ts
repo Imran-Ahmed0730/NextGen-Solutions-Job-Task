@@ -71,7 +71,7 @@ function refreshSession(): Promise<SessionTokens | null> {
 export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
-  options: { authenticated?: boolean; retry?: boolean } = {},
+  options: { authenticated?: boolean; retry?: boolean; responseType?: 'json' | 'blob' } = {},
 ): Promise<T> {
   const authenticated = options.authenticated ?? true;
   const headers = new Headers(init.headers);
@@ -119,5 +119,6 @@ export async function apiRequest<T>(
   }
 
   if (response.status === 204) return undefined as T;
+  if (options.responseType === 'blob') return (await response.blob()) as T;
   return (await response.json()) as T;
 }

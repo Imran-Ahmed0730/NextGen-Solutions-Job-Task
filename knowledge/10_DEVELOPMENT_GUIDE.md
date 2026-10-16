@@ -57,6 +57,7 @@ is protected.
 │   │   ├── modules/boms/        # BOM master data and material components
 │   │   ├── modules/production_orders/ # Production orders, posting, and costing
 │   │   ├── modules/employees/   # Employee master data (Phase 10)
+│   │   ├── modules/attendance/  # Daily attendance and Excel import/export
 │   │   ├── modules/inventory/   # Stock ledger, balances, posting service, read APIs
 │   │   ├── modules/stock_transfers/ # Atomic inter-warehouse transfers
 │   │   ├── modules/units/       # Measurement-unit master-data reference module
@@ -839,10 +840,24 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   in this slice. Backend lifecycle, validation, audit, and permission-denial tests are in
   `backend/tests/test_employees.py`.
 
+### Implemented Phase 10 slice — Attendance
+
+- Attendance is unique per employee/date, with documented `PRESENT`, `ABSENT`, `LEAVE`, and `LATE`
+  statuses and optional in/out times.
+- The API supports daily-range reads, create, correction, and Excel import. Each row is checked
+  independently; existing employee/date pairs, unknown employee codes, and invalid rows are
+  rejected with row numbers, while valid rows are recorded and audited.
+- `/attendance` supports manual create/edit, `.xlsx` template download, import by employee code,
+  and export of the selected date range. Frontend Zod and backend Pydantic validation cover dates,
+  status, employee identity, and times.
+- Attendance permissions are `employees.attendance.read`, `employees.attendance.create`, and
+  `employees.attendance.update`. API and UI tests cover creation, correction, validation, import
+  partial-failure reporting, and permission denial.
+
 ### Planned, not yet implemented
 
-The remaining roadmap includes user-account and asset assignment links, attendance, payroll,
-approvals, reports/dashboard, and full-cycle hardening. Consult
+The remaining roadmap includes user-account and asset assignment links, payroll, approvals,
+reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens
 are actually delivered.

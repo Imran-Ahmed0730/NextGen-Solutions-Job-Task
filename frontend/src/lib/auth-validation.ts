@@ -225,6 +225,35 @@ export const employeeSchema = z.object({
     .regex(/^(?:0|[1-9]\d{0,15})(?:\.\d{1,2})?$/, 'Salary must be nonnegative with at most 2 decimals'),
 });
 
+const attendanceTime = z
+  .string()
+  .regex(/^$|^(?:[01]\d|2[0-3]):[0-5]\d$/, 'Enter a valid time')
+  .transform((value) => value || null);
+
+export const attendanceCreateSchema = z.object({
+  employee_id: z.number().int().positive('Choose an employee'),
+  att_date: z.string().date('Enter a valid attendance date'),
+  status: z.enum(['PRESENT', 'ABSENT', 'LEAVE', 'LATE'] as const),
+  in_time: attendanceTime,
+  out_time: attendanceTime,
+});
+
+export const attendanceUpdateSchema = z.object({
+  status: z.enum(['PRESENT', 'ABSENT', 'LEAVE', 'LATE'] as const),
+  in_time: attendanceTime,
+  out_time: attendanceTime,
+});
+
+export const attendanceDateRangeSchema = z
+  .object({
+    from_date: z.string().date('Enter a valid start date'),
+    to_date: z.string().date('Enter a valid end date'),
+  })
+  .refine((value) => value.from_date <= value.to_date, {
+    message: 'Start date cannot be after end date',
+    path: ['to_date'],
+  });
+
 export const bomSchema = z.object({
   code: z.string().trim().min(1, 'BOM code is required').max(50, 'Use at most 50 characters'),
   finished_product_id: z.number().int().positive('Choose a finished product'),

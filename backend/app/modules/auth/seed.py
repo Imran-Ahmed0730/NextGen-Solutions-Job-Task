@@ -212,6 +212,15 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("employees.create", "employees", "Create employees"),
     PermissionDefinition("employees.update", "employees", "Update and restore employees"),
     PermissionDefinition("employees.delete", "employees", "Delete employees"),
+    PermissionDefinition(
+        "employees.attendance.read", "employees", "View employee attendance"
+    ),
+    PermissionDefinition(
+        "employees.attendance.create", "employees", "Record employee attendance"
+    ),
+    PermissionDefinition(
+        "employees.attendance.update", "employees", "Update employee attendance"
+    ),
 )
 
 

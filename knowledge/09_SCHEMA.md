@@ -143,6 +143,10 @@ The employee master uses `is_active` and `deleted_at` for status/soft deletion; 
 second status field. `users.employee_id` remains nullable and will receive its FK in a later Phase
 10 migration.
 
+Attendance records are unique per employee and date and retain status/time corrections in the
+audit log. Excel imports identify employees by code, reject duplicate employee/date records, and
+report invalid rows while allowing valid rows in the same workbook to be saved.
+
 ## 11. Approvals
 **approval_rules**: id, doc_type, min_amount, max_amount(null), approver_role_id(FK), is_active
 **approval_requests**: id, doc_type, doc_id, requested_by, rule_id(FK), status(PENDING/APPROVED/REJECTED), requested_at, decided_at

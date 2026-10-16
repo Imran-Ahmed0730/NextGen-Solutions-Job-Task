@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  attendanceCreateSchema,
+  attendanceDateRangeSchema,
+  attendanceUpdateSchema,
   changePasswordSchema,
   companySettingValueSchemas,
   customerCollectionSchema,
@@ -31,6 +34,24 @@ import {
 } from './auth-validation';
 
 describe('auth-validation schemas', () => {
+  it('validates attendance statuses, dates, employees, and optional times', () => {
+    const valid = {
+      employee_id: 2,
+      att_date: '2026-10-16',
+      status: 'PRESENT' as const,
+      in_time: '08:30',
+      out_time: '',
+    };
+    expect(attendanceCreateSchema.parse(valid)).toEqual({ ...valid, out_time: null });
+    expect(attendanceCreateSchema.safeParse({ ...valid, employee_id: 0 }).success).toBe(false);
+    expect(attendanceCreateSchema.safeParse({ ...valid, status: 'HOLIDAY' }).success).toBe(false);
+    expect(attendanceUpdateSchema.safeParse({ ...valid, in_time: '25:00' }).success).toBe(false);
+    expect(attendanceDateRangeSchema.safeParse({
+      from_date: '2026-10-17',
+      to_date: '2026-10-16',
+    }).success).toBe(false);
+  });
+
   it('validates company setting values consistently with backend rules', () => {
     expect(companySettingValueSchemas.company_name.safeParse('  ').success).toBe(false);
     expect(companySettingValueSchemas.company_email.safeParse('bad-email').success).toBe(false);

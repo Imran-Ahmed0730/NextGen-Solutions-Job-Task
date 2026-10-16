@@ -147,14 +147,16 @@ Sales Order details.
 
 ### 5.5b Employees
 Maintain employee code, contact and job details, joining date, and monthly base salary in Employee
-List/Add/Edit. Employees are soft-deleted and can be restored. User-account linking, attendance, and
-payroll are separate Phase 10 slices; salary deductions and other payroll details remain subject to
-the open scope decision in `06_TODO.md`.
+List/Add/Edit. Employees are soft-deleted and can be restored. The Attendance screen records one
+status per employee/date, supports corrections, imports valid rows from `.xlsx` while reporting
+invalid rows, and exports a selected date range. User-account linking, employee-linked asset
+assignment, and payroll remain separate pending slices; payroll details remain subject to the open
+scope decision in `06_TODO.md`.
 
 ### 5.6 Assets
 Register asset → assign to a location → return to store → log maintenance → review assignment and
-maintenance history. Employee-linked assignment is deferred until the Phase 10 employee master is
-implemented; the current assignment history records locations only.
+maintenance history. Employee-linked assignment remains deferred; current assignment history
+records locations only.
 
 ### 5.7 Approvals
 ```

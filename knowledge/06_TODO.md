@@ -153,10 +153,11 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
       permissions, audit, and soft-delete/restore
 - [ ] Add `users.employee_id` foreign key to `employees.id`
 - [ ] Complete Phase 9 employee-linked asset assignment now that employee master exists
-- [ ] Attendance
+- [x] Attendance register with employee/date uniqueness, status/time validation, audit, and permissions
+- [x] Attendance screen with edit/update, `.xlsx` template/import, and date-range export
 - [ ] Payroll + salary payment via Money
 - [x] Screens: Employee List and Add/Edit
-- [ ] Screens: Attendance, Basic Payroll
+- [ ] Screens: Basic Payroll
 
 ## Phase 11 — Approvals
 - [ ] Rules, requests, actions
@@ -180,3 +181,4 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Security review
 - [ ] README, OpenAPI docs, demo script
 - [ ] Interview notes: architecture, ledger design, costing, transaction flow
+- [ ] Include drafted order, purchase receipt, sales order invoice printing feature if we have time.
