@@ -109,7 +109,7 @@ function DocumentNumberingContent() {
         <div>
           <h1 className="text-2xl font-semibold">Document Numbering</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Configure central, gap-free document number sequences by type and year.
+            Set the format the system uses to number documents when they are posted.
           </p>
         </div>
         {profile?.permissions.includes('master_data.document_numbering.create') && !isFormOpen && (
@@ -135,6 +135,23 @@ function DocumentNumberingContent() {
           className="mt-6 grid max-w-3xl gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:grid-cols-2"
           onSubmit={submit}
         >
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 sm:col-span-2">
+            <p className="font-semibold">How document numbering works</p>
+            <p className="mt-1">
+              Create one sequence for each document type and year. The type must match the
+              document being posted—for example, use <span className="font-semibold">PAYROLL</span>{' '}
+              for payroll runs. The system combines the prefix, year, and next number. With prefix
+              <span className="font-mono"> PAY-</span>, year <span className="font-mono">2026</span>,
+              last number <span className="font-mono">0</span>, and padding{' '}
+              <span className="font-mono">4</span>, the first number will be{' '}
+              <span className="font-mono font-semibold">PAY-20260001</span>.
+            </p>
+            <p className="mt-1">
+              Set last number to <span className="font-semibold">0</span> to start fresh, or to the
+              last number already used if continuing an existing series.
+            </p>
+          </div>
+
           <label className="block text-sm font-medium">
             Document type<RequiredMark />
             <input type="text"
@@ -147,7 +164,32 @@ function DocumentNumberingContent() {
               aria-invalid={Boolean(errors.doc_type)}
               aria-describedby={errors.doc_type ? 'doc-type-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
+              list="document-type-options"
             />
+            <datalist id="document-type-options">
+              <option value="CUSTOMER_COLLECTION" label="Customer collection" />
+              <option value="DELIVERY" label="Sales delivery" />
+              <option value="DIRECT_PURCHASE" label="Direct purchase" />
+              <option value="EXPENSE" label="Expense" />
+              <option value="FUND_TRANSFER" label="Fund transfer" />
+              <option value="GOODS_RECEIPT" label="Goods receipt" />
+              <option value="INCOME" label="Income" />
+              <option value="INVOICE" label="Sales invoice" />
+              <option value="PAYROLL" label="Payroll run" />
+              <option value="PHYSICAL_COUNT" label="Physical stock count" />
+              <option value="PRODUCTION_ORDER" label="Production order" />
+              <option value="PURCHASE_ORDER" label="Purchase order" />
+              <option value="PURCHASE_RETURN" label="Purchase return" />
+              <option value="QUOTATION" label="Quotation" />
+              <option value="SALES_ORDER" label="Sales order" />
+              <option value="SALES_RETURN" label="Sales return" />
+              <option value="STOCK_ADJUSTMENT" label="Stock adjustment" />
+              <option value="STOCK_TRANSFER" label="Stock transfer" />
+              <option value="SUPPLIER_PAYMENT" label="Supplier payment" />
+            </datalist>
+            <span className="mt-1 block text-xs font-normal text-slate-500">
+              Start typing to see supported document types, then choose the matching type.
+            </span>
             <FieldError id="doc-type-error" message={errors.doc_type} />
           </label>
 
@@ -163,6 +205,9 @@ function DocumentNumberingContent() {
               aria-describedby={errors.prefix ? 'prefix-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
             />
+            <span className="mt-1 block text-xs font-normal text-slate-500">
+              Text placed before the year and number, e.g. PAY-.
+            </span>
             <FieldError id="prefix-error" message={errors.prefix} />
           </label>
 
@@ -180,6 +225,9 @@ function DocumentNumberingContent() {
               aria-describedby={errors.year ? 'year-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
             />
+            <span className="mt-1 block text-xs font-normal text-slate-500">
+              The document year; each year has its own sequence.
+            </span>
             <FieldError id="year-error" message={errors.year} />
           </label>
 
@@ -196,6 +244,9 @@ function DocumentNumberingContent() {
               aria-describedby={errors.last_number ? 'last-number-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
             />
+            <span className="mt-1 block text-xs font-normal text-slate-500">
+              Most recent number already used; use 0 for a new series.
+            </span>
             <FieldError id="last-number-error" message={errors.last_number} />
           </label>
 
@@ -213,6 +264,9 @@ function DocumentNumberingContent() {
               aria-describedby={errors.padding ? 'padding-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
             />
+            <span className="mt-1 block text-xs font-normal text-slate-500">
+              Minimum digits for the number part; 4 makes 1 display as 0001.
+            </span>
             <FieldError id="padding-error" message={errors.padding} />
           </label>
 
@@ -282,7 +336,8 @@ function DocumentNumberingContent() {
             {sequences.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                  No document sequences found.
+                  No sequences yet. Add one for each document type and year before posting, such as
+                  PAYROLL for payroll runs.
                 </td>
               </tr>
             )}

@@ -271,6 +271,33 @@ export const payrollPostSchema = z.object({
   paid_on: z.string().date('Enter a valid payment date'),
 });
 
+const approvalAmount = z
+  .string()
+  .trim()
+  .regex(/^\d{1,16}(?:\.\d{1,2})?$/, 'Enter a nonnegative amount with up to 2 decimals');
+
+export const approvalRuleSchema = z
+  .object({
+    doc_type: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .min(1, 'Document type is required')
+      .max(50, 'Use at most 50 characters')
+      .regex(/^[A-Z][A-Z0-9_]*$/, 'Use uppercase letters, numbers, and underscores'),
+    min_amount: approvalAmount,
+    max_amount: z.union([approvalAmount, z.literal('')]),
+    approver_role_id: z.number().int().positive('Choose an approver role'),
+  })
+  .refine(
+    (value) =>
+      !value.max_amount || Number(value.max_amount) >= Number(value.min_amount),
+    {
+      message: 'Maximum amount must be at least the minimum amount',
+      path: ['max_amount'],
+    },
+  );
+
 export const bomSchema = z.object({
   code: z.string().trim().min(1, 'BOM code is required').max(50, 'Use at most 50 characters'),
   finished_product_id: z.number().int().positive('Choose a finished product'),

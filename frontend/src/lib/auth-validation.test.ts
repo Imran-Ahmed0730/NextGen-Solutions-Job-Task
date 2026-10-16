@@ -4,6 +4,7 @@ import {
   attendanceCreateSchema,
   attendanceDateRangeSchema,
   attendanceUpdateSchema,
+  approvalRuleSchema,
   changePasswordSchema,
   companySettingValueSchemas,
   customerCollectionSchema,
@@ -64,6 +65,25 @@ describe('auth-validation schemas', () => {
       true,
     );
     expect(payrollPostSchema.safeParse({ account_id: 0, paid_on: 'invalid' }).success).toBe(false);
+  });
+
+  it('validates approval document types, thresholds, and approver roles', () => {
+    expect(
+      approvalRuleSchema.safeParse({
+        doc_type: 'purchase_order',
+        min_amount: '1000.00',
+        max_amount: '5000',
+        approver_role_id: 3,
+      }).success,
+    ).toBe(true);
+    expect(
+      approvalRuleSchema.safeParse({
+        doc_type: 'PO;DROP',
+        min_amount: '1000.00',
+        max_amount: '500.00',
+        approver_role_id: 0,
+      }).success,
+    ).toBe(false);
   });
 
   it('validates company setting values consistently with backend rules', () => {
