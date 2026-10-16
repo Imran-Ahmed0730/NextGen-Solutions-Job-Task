@@ -9,7 +9,9 @@ administration in one FastAPI API and Next.js web application backed by MySQL.
 Phases 0–11 are implemented, including authentication and administration, master data, parties,
 inventory, purchasing, money workflows, sales, production, assets, attendance, and basic payroll.
 Approval rules and requests, the pending-approvals inbox, and PO/expense/adjustment posting gates
-are complete. Reports/dashboard and final hardening/delivery work remain planned.
+are complete. Phase 12 now includes the permission-protected management dashboard, a report center
+with CSV export/print, and a read-only Audit Log screen. Database views and report/dashboard parity
+remain in progress; Phase 13 hardening/delivery is planned.
 
 See [the phased plan](./knowledge/05_PLAN.md), [the current checklist](./knowledge/06_TODO.md), and
 [the implementation guide](./knowledge/10_DEVELOPMENT_GUIDE.md) for details. The business and

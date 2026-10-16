@@ -183,12 +183,15 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Exit: matching documents wait for approval, self-approval is blocked, and failed posting rolls back approval
 
 ## Phase 12 — Reports & Dashboard
+- [x] Permission-protected management dashboard with all requested KPI values and tests
+- [x] Report services + Report Center/Viewer for sales, purchases, stock valuation, low stock,
+  party dues, production cost, cash book, expense/income, profit, assets, and attendance/payroll
+- [x] Date, party, product, and warehouse filters for applicable reports
+- [x] CSV export and browser print/PDF from the report viewer
+- [x] Audit Log screen with read-only before/after history
 - [ ] DB views (stock, due, balances, profit, KPIs)
-- [ ] Report services + Report Center/Viewer
-- [ ] PDF/CSV export + print layouts (invoice, statements)
-- [ ] Management dashboard (11 KPIs)
-- [ ] Audit Log screen
-- [ ] Exit: dashboard = report totals
+- [ ] Dedicated print layouts for invoices and party statements
+- [ ] Exit: dashboard figures reconcile with corresponding report totals
 
 ## Phase 13 — Hardening
 - [x] Shared searchable entity selectors and visible required-field markers across existing screens

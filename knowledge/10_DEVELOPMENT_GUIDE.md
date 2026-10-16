@@ -906,7 +906,20 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 
 ### Planned, not yet implemented
 
-The remaining roadmap includes reports/dashboard and full-cycle hardening. Consult
+Phase 12 now includes the read-only management dashboard (`reports.dashboard.read`), a report
+catalog/viewer (`reports.read`), CSV export/browser print, and the read-only Audit Log screen
+(`auth.audit_logs.read`). Reports cover sales, purchases, stock valuation, low stock, customer and
+supplier due, production cost, cash book, expense/income, profit, assets, and attendance/payroll.
+Date filters apply to activity reports; customer and supplier due reports show balances through the
+selected end date. Stock valuation, low stock, and assets are current snapshots and ignore the
+selected dates. Party, product, and warehouse filters are provided where applicable. In sales and
+purchase reports, a product filter matches documents containing that product while retaining full
+document totals. Dashboard and report routes have API coverage; the dashboard, report center, and
+Audit Log have frontend regression coverage. Dashboard/report total reconciliation is covered for
+profit and inventory valuation.
+
+The remaining Phase 12 work includes database views, dedicated invoice/statement print layouts,
+and full dashboard/report reconciliation, followed by full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 planned work is complete until its modules, persistence, permissions, tests, and screens are
 actually delivered.

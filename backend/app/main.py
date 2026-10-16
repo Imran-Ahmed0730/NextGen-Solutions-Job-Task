@@ -38,6 +38,7 @@ from app.modules.products.router import router as products_router
 from app.modules.purchase_orders.router import router as purchase_orders_router
 from app.modules.purchase_returns.router import router as purchase_returns_router
 from app.modules.quotations.router import router as quotations_router
+from app.modules.reports.router import router as reports_router
 from app.modules.sales_invoices.router import router as sales_invoices_router
 from app.modules.sales_orders.router import router as sales_orders_router
 from app.modules.sales_returns.router import router as sales_returns_router
@@ -99,6 +100,7 @@ app.include_router(price_lists_router)
 app.include_router(expenses_router)
 app.include_router(incomes_router)
 app.include_router(fund_transfers_router)
+app.include_router(reports_router)
 
 
 @app.get("/")

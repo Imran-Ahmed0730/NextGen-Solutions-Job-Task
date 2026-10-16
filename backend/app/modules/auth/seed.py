@@ -244,6 +244,8 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "approvals.requests.decide", "approvals", "Approve or reject approval requests"
     ),
+    PermissionDefinition("reports.dashboard.read", "reports", "View management dashboard"),
+    PermissionDefinition("reports.read", "reports", "View business reports"),
 )
 
 

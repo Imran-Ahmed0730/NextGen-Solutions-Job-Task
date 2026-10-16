@@ -18,7 +18,7 @@ const navigation = [
   {
     label: 'Workspace',
     items: [
-      { href: '/', label: 'Dashboard', icon: 'grid', permissions: ['auth.profile.read'] },
+      { href: '/', label: 'Dashboard', icon: 'grid', permissions: ['reports.dashboard.read'] },
     ],
   },
   {
@@ -36,6 +36,12 @@ const navigation = [
         label: 'Permissions',
         icon: 'list',
         permissions: ['auth.permissions.read'],
+      },
+      {
+        href: '/audit-logs',
+        label: 'Audit Log',
+        icon: 'list',
+        permissions: ['auth.audit_logs.read'],
       },
     ],
   },
@@ -314,6 +320,17 @@ const navigation = [
       },
     ],
   },
+  {
+    label: 'Reports',
+    items: [
+      {
+        href: '/reports',
+        label: 'Report Center',
+        icon: 'list',
+        permissions: ['reports.read'],
+      },
+    ],
+  },
 ] as const;
 
 const iconPaths = {
@@ -560,7 +577,7 @@ export function SessionShell({ children }: { children: ReactNode }) {
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform duration-200 print:hidden lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0 ${
           mobileNavigationOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -636,7 +653,7 @@ export function SessionShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur print:hidden sm:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -715,7 +732,7 @@ export function SessionShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <SessionContext.Provider value={profile}>
-          <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6 lg:p-8">
+          <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 print:max-w-none print:p-0 sm:p-6 lg:p-8">
             {children}
           </main>
         </SessionContext.Provider>

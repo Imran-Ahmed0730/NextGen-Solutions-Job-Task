@@ -183,7 +183,14 @@ Requester ≠ approver. All status changes and decisions are audited.
 ```
 
 ### 5.8 Reports & Dashboard
-Report Center (grouped list) → choose report → Report Viewer (parameters, table, totals, chart where useful) → Print / PDF / CSV. Dashboard KPIs read from database views; clicking a KPI opens the matching report.
+The permission-protected management dashboard supports a selected activity date range and shows
+sales, collections, expenses, and purchases; current cash/bank/MFS balances, customer/supplier due,
+and inventory value; pending sales orders; and estimated profit. The Report Center provides
+parameterized tables for sales, purchases, stock valuation, low stock, party due, production cost,
+cash book, expense/income, profit, assets, and attendance/payroll. Applicable reports support party,
+product, and warehouse filters. CSV export and browser print/PDF are available. The Audit Log
+screen shows recent before/after changes read-only. Database views, invoice/statement print layouts,
+and full dashboard/report reconciliation remain Phase 12 work.
 
 ## 6. Error and edge flows
 | Situation | Behavior |

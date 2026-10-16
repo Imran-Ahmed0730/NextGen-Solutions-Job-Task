@@ -31,3 +31,20 @@ textarea::placeholder {
   color: #64748b;
   opacity: 1;
 }
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid #cbd5e1;
+    padding: 0.35rem;
+  }
+}
