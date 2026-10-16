@@ -289,7 +289,7 @@ The implemented auth API is:
 | `PUT /api/v1/production/boms/{id}` | `production.boms.update` | Replace BOM fields and component lines |
 | `DELETE /api/v1/production/boms/{id}` | `production.boms.delete` | Soft-delete a BOM |
 | `POST /api/v1/production/boms/{id}/activate` | `production.boms.update` | Restore a soft-deleted BOM |
-| `GET /api/v1/production/orders/options` | `production.orders.read` | Read active BOM and warehouse choices |
+| `GET /api/v1/production/orders/options` | `production.orders.read` | Read active BOM, warehouse, and open Sales Order line choices |
 | `GET /api/v1/production/orders` / `GET /api/v1/production/orders/{id}` | `production.orders.read` | List or read production orders with costing snapshots |
 | `POST /api/v1/production/orders` / `PUT /api/v1/production/orders/{id}` | `production.orders.create/update` | Create or edit a numbered production-order draft |
 | `POST /api/v1/production/orders/{id}/start` | `production.orders.update` | Check material availability and start a draft |
@@ -736,15 +736,18 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   `production.boms.read`, `production.boms.create`, `production.boms.update`, and
   `production.boms.delete` (assigned to Administrator). Frontend: `/boms`.
 - **Production Orders** — Drafts are numbered centrally and reference an active BOM, planned
-  quantity, and warehouse. Start checks availability of the scaled raw-material quantities.
+  quantity, and warehouse; they may optionally link to a matching Sales Order line. Start checks
+  availability of the scaled raw-material quantities.
   Completion locks the finished and raw products in ID order, snapshots material quantities and
   average costs, computes material + labor + overhead cost, then posts `PRODUCTION_CONSUME` and
   `PRODUCTION_OUTPUT` through the inventory service in one transaction. The finished-good average
-  cost is updated using the production unit cost; each order stores consumption/output and total
-  cost snapshots. Audit records cover create, edit, start, cancel, and completion. Permissions:
+  cost is updated using the production unit cost; when linked, the Sales Order line's `qty_produced`
+  and audit snapshot are updated in that same transaction. Linked output cannot exceed the line's
+  unreserved, undelivered remaining quantity. Each production order stores consumption/output and
+  total cost snapshots. Audit records cover create, edit, start, cancel, and completion. Permissions:
   `production.orders.read`, `production.orders.create`, and `production.orders.update` (assigned to
   Administrator). Configure the `PRODUCTION_ORDER` document sequence. Frontend:
-  `/production-orders`. Sales-order shortage linking remains unimplemented.
+  `/production-orders`.
 - **Quotations** — Quotations are created with status `DRAFT`; the service validates active
   customers and products, calculates line totals and subtotal using decimal arithmetic, checks that
   the discount does not exceed subtotal, allocates the central `QUOTATION` number, and writes audit

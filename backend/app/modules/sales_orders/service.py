@@ -11,8 +11,9 @@ from app.modules.document_numbering.service import generate_next_number
 from app.modules.inventory import service as inventory_service
 from app.modules.inventory.models import StockReservation, StockTransaction
 from app.modules.products import service as product_service
-from app.modules.products.models import Product
+from app.modules.products.models import Product, ProductType
 from app.modules.quotations import service as quotation_service
+from app.modules.sales import repository as sales_repository
 from app.modules.sales.models import SalesDelivery, SalesDeliveryLine, SalesOrder, SalesOrderLine
 from app.modules.sales_orders import repository
 from app.modules.sales_orders.schemas import (
@@ -21,6 +22,7 @@ from app.modules.sales_orders.schemas import (
     SalesOrderCustomerOption,
     SalesOrderFromQuotationCreate,
     SalesOrderOptionsResponse,
+    SalesOrderProductionLineOption,
     SalesOrderProductOption,
     SalesOrderResponse,
     SalesOrderUpdate,
@@ -40,6 +42,80 @@ def list_sales_orders(db: Session, *, offset: int = 0, limit: int = 50) -> list[
 
 def get_sales_order(db: Session, sales_order_id: int) -> SalesOrder | None:
     return repository.get_sales_order(db, sales_order_id)
+
+
+def list_production_order_lines(
+    db: Session,
+) -> list[SalesOrderProductionLineOption]:
+    orders = repository.list_sales_orders(db, offset=0, limit=200)
+    products = product_service.list_products(
+        db, product_type=ProductType.FINISHED, is_stocked=True, limit=200
+    )
+    product_by_id = {product.id: product for product in products}
+    return [
+        SalesOrderProductionLineOption(
+            id=line.id,
+            sales_order_id=order.id,
+            doc_no=order.doc_no,
+            product_id=line.product_id,
+            product_sku=product_by_id[line.product_id].sku,
+            product_name=product_by_id[line.product_id].name,
+            warehouse_id=order.warehouse_id,
+            qty_ordered=line.qty_ordered,
+            qty_reserved=line.qty_reserved,
+            qty_produced=line.qty_produced,
+            qty_delivered=line.qty_delivered,
+        )
+        for order in orders
+        if order.status == "DRAFT"
+        for line in order.lines
+        if line.qty_ordered > line.qty_reserved + line.qty_produced + line.qty_delivered
+        and line.product_id in product_by_id
+    ]
+
+
+def get_production_order_line(
+    db: Session, sales_order_line_id: int, *, for_update: bool = False
+) -> tuple[SalesOrderLine, SalesOrder] | None:
+    if for_update:
+        return sales_repository.get_order_line_for_update(db, sales_order_line_id)
+    return sales_repository.get_order_line(db, sales_order_line_id)
+
+
+def record_production_output(
+    db: Session,
+    *,
+    sales_order_line_id: int,
+    qty: Decimal,
+    actor: User,
+    ip: str | None = None,
+) -> SalesOrder:
+    line_and_order = sales_repository.get_order_line_for_update(db, sales_order_line_id)
+    if line_and_order is None:
+        raise HTTPException(status_code=404, detail="Sales order line not found")
+    line, order = line_and_order
+    if order.status != "DRAFT":
+        raise HTTPException(status_code=409, detail="SALES_ORDER_NOT_PRODUCIBLE")
+    available_to_produce = (
+        line.qty_ordered - line.qty_reserved - line.qty_produced - line.qty_delivered
+    )
+    if qty > available_to_produce:
+        raise HTTPException(status_code=409, detail="PRODUCTION_EXCEEDS_SALES_ORDER_REMAINING")
+    before = _snapshot(order)
+    line.qty_produced += qty
+    order.updated_at = datetime.now(UTC)
+    db.flush()
+    record_audit(
+        db,
+        actor_id=actor.id,
+        entity_type="sales_order",
+        entity_id=order.id,
+        action="UPDATE",
+        before=before,
+        after=_snapshot(order),
+        ip=ip,
+    )
+    return order
 
 
 def serialize_sales_orders(db: Session, orders: list[SalesOrder]) -> list[SalesOrderResponse]:

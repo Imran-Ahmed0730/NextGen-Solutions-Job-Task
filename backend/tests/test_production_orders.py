@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -13,12 +14,14 @@ from app.main import app
 from app.modules.auth.models import AuditLog, User
 from app.modules.auth.seed import seed_initial_admin
 from app.modules.boms.models import BOM, BOMLine
+from app.modules.customers.models import Customer
 from app.modules.document_numbering.models import DocumentSequence
 from app.modules.inventory.models import MovementType, StockBalance, StockTransaction
 from app.modules.inventory.service import post_stock_movement
 from app.modules.product_categories.models import ProductCategory
 from app.modules.production_orders.models import ProductionOrder, ProductionOutput
 from app.modules.products.models import Product, ProductType
+from app.modules.sales.models import SalesOrder, SalesOrderLine
 from app.modules.units.models import Unit
 from app.modules.warehouses.models import Warehouse
 
@@ -138,7 +141,12 @@ def _login(client: TestClient, actor: User, password: str) -> dict[str, str]:
 
 
 def _create_order(
-    client: TestClient, headers: dict[str, str], bom: BOM, warehouse: Warehouse, qty: str = "4.000"
+    client: TestClient,
+    headers: dict[str, str],
+    bom: BOM,
+    warehouse: Warehouse,
+    qty: str = "4.000",
+    sales_order_line_id: int | None = None,
 ) -> dict[str, object]:
     response = client.post(
         "/api/v1/production/orders",
@@ -146,6 +154,7 @@ def _create_order(
         json={
             "doc_date": "2026-10-16",
             "bom_id": bom.id,
+            "sales_order_line_id": sales_order_line_id,
             "planned_qty": qty,
             "warehouse_id": warehouse.id,
         },
@@ -248,6 +257,120 @@ def test_production_start_rejects_shortage_and_update_is_draft_only(
     )
     assert changed.status_code == 200
     assert changed.json()["planned_qty"] == "3.000"
+
+
+def test_linked_production_updates_sales_order_and_rejects_excess_output(
+    client: TestClient,
+    db_session: Session,
+    production_fixture: tuple[User, str, BOM, Warehouse, Product, Product],
+) -> None:
+    actor, password, bom, warehouse, _, finished = production_fixture
+    customer = Customer(code="PROD-CUS-01", name="Production Link Customer")
+    db_session.add(customer)
+    db_session.flush()
+    sales_order = SalesOrder(
+        doc_no="SO-PROD-01",
+        doc_date=date(2026, 10, 16),
+        customer_id=customer.id,
+        warehouse_id=warehouse.id,
+        subtotal=Decimal("10.00"),
+        discount=Decimal("0.00"),
+        total=Decimal("10.00"),
+        lines=[
+            SalesOrderLine(
+                product_id=finished.id,
+                qty_ordered=Decimal("10.000"),
+                unit_price=Decimal("1.00"),
+                line_total=Decimal("10.00"),
+            )
+        ],
+    )
+    db_session.add(sales_order)
+    db_session.commit()
+    db_session.refresh(sales_order)
+    line = sales_order.lines[0]
+    headers = _login(client, actor, password)
+
+    options = client.get("/api/v1/production/orders/options", headers=headers)
+    assert options.status_code == 200
+    assert options.json()["sales_order_lines"][0]["id"] == line.id
+
+    other_warehouse = Warehouse(code="OTHER-PROD-WH", name="Other Production Warehouse")
+    db_session.add(other_warehouse)
+    db_session.commit()
+    mismatch = client.post(
+        "/api/v1/production/orders",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-16",
+            "bom_id": bom.id,
+            "sales_order_line_id": line.id,
+            "planned_qty": "1.000",
+            "warehouse_id": other_warehouse.id,
+        },
+    )
+    assert mismatch.status_code == 422
+    assert mismatch.json()["detail"] == "PRODUCTION_SALES_ORDER_LINE_MISMATCH"
+
+    order = _create_order(
+        client, headers, bom, warehouse, qty="5.000", sales_order_line_id=line.id
+    )
+    started = client.post(
+        f"/api/v1/production/orders/{order['id']}/start",
+        headers=headers,
+    )
+    assert started.status_code == 200
+
+    excess = client.post(
+        f"/api/v1/production/orders/{order['id']}/complete",
+        headers=headers,
+        json={"actual_qty": "11.000", "labor_cost": "2.00", "overhead_cost": "1.50"},
+    )
+    assert excess.status_code == 409
+    assert excess.json()["detail"] == "PRODUCTION_EXCEEDS_SALES_ORDER_REMAINING"
+    assert db_session.scalar(
+        select(func.count(StockTransaction.id)).where(
+            StockTransaction.source_type == "PRODUCTION_ORDER",
+            StockTransaction.source_id == order["id"],
+        )
+    ) == 0
+
+    completed = client.post(
+        f"/api/v1/production/orders/{order['id']}/complete",
+        headers=headers,
+        json={"actual_qty": "5.000", "labor_cost": "2.00", "overhead_cost": "1.50"},
+    )
+    assert completed.status_code == 200
+    db_session.refresh(line)
+    assert line.qty_produced == Decimal("5.000")
+    assert completed.json()["sales_order_line_id"] == line.id
+    assert db_session.scalar(
+        select(func.count(AuditLog.id)).where(
+            AuditLog.entity_type == "sales_order",
+            AuditLog.entity_id == str(sales_order.id),
+            AuditLog.action == "UPDATE",
+        )
+    ) == 1
+    tracked_order = client.get(
+        f"/api/v1/sales/orders/{sales_order.id}",
+        headers=headers,
+    )
+    assert tracked_order.status_code == 200
+    assert tracked_order.json()["lines"][0]["qty_produced"] == "5.000"
+    over_reservation = client.post(
+        f"/api/v1/sales/orders/{sales_order.id}/lines/{line.id}/reservations",
+        headers=headers,
+        json={"qty": "6.000"},
+    )
+    assert over_reservation.status_code == 409
+    assert over_reservation.json()["detail"] == "RESERVATION_EXCEEDS_ORDER_REMAINING"
+    reservation = client.post(
+        f"/api/v1/sales/orders/{sales_order.id}/lines/{line.id}/reservations",
+        headers=headers,
+        json={"qty": "5.000"},
+    )
+    assert reservation.status_code == 200
+    assert reservation.json()["lines"][0]["qty_reserved"] == "5.000"
 
 
 def test_production_order_requires_permission(

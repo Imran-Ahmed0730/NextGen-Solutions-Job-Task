@@ -4,6 +4,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.modules.sales_orders.schemas import SalesOrderProductionLineOption
+
 Quantity = Annotated[Decimal, Field(gt=0, max_digits=18, decimal_places=3)]
 Cost = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=2)]
 
@@ -11,6 +13,7 @@ Cost = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=2)]
 class ProductionOrderCreate(BaseModel):
     doc_date: date
     bom_id: int = Field(gt=0)
+    sales_order_line_id: int | None = Field(default=None, gt=0)
     planned_qty: Quantity
     warehouse_id: int = Field(gt=0)
 
@@ -47,6 +50,7 @@ class ProductionOrderResponse(BaseModel):
     doc_no: str
     doc_date: date
     bom_id: int
+    sales_order_line_id: int | None
     finished_product_id: int
     planned_qty: Decimal
     actual_qty: Decimal | None
@@ -82,3 +86,4 @@ class ProductionOrderWarehouseOption(BaseModel):
 class ProductionOrderOptionsResponse(BaseModel):
     boms: list[ProductionOrderBOMOption]
     warehouses: list[ProductionOrderWarehouseOption]
+    sales_order_lines: list[SalesOrderProductionLineOption]

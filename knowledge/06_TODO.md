@@ -137,9 +137,9 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Production order (draft → in progress → completed/cancelled)
 - [x] Consumption + output posting through inventory service
 - [x] Cost calculation (materials + labor + overhead)
-- [ ] Link sales-order shortages to production orders
+- [x] Link production orders to matching Sales Order lines and update Produced quantity on posting
 - [x] Production order list, draft editing, completion, and costing details screen
-- [x] Exit: cost and stock effects tested in backend API tests and frontend lifecycle test
+- [x] Exit: cost, stock, shortage-link, and rollback effects tested
 
 ## Phase 9 — Assets
 - [ ] Asset, assignment, maintenance models + services

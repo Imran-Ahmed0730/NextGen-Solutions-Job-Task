@@ -151,3 +151,17 @@ class SalesOrderOptionsResponse(BaseModel):
     customers: list[SalesOrderCustomerOption]
     warehouses: list[SalesOrderWarehouseOption]
     products: list[SalesOrderProductOption]
+
+
+class SalesOrderProductionLineOption(BaseModel):
+    id: int
+    sales_order_id: int
+    doc_no: str
+    product_id: int
+    product_sku: str
+    product_name: str
+    warehouse_id: int
+    qty_ordered: Decimal
+    qty_reserved: Decimal
+    qty_produced: Decimal
+    qty_delivered: Decimal

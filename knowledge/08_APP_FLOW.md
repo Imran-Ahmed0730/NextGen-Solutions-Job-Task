@@ -96,12 +96,13 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 1. Maintain a BOM with a stocked finished good, output quantity, raw-material quantities, and
    default labor/overhead costs. BOM List and Create/Edit are available at `/boms`.
 2. Create a draft Production Order from an active BOM, planned output quantity, and warehouse.
+   Optionally link it to an open Sales Order line for the same finished good and warehouse.
 3. Start → check raw material availability; a shortage blocks the transition.
 4. Complete → enter actual output quantity and labor/overhead costs. One transaction consumes raw
    materials (`PRODUCTION_CONSUME`), adds finished goods (`PRODUCTION_OUTPUT`), snapshots
-   consumption/output costs, updates weighted-average cost, and audits the completion.
-5. Production-order-to-sales-order shortage linking and the Sales Order *Produced* quantity update
-   remain to be implemented.
+   consumption/output costs, updates weighted-average cost, and audits the completion. When linked,
+   the Sales Order line's *Produced* quantity and audit record update in the same transaction.
+   Linked output cannot exceed the line's unreserved, undelivered remaining quantity.
 
 ### 5.4 Sales
 1. Quotation draft → Send → customer response → Accept or Reject. Only Accepted quotations can be

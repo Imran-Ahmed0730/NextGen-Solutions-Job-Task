@@ -119,7 +119,9 @@ BOM and warehouse, check material availability when started, and atomically post
 consumption, finished-goods output, audit, and weighted-average costing when completed. The
 `/production-orders` screen supports draft editing, start/cancel, completion inputs, and costing
 details. Backend API and UI tests cover the lifecycle and stock/cost effects. Sales-order shortage
-linking remains open.
+linking uses a specific Sales Order line, validates that the BOM finished good and warehouse match,
+updates the line's Produced quantity with audit in the same completion transaction, and rejects
+output beyond the order line's unreserved, undelivered remaining quantity. Phase 8 exit checks pass.
 
 ## Phase 9 — Assets
 **Build:** asset register, assignment, maintenance.

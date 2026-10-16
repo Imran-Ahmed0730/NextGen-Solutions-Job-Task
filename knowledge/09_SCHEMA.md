@@ -68,7 +68,7 @@ their respective transaction workflows.
 ## 6. Production
 **boms**: id, code(U), finished_product_id(FK), output_qty, labor_cost_default, overhead_cost_default, is_active, deleted_at
 **bom_lines**: id, bom_id(FK), raw_product_id(FK), qty; unique(bom_id, raw_product_id)
-**production_orders**: id, doc_no(U), doc_date, bom_id(FK), finished_product_id(FK), planned_qty, actual_qty, warehouse_id(FK), status(DRAFT/IN_PROGRESS/COMPLETED/CANCELLED), labor_cost, overhead_cost, material_cost, total_cost, unit_cost(DECIMAL 18,4), created_by(FK), created_at, updated_at
+**production_orders**: id, doc_no(U), doc_date, bom_id(FK), sales_order_line_id(FK→sales_order_lines, null), finished_product_id(FK), planned_qty, actual_qty, warehouse_id(FK), status(DRAFT/IN_PROGRESS/COMPLETED/CANCELLED), labor_cost, overhead_cost, material_cost, total_cost, unit_cost(DECIMAL 18,4), created_by(FK), created_at, updated_at
 **production_consumption**: id, production_order_id(FK), product_id(FK), qty, unit_cost(DECIMAL 18,4), line_cost
 **production_outputs**: id, production_order_id(FK), product_id(FK), qty, unit_cost(DECIMAL 18,4)
 
@@ -76,8 +76,10 @@ BOMs require a stocked `FINISHED` product and unique stocked `RAW` material line
 three decimal places; default labor and overhead costs use two. Deletion is soft and audited.
 Production orders use centrally numbered drafts. Starting checks material availability; completion
 posts consumption and output through the inventory service and snapshots actual costs atomically.
-The finished-good average cost is updated using the resulting production unit cost. Sales-order
-linkage is not implemented yet.
+The finished-good average cost is updated using the resulting production unit cost. An optional
+Sales Order line link must match the finished good and warehouse; completion updates that line's
+`qty_produced` in the same transaction and rejects quantities exceeding unreserved, undelivered
+remaining demand.
 
 ## 7. Sales
 **quotations**: id, doc_no, doc_date, customer_id(FK), valid_until, status(DRAFT/SENT/ACCEPTED/REJECTED), subtotal, discount, total, note, created_by(FK), created_at, updated_at

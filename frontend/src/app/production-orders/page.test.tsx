@@ -47,6 +47,19 @@ describe('ProductionOrdersPage', () => {
             overhead_cost_default: '1.50',
           }],
           warehouses: [{ id: 4, code: 'MAIN', name: 'Main Warehouse' }],
+          sales_order_lines: [{
+            id: 6,
+            sales_order_id: 10,
+            doc_no: 'SO-20260001',
+            product_id: 3,
+            product_sku: 'FG-03',
+            product_name: 'Bread',
+            warehouse_id: 4,
+            qty_ordered: '10.000',
+            qty_reserved: '0.000',
+            qty_produced: '0.000',
+            qty_delivered: '0.000',
+          }],
         });
       }
       if (path === '/api/v1/production/orders' && init?.method === 'POST') {
@@ -103,6 +116,9 @@ describe('ProductionOrdersPage', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'BOM' }), {
       target: { value: '2' },
     });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Sales Order line' }), {
+      target: { value: '6' },
+    });
     fireEvent.change(screen.getByRole('textbox', { name: 'Planned quantity' }), {
       target: { value: '4.000' },
     });
@@ -116,7 +132,9 @@ describe('ProductionOrdersPage', () => {
       '/api/v1/production/orders',
       expect.objectContaining({
         method: 'POST',
-        body: expect.stringContaining('"planned_qty":"4.000"'),
+        body: expect.stringMatching(
+          /"sales_order_line_id":6.*"planned_qty":"4\.000"/,
+        ),
       }),
     );
 

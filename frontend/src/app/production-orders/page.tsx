@@ -21,8 +21,25 @@ type ProductionBOMOption = {
   labor_cost_default: string;
   overhead_cost_default: string;
 };
+type SalesOrderLineOption = {
+  id: number;
+  sales_order_id: number;
+  doc_no: string;
+  product_id: number;
+  product_sku: string;
+  product_name: string;
+  warehouse_id: number;
+  qty_ordered: string;
+  qty_reserved: string;
+  qty_produced: string;
+  qty_delivered: string;
+};
 type WarehouseOption = { id: number; code: string; name: string };
-type ProductionOptions = { boms: ProductionBOMOption[]; warehouses: WarehouseOption[] };
+type ProductionOptions = {
+  boms: ProductionBOMOption[];
+  warehouses: WarehouseOption[];
+  sales_order_lines: SalesOrderLineOption[];
+};
 type ConsumptionLine = {
   id: number;
   product_id: number;
@@ -36,6 +53,7 @@ type ProductionOrderRecord = {
   doc_no: string;
   doc_date: string;
   bom_id: number;
+  sales_order_line_id: number | null;
   finished_product_id: number;
   planned_qty: string;
   actual_qty: string | null;
@@ -62,12 +80,17 @@ function ProductionOrdersContent() {
   const canRead = permissions.includes('production.orders.read');
   const canCreate = permissions.includes('production.orders.create');
   const canUpdate = permissions.includes('production.orders.update');
-  const [options, setOptions] = useState<ProductionOptions>({ boms: [], warehouses: [] });
+  const [options, setOptions] = useState<ProductionOptions>({
+    boms: [],
+    warehouses: [],
+    sales_order_lines: [],
+  });
   const [orders, setOrders] = useState<ProductionOrderRecord[]>([]);
   const [selected, setSelected] = useState<ProductionOrderRecord | null>(null);
   const [detailId, setDetailId] = useState<number | null>(null);
   const [docDate, setDocDate] = useState(todayLocalDate);
   const [bomId, setBomId] = useState('');
+  const [salesOrderLineId, setSalesOrderLineId] = useState('');
   const [plannedQty, setPlannedQty] = useState('');
   const [warehouseId, setWarehouseId] = useState('');
   const [completionId, setCompletionId] = useState<number | null>(null);
@@ -97,6 +120,7 @@ function ProductionOrdersContent() {
     setSelected(null);
     setDocDate(todayLocalDate());
     setBomId('');
+    setSalesOrderLineId('');
     setPlannedQty('');
     setWarehouseId('');
     setError('');
@@ -107,6 +131,9 @@ function ProductionOrdersContent() {
     setDetailId(null);
     setDocDate(order.doc_date);
     setBomId(String(order.bom_id));
+    setSalesOrderLineId(
+      order.sales_order_line_id === null ? '' : String(order.sales_order_line_id),
+    );
     setPlannedQty(order.planned_qty);
     setWarehouseId(String(order.warehouse_id));
     setError('');
@@ -117,6 +144,7 @@ function ProductionOrdersContent() {
     const parsed = productionOrderSchema.safeParse({
       doc_date: docDate,
       bom_id: Number(bomId),
+      sales_order_line_id: salesOrderLineId ? Number(salesOrderLineId) : null,
       planned_qty: plannedQty,
       warehouse_id: Number(warehouseId),
     });
@@ -227,6 +255,11 @@ function ProductionOrdersContent() {
     );
   }
 
+  const selectedBOM = options.boms.find((bom) => String(bom.id) === bomId);
+  const salesOrderLineOptions = options.sales_order_lines.filter(
+    (line) => !selectedBOM || line.product_id === selectedBOM.finished_product_id,
+  );
+
   return (
     <section className="space-y-6">
       <header>
@@ -257,10 +290,37 @@ function ProductionOrdersContent() {
                 required
                 placeholder="Search or select a BOM"
                 value={bomId}
-                onChange={setBomId}
+                onChange={(value) => {
+                  const nextBOM = options.boms.find((bom) => String(bom.id) === value);
+                  if (
+                    salesOrderLineId &&
+                    options.sales_order_lines.find((line) => String(line.id) === salesOrderLineId)
+                      ?.product_id !== nextBOM?.finished_product_id
+                  ) {
+                    setSalesOrderLineId('');
+                  }
+                  setBomId(value);
+                }}
                 options={options.boms.map((bom) => ({
                   value: String(bom.id),
                   label: bom.code,
+                }))}
+              />
+            </label>
+            <label className="text-sm font-medium text-slate-700">
+              Sales Order line (optional)
+              <SearchableSelect
+                aria-label="Sales Order line"
+                placeholder="Optional—search Sales Order lines"
+                value={salesOrderLineId}
+                onChange={(value) => {
+                  setSalesOrderLineId(value);
+                  const line = salesOrderLineOptions.find((item) => String(item.id) === value);
+                  if (line) setWarehouseId(String(line.warehouse_id));
+                }}
+                options={salesOrderLineOptions.map((line) => ({
+                  value: String(line.id),
+                  label: `${line.doc_no} · ${line.product_sku} - ${line.product_name} · ordered ${line.qty_ordered}, produced ${line.qty_produced}`,
                 }))}
               />
             </label>

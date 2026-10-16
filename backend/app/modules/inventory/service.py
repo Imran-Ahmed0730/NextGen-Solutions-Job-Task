@@ -197,7 +197,9 @@ def reserve_stock(
     balance = _get_or_create_locked_balance(
         db, product_id=product.id, warehouse_id=order.warehouse_id
     )
-    available_order_qty = line.qty_ordered - line.qty_delivered - line.qty_reserved
+    available_order_qty = (
+        line.qty_ordered - line.qty_delivered - line.qty_reserved - line.qty_produced
+    )
     if qty > available_order_qty:
         raise HTTPException(status_code=409, detail="RESERVATION_EXCEEDS_ORDER_REMAINING")
     if balance.available < qty:

@@ -26,6 +26,7 @@ from app.modules.production_orders.schemas import (
 )
 from app.modules.products import service as product_service
 from app.modules.products.models import Product, ProductType
+from app.modules.sales_orders import service as sales_order_service
 from app.modules.warehouses import service as warehouse_service
 
 DOCUMENT_TYPE = "PRODUCTION_ORDER"
@@ -66,6 +67,7 @@ def get_production_order_options(db: Session) -> ProductionOrderOptionsResponse:
             ProductionOrderWarehouseOption(id=item.id, code=item.code, name=item.name)
             for item in warehouses
         ],
+        sales_order_lines=sales_order_service.list_production_order_lines(db),
     )
 
 
@@ -78,10 +80,18 @@ def create_production_order(
         warehouse = warehouse_service.get_active_warehouse(db, payload.warehouse_id)
         if warehouse is None:
             raise HTTPException(status_code=404, detail="Warehouse not found")
+        _validate_sales_order_link(
+            db,
+            payload.sales_order_line_id,
+            finished_product_id=bom.finished_product_id,
+            warehouse_id=warehouse.id,
+            for_update=True,
+        )
         order = ProductionOrder(
             doc_no=generate_next_number(db, DOCUMENT_TYPE, payload.doc_date.year),
             doc_date=payload.doc_date,
             bom_id=bom.id,
+            sales_order_line_id=payload.sales_order_line_id,
             finished_product_id=bom.finished_product_id,
             planned_qty=payload.planned_qty,
             warehouse_id=warehouse.id,
@@ -128,9 +138,18 @@ def update_production_order(
         warehouse = warehouse_service.get_active_warehouse(db, payload.warehouse_id)
         if warehouse is None:
             raise HTTPException(status_code=404, detail="Warehouse not found")
+        _validate_sales_order_link(
+            db,
+            payload.sales_order_line_id,
+            finished_product_id=bom.finished_product_id,
+            warehouse_id=warehouse.id,
+            for_update=True,
+        )
         before = _snapshot(order)
         order.doc_date = payload.doc_date
         order.bom_id = bom.id
+        # The installed SQLAlchemy/Python combination rejects nullable union mappings.
+        setattr(order, "sales_order_line_id", payload.sales_order_line_id)
         order.finished_product_id = bom.finished_product_id
         order.planned_qty = payload.planned_qty
         order.warehouse_id = warehouse.id
@@ -166,6 +185,13 @@ def start_production_order(
         if order.status != "DRAFT":
             raise HTTPException(status_code=409, detail="PRODUCTION_ORDER_CANNOT_START")
         bom = _active_bom(db, order.bom_id)
+        _validate_sales_order_link(
+            db,
+            order.sales_order_line_id,
+            finished_product_id=order.finished_product_id,
+            warehouse_id=order.warehouse_id,
+            for_update=True,
+        )
         _check_material_availability(
             db, bom, order.planned_qty, order.warehouse_id
         )
@@ -237,6 +263,13 @@ def complete_production_order(
         if order.status != "IN_PROGRESS":
             raise HTTPException(status_code=409, detail="PRODUCTION_ORDER_NOT_IN_PROGRESS")
         bom = _active_bom(db, order.bom_id)
+        _validate_sales_order_link(
+            db,
+            order.sales_order_line_id,
+            finished_product_id=order.finished_product_id,
+            warehouse_id=order.warehouse_id,
+            for_update=True,
+        )
         raw_ids = sorted({line.raw_product_id for line in bom.lines})
         expected_types = {product_id: ProductType.RAW for product_id in raw_ids}
         expected_types[order.finished_product_id] = ProductType.FINISHED
@@ -336,6 +369,14 @@ def complete_production_order(
         product_service.update_average_cost_for_production(
             db, product_id=finished_product.id, average_cost=next_average
         )
+        if order.sales_order_line_id is not None:
+            sales_order_service.record_production_output(
+                db,
+                sales_order_line_id=order.sales_order_line_id,
+                qty=payload.actual_qty,
+                actor=actor,
+                ip=ip,
+            )
         db.flush()
         record_audit(
             db,
@@ -359,6 +400,28 @@ def _active_bom(db: Session, bom_id: int) -> BOM:
     if bom is None:
         raise HTTPException(status_code=404, detail="Active BOM not found")
     return bom
+
+
+def _validate_sales_order_link(
+    db: Session,
+    sales_order_line_id: int | None,
+    *,
+    finished_product_id: int,
+    warehouse_id: int,
+    for_update: bool = False,
+) -> None:
+    if sales_order_line_id is None:
+        return
+    line_and_order = sales_order_service.get_production_order_line(
+        db, sales_order_line_id, for_update=for_update
+    )
+    if line_and_order is None:
+        raise HTTPException(status_code=404, detail="Sales order line not found")
+    line, order = line_and_order
+    if order.status != "DRAFT":
+        raise HTTPException(status_code=409, detail="SALES_ORDER_NOT_PRODUCIBLE")
+    if line.product_id != finished_product_id or order.warehouse_id != warehouse_id:
+        raise HTTPException(status_code=422, detail="PRODUCTION_SALES_ORDER_LINE_MISMATCH")
 
 
 def _lock_active_product(
@@ -418,6 +481,7 @@ def _snapshot(order: ProductionOrder) -> dict[str, object]:
         "doc_no": order.doc_no,
         "doc_date": order.doc_date.isoformat(),
         "bom_id": order.bom_id,
+        "sales_order_line_id": order.sales_order_line_id,
         "finished_product_id": order.finished_product_id,
         "planned_qty": str(order.planned_qty),
         "actual_qty": str(order.actual_qty) if order.actual_qty is not None else None,

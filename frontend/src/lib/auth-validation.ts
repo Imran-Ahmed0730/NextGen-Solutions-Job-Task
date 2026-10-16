@@ -205,6 +205,7 @@ export const bomSchema = z.object({
 export const productionOrderSchema = z.object({
   doc_date: z.string().date('Enter a valid production date'),
   bom_id: z.number().int().positive('Choose a BOM'),
+  sales_order_line_id: z.number().int().positive().nullable(),
   planned_qty: z
     .string()
     .regex(/^(?:0|[1-9]\d{0,14})(?:\.\d{1,3})?$/, 'Planned quantity must have at most 3 decimals')

@@ -45,6 +45,12 @@ class ProductionOrder(Base):
     bom_id: Mapped[int] = mapped_column(
         ID_TYPE, ForeignKey("boms.id", ondelete="RESTRICT"), nullable=False, index=True
     )
+    sales_order_line_id: Mapped[int] = mapped_column(
+        ID_TYPE,
+        ForeignKey("sales_order_lines.id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
     finished_product_id: Mapped[int] = mapped_column(
         ID_TYPE, ForeignKey("products.id", ondelete="RESTRICT"), nullable=False
     )
