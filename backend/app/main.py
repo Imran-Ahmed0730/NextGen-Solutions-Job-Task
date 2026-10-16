@@ -28,6 +28,7 @@ from app.modules.payment_methods.router import router as payment_methods_router
 from app.modules.physical_counts.router import router as physical_counts_router
 from app.modules.price_lists.router import router as price_lists_router
 from app.modules.product_categories.router import router as product_categories_router
+from app.modules.production_orders.router import router as production_orders_router
 from app.modules.products.router import router as products_router
 from app.modules.purchase_orders.router import router as purchase_orders_router
 from app.modules.purchase_returns.router import router as purchase_returns_router
@@ -71,6 +72,7 @@ app.include_router(sales_orders_router)
 app.include_router(sales_invoices_router)
 app.include_router(sales_returns_router)
 app.include_router(boms_router)
+app.include_router(production_orders_router)
 app.include_router(suppliers_router)
 app.include_router(units_router)
 app.include_router(product_categories_router)

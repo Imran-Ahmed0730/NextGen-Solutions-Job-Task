@@ -114,9 +114,12 @@ balance.
 **Screens:** BOM List, BOM Create/Edit, Production Order List, Create/Edit Production Order, Production Details & Costing.
 **Exit:** raw stock falls, finished stock rises, finished-good average cost is correct, shortages are blocked, and eligible sales-order shortages can be linked to production orders.
 
-**Progress:** BOM and BOM line setup is implemented with raw/finished product validation, default
-labor/overhead inputs, audit, permissions, soft-delete/restore, and the `/boms` screen. Production
-orders, posting, and costing remain the next slices.
+**Progress:** BOM setup and the production-order lifecycle are implemented. Production orders use a
+BOM and warehouse, check material availability when started, and atomically post raw-material
+consumption, finished-goods output, audit, and weighted-average costing when completed. The
+`/production-orders` screen supports draft editing, start/cancel, completion inputs, and costing
+details. Backend API and UI tests cover the lifecycle and stock/cost effects. Sales-order shortage
+linking remains open.
 
 ## Phase 9 — Assets
 **Build:** asset register, assignment, maintenance.

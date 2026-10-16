@@ -54,6 +54,8 @@ is protected.
 │   │   ├── api/                 # Health endpoint
 │   │   ├── core/                # Configuration, DB, security, exceptions, email
 │   │   ├── modules/auth/        # Authentication and user/role administration
+│   │   ├── modules/boms/        # BOM master data and material components
+│   │   ├── modules/production_orders/ # Production orders, posting, and costing
 │   │   ├── modules/inventory/   # Stock ledger, balances, posting service, read APIs
 │   │   ├── modules/stock_transfers/ # Atomic inter-warehouse transfers
 │   │   ├── modules/units/       # Measurement-unit master-data reference module
@@ -135,6 +137,8 @@ The frontend route tree currently includes:
 | `/sales-orders` | Create, edit, browse, view draft sales order details, and post deliveries with COGS |
 | `/sales-invoices` | Post invoices from deliveries, apply credit-limit mode, and browse invoice/COGS history |
 | `/sales-returns` | Return remaining invoiced quantities, restore stock at original COGS, and reduce customer due |
+| `/boms` | Create, edit, browse, soft-delete, and restore Bills of Materials |
+| `/production-orders` | Create/edit drafts, start/cancel orders, post actual production, and review costs |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/expenses` | Record operational expenses paid from any money account and browse expense history |
 | `/incomes` | Record money received into any account from any income source and browse income history |
@@ -285,6 +289,12 @@ The implemented auth API is:
 | `PUT /api/v1/production/boms/{id}` | `production.boms.update` | Replace BOM fields and component lines |
 | `DELETE /api/v1/production/boms/{id}` | `production.boms.delete` | Soft-delete a BOM |
 | `POST /api/v1/production/boms/{id}/activate` | `production.boms.update` | Restore a soft-deleted BOM |
+| `GET /api/v1/production/orders/options` | `production.orders.read` | Read active BOM and warehouse choices |
+| `GET /api/v1/production/orders` / `GET /api/v1/production/orders/{id}` | `production.orders.read` | List or read production orders with costing snapshots |
+| `POST /api/v1/production/orders` / `PUT /api/v1/production/orders/{id}` | `production.orders.create/update` | Create or edit a numbered production-order draft |
+| `POST /api/v1/production/orders/{id}/start` | `production.orders.update` | Check material availability and start a draft |
+| `POST /api/v1/production/orders/{id}/complete` | `production.orders.update` | Atomically post material consumption, output, and production costs |
+| `POST /api/v1/production/orders/{id}/cancel` | `production.orders.update` | Cancel a draft or in-progress order |
 | `GET /api/v1/sales/quotations` / `GET /api/v1/sales/quotations/{id}` | `sales.quotations.read` | List or view quotation drafts |
 | `GET /api/v1/sales/quotations/options` | `sales.quotations.read` | Read active customers and products for quotation entry |
 | `POST /api/v1/sales/quotations` | `sales.quotations.create` | Create a numbered quotation draft and audit snapshot |
@@ -725,6 +735,16 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   use two. Create, full replacement, soft-delete, and restore operations are audited. Permissions:
   `production.boms.read`, `production.boms.create`, `production.boms.update`, and
   `production.boms.delete` (assigned to Administrator). Frontend: `/boms`.
+- **Production Orders** — Drafts are numbered centrally and reference an active BOM, planned
+  quantity, and warehouse. Start checks availability of the scaled raw-material quantities.
+  Completion locks the finished and raw products in ID order, snapshots material quantities and
+  average costs, computes material + labor + overhead cost, then posts `PRODUCTION_CONSUME` and
+  `PRODUCTION_OUTPUT` through the inventory service in one transaction. The finished-good average
+  cost is updated using the production unit cost; each order stores consumption/output and total
+  cost snapshots. Audit records cover create, edit, start, cancel, and completion. Permissions:
+  `production.orders.read`, `production.orders.create`, and `production.orders.update` (assigned to
+  Administrator). Configure the `PRODUCTION_ORDER` document sequence. Frontend:
+  `/production-orders`. Sales-order shortage linking remains unimplemented.
 - **Quotations** — Quotations are created with status `DRAFT`; the service validates active
   customers and products, calculates line totals and subtotal using decimal arithmetic, checks that
   the discount does not exceed subtotal, allocates the central `QUOTATION` number, and writes audit

@@ -48,6 +48,21 @@ def lock_product_for_stock_posting(db: Session, product_id: int) -> Product | No
     return repository.lock_product_for_stock_posting(db, product_id)
 
 
+def update_average_cost_for_production(
+    db: Session, *, product_id: int, average_cost: Decimal
+) -> Product:
+    if not average_cost.is_finite() or average_cost < 0:
+        raise HTTPException(status_code=422, detail="Average cost must be nonnegative")
+    if average_cost != average_cost.quantize(Decimal("0.0001")):
+        raise HTTPException(status_code=422, detail="Average cost supports at most 4 decimals")
+    product = repository.lock_product_for_stock_posting(db, product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    product.avg_cost = average_cost
+    db.flush()
+    return product
+
+
 def create_product(
     db: Session, data: dict[str, object], actor: User, ip: str | None = None
 ) -> Product:

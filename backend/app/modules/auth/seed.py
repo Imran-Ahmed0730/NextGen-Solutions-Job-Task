@@ -140,6 +140,11 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("production.boms.create", "production", "Create bills of materials"),
     PermissionDefinition("production.boms.update", "production", "Update bills of materials"),
     PermissionDefinition("production.boms.delete", "production", "Delete bills of materials"),
+    PermissionDefinition("production.orders.read", "production", "View production orders"),
+    PermissionDefinition("production.orders.create", "production", "Create production orders"),
+    PermissionDefinition(
+        "production.orders.update", "production", "Update and post production orders"
+    ),
     PermissionDefinition("master_data.price_lists.read", "master_data", "View price lists"),
     PermissionDefinition("master_data.price_lists.create", "master_data", "Create price lists"),
     PermissionDefinition("master_data.price_lists.update", "master_data", "Update price lists"),

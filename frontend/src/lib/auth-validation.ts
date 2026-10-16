@@ -202,6 +202,29 @@ export const bomSchema = z.object({
     ),
 });
 
+export const productionOrderSchema = z.object({
+  doc_date: z.string().date('Enter a valid production date'),
+  bom_id: z.number().int().positive('Choose a BOM'),
+  planned_qty: z
+    .string()
+    .regex(/^(?:0|[1-9]\d{0,14})(?:\.\d{1,3})?$/, 'Planned quantity must have at most 3 decimals')
+    .refine((value) => Number(value) > 0, 'Planned quantity must be greater than zero'),
+  warehouse_id: z.number().int().positive('Choose a warehouse'),
+});
+
+export const productionOrderCompleteSchema = z.object({
+  actual_qty: z
+    .string()
+    .regex(/^(?:0|[1-9]\d{0,14})(?:\.\d{1,3})?$/, 'Actual quantity must have at most 3 decimals')
+    .refine((value) => Number(value) > 0, 'Actual quantity must be greater than zero'),
+  labor_cost: z
+    .string()
+    .regex(/^(?:0|[1-9]\d{0,15})(?:\.\d{1,2})?$/, 'Labor cost must have at most 2 decimals'),
+  overhead_cost: z
+    .string()
+    .regex(/^(?:0|[1-9]\d{0,15})(?:\.\d{1,2})?$/, 'Overhead cost must have at most 2 decimals'),
+});
+
 export const stockTransferSchema = z
   .object({
     doc_date: z.string().date('Enter a valid transfer date'),

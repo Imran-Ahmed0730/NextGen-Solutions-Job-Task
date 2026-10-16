@@ -219,6 +219,12 @@ const navigation = [
     label: 'Production',
     items: [
       {
+        href: '/production-orders',
+        label: 'Production Orders',
+        icon: 'warehouse',
+        permissions: ['production.orders.read'],
+      },
+      {
         href: '/boms',
         label: 'Bills of Materials',
         icon: 'warehouse',

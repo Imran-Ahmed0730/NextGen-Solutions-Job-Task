@@ -21,6 +21,13 @@ def list_boms(
     )
 
 
+def get_bom(db: Session, bom_id: int, *, active_only: bool = False) -> BOM | None:
+    bom = repository.get_bom(db, bom_id)
+    if bom is None or (active_only and (not bom.is_active or bom.deleted_at is not None)):
+        return None
+    return bom
+
+
 def get_bom_options(db: Session) -> BOMOptionsResponse:
     raw_products = product_service.list_products(
         db, product_type=ProductType.RAW, limit=200

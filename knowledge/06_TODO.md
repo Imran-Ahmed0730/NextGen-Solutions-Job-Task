@@ -134,12 +134,12 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 ## Phase 8 — Production
 - [x] BOM + lines with raw/finished product validation, default costs, audit, and permissions
 - [x] BOM List and Create/Edit screen
-- [ ] Production order (draft → in progress → completed)
-- [ ] Consumption + output posting through inventory service
-- [ ] Cost calculation (materials + labor + overhead)
+- [x] Production order (draft → in progress → completed/cancelled)
+- [x] Consumption + output posting through inventory service
+- [x] Cost calculation (materials + labor + overhead)
 - [ ] Link sales-order shortages to production orders
-- [ ] Screens: 5 Production screens
-- [ ] Exit: cost and stock effects tested
+- [x] Production order list, draft editing, completion, and costing details screen
+- [x] Exit: cost and stock effects tested in backend API tests and frontend lifecycle test
 
 ## Phase 9 — Assets
 - [ ] Asset, assignment, maintenance models + services
