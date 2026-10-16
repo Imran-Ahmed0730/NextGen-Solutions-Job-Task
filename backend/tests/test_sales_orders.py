@@ -22,6 +22,7 @@ from app.modules.inventory.models import (
     StockTransaction,
 )
 from app.modules.inventory.service import post_stock_movement
+from app.modules.money_accounts.models import MoneyAccount, MoneyAccountType
 from app.modules.product_categories.models import ProductCategory
 from app.modules.products.models import Product, ProductType
 from app.modules.sales.models import SalesDelivery, SalesDeliveryLine, SalesOrder
@@ -115,6 +116,18 @@ def sales_order_fixture(
                 year=2026,
                 last_number=0,
                 padding=4,
+            ),
+            DocumentSequence(
+                doc_type="CUSTOMER_COLLECTION",
+                prefix="COL-",
+                year=2026,
+                last_number=0,
+                padding=4,
+            ),
+            MoneyAccount(
+                name="Sales Cycle Cash",
+                type=MoneyAccountType.CASH,
+                opening_balance=Decimal("0.00"),
             ),
         ]
     )
@@ -606,6 +619,17 @@ def test_invoice_posts_from_delivery_updates_due_and_preserves_cogs(
     assert invoice["cogs_total"] == "7.50"
     assert invoice["lines"][0]["unit_cost_cogs"] == "2.5000"
     assert result["credit_limit_warning"] is False
+    balance = db_session.get(StockBalance, (product.id, warehouse.id))
+    assert balance is not None
+    assert balance.qty_on_hand == Decimal("7.000")
+    movement = db_session.scalar(
+        select(StockTransaction).where(
+            StockTransaction.movement_type == MovementType.SALE_DELIVERY
+        )
+    )
+    assert movement is not None
+    assert movement.qty_signed == Decimal("-3.000")
+    assert movement.unit_cost == Decimal("2.5000")
     statement = client.get(f"/api/v1/customers/{customer.id}/statement", headers=headers)
     assert statement.json()["balance"] == "14.40"
     assert [item["type"] for item in statement.json()["entries"]] == [
@@ -637,6 +661,25 @@ def test_invoice_posts_from_delivery_updates_due_and_preserves_cogs(
         f"/api/v1/customers/{customer.id}/statement", headers=headers
     )
     assert updated_statement.json()["balance"] == "24.00"
+
+    account = db_session.scalar(select(MoneyAccount))
+    assert account is not None
+    collection = client.post(
+        "/api/v1/money/collections",
+        headers=headers,
+        json={
+            "doc_date": "2026-10-27",
+            "customer_id": customer.id,
+            "account_id": account.id,
+            "amount": "5.00",
+            "method_ref": "SALES-CYCLE-001",
+        },
+    )
+    assert collection.status_code == 201
+    collected_statement = client.get(
+        f"/api/v1/customers/{customer.id}/statement", headers=headers
+    )
+    assert collected_statement.json()["balance"] == "19.00"
 
 
 def test_invoice_credit_limit_warns_or_blocks_without_partial_writes(

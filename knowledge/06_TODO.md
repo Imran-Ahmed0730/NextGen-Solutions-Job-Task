@@ -127,8 +127,9 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
       customer-due reduction, audit, permissions, and screen
 - [x] Sales Return screen `/sales-returns`
 - [x] Order tracking (Ordered/Available/Reserved/Produced/Delivered/Remaining)
-- [ ] Screens: 9 Sales screens
-- [ ] Exit: stock + COGS + due tested together
+- [x] Screens: all 9 Sales workflows implemented across the quotation, Sales Order/delivery,
+      invoice, and return screens
+- [x] Exit: end-to-end order → delivery → invoice → collection test verifies stock, COGS, and due
 
 ## Phase 8 — Production
 - [ ] BOM + lines
