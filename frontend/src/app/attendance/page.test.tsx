@@ -105,7 +105,7 @@ describe('AttendancePage', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Save attendance' }));
 
-    await screen.findByText('LATE');
+    await screen.findByText('Late');
     expect(mocks.apiRequest).toHaveBeenCalledWith(
       '/api/v1/attendance/4',
       expect.objectContaining({

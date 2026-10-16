@@ -74,9 +74,11 @@ describe('StockLedgerPage', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
-    expect(await screen.findByText('TRANSFER_IN')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Stock received from another warehouse'),
+    ).toBeInTheDocument();
     expect(screen.getByText('8.000')).toBeInTheDocument();
-    const sourceLink = screen.getByRole('link', { name: 'STOCK_TRANSFER #9' });
+    const sourceLink = screen.getByRole('link', { name: 'Stock transfer #9' });
     expect(sourceLink).toHaveAttribute('href', '/stock-transfers?document_id=9');
     await waitFor(() => {
       expect(mocks.apiRequest).toHaveBeenCalledWith(

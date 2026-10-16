@@ -437,7 +437,10 @@ price list may be soft-deleted; suspended/referenced product records cannot be h
 Product prices validate product and price-list references and prevent duplicates.
 
 Company settings are implemented as a flexible key/value store. Document numbering is implemented
-as typed sequences with locking, gap-free number generation.
+as typed sequences with locking, gap-free number generation. The frontend presents supported
+document types using plain-language names, formats ledger transaction/movement/source types and
+document statuses for users, and groups role permissions by work area with technical codes available
+on demand.
 
 The current migration chain is:
 

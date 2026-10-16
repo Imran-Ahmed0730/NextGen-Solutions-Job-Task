@@ -7,6 +7,7 @@ import { RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
+import { sourceTypeLabel, stockMovementLabel } from '@/lib/display-labels';
 import { showErrorToast } from '@/lib/notifications';
 
 type WarehouseOption = {
@@ -149,7 +150,7 @@ function StockLedgerContent() {
         : entry.source_type === 'STOCK_ADJUSTMENT'
           ? `/stock-adjustments?document_id=${entry.source_id}`
           : null;
-    const label = `${entry.source_type} #${entry.source_id}`;
+    const label = `${sourceTypeLabel(entry.source_type)} #${entry.source_id}`;
     return path ? (
       <a className="font-medium text-emerald-700 hover:underline" href={path}>
         {label}
@@ -289,7 +290,7 @@ function StockLedgerContent() {
                       `Warehouse ${entry.warehouse_id}`}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                    {entry.movement_type}
+                    {stockMovementLabel(entry.movement_type)}
                   </td>
                   <td
                     className={`whitespace-nowrap px-4 py-3 text-right font-medium ${

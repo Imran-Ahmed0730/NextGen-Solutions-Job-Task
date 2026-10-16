@@ -7,6 +7,7 @@ import { RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 import { stockAdjustmentSchema } from '@/lib/auth-validation';
 
@@ -429,7 +430,7 @@ function StockAdjustmentsContent() {
                   </td>
                   <td className="px-4 py-3">
                     <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
-                      {adjustment.status}
+                      {statusLabel(adjustment.status)}
                     </span>
                   </td>
                 </tr>

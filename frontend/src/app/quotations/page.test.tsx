@@ -87,10 +87,10 @@ describe('QuotationsPage', () => {
     render(<QuotationsPage />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Send' }));
-    await screen.findByText('SENT');
+    await screen.findByText('Sent');
 
     fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
-    await screen.findByText('ACCEPTED');
+    await screen.findByText('Accepted');
 
     fireEvent.click(screen.getByRole('button', { name: 'Convert' }));
     fireEvent.change(screen.getByRole('combobox', { name: 'Conversion warehouse' }), {

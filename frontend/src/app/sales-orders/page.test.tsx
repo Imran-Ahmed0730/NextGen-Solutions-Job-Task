@@ -225,7 +225,7 @@ describe('SalesOrdersPage', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Reserve quantity for line 1' }));
 
-    await screen.findByText(/Reservation 91: ACTIVE/);
+    await screen.findByText(/Reservation 91: Active/);
     expect(mocks.apiRequest).toHaveBeenCalledWith(
       '/api/v1/sales/orders/11/lines/1/reservations',
       expect.objectContaining({

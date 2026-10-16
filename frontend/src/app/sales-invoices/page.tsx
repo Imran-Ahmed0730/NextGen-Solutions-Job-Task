@@ -7,6 +7,7 @@ import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import { salesInvoiceSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast, showToast } from '@/lib/notifications';
 
@@ -246,7 +247,7 @@ function SalesInvoicesContent() {
                     <td className="px-4 py-3">
                       Customer {invoice.customer_id} / delivery {invoice.delivery_id}
                     </td>
-                    <td className="px-4 py-3">{invoice.status}</td>
+                    <td className="px-4 py-3">{statusLabel(invoice.status)}</td>
                     <td className="px-4 py-3 text-right">
                       {invoice.total} / {invoice.cogs_total}
                     </td>

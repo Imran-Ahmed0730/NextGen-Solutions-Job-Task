@@ -8,6 +8,7 @@ import { FieldError, RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import {
   salesDeliverySchema,
   salesOrderReservationSchema,
@@ -591,7 +592,7 @@ function SalesOrdersContent() {
                         {options.warehouses.find((item) => item.id === order.warehouse_id)?.name ??
                           `Warehouse ${order.warehouse_id}`}
                       </td>
-                      <td className="px-4 py-3">{order.status}</td>
+                      <td className="px-4 py-3">{statusLabel(order.status)}</td>
                       <td className="px-4 py-3 text-right">{order.total}</td>
                       <td className="px-4 py-3">
                         <IconActionButton
@@ -669,7 +670,7 @@ function SalesOrdersContent() {
                                     key={reservation.id}
                                     className="flex flex-wrap items-center gap-2 text-xs text-slate-600"
                                   >
-                                    Reservation {reservation.id}: {reservation.status} · qty{' '}
+                                    Reservation {reservation.id}: {statusLabel(reservation.status)} · qty{' '}
                                     {reservation.qty}, consumed {reservation.qty_consumed}, released{' '}
                                     {reservation.qty_released}
                                     {canReserve && reservation.status === 'ACTIVE' && (
@@ -755,7 +756,7 @@ function SalesOrdersContent() {
                                 {order.deliveries.map((delivery) => (
                                   <li key={delivery.id}>
                                     <p className="font-medium text-slate-800">
-                                      {delivery.doc_no} · {delivery.doc_date} · {delivery.status}
+                                      {delivery.doc_no} · {delivery.doc_date} · {statusLabel(delivery.status)}
                                     </p>
                                     {delivery.lines.map((line) => (
                                       <p key={line.id}>

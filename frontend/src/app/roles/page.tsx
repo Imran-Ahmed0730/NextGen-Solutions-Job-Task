@@ -13,6 +13,7 @@ import {
 } from '@/components/forms/field-error';
 import { apiRequest } from '@/lib/auth-api';
 import { roleSchema } from '@/lib/auth-validation';
+import { moduleLabel, permissionLabel } from '@/lib/display-labels';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 
@@ -32,6 +33,13 @@ function RolesContent() {
   const [permissions, setPermissions] = useState<PermissionRecord[]>([]);
   const [selected, setSelected] = useState<RoleRecord | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const permissionsByModule = permissions.reduce<Record<string, PermissionRecord[]>>(
+    (groups, permission) => {
+      (groups[permission.module] ??= []).push(permission);
+      return groups;
+    },
+    {},
+  );
 
   async function load() {
     try {
@@ -160,22 +168,39 @@ function RolesContent() {
             aria-invalid={Boolean(errors.permission_ids)}
             aria-describedby={errors.permission_ids ? 'role-permissions-error' : undefined}
           >
-            <legend className="px-1 text-sm font-medium">Permissions</legend>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {permissions.map((permission) => (
-                <label key={permission.id} className="flex items-start gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    name="permission_ids"
-                    value={permission.id}
-                    defaultChecked={selected?.permission_ids.includes(permission.id) ?? false}
-                    className="mt-1"
-                  />
-                  <span>
-                    <span className="font-medium">{permission.code}</span>
-                    {permission.description && <span className="block text-xs text-slate-500">{permission.description}</span>}
-                  </span>
-                </label>
+            <legend className="px-1 text-sm font-medium">Permissions by work area</legend>
+            <p className="mb-4 text-xs text-slate-500">
+              Select the tasks this role is allowed to perform.
+            </p>
+            <div className="space-y-5">
+              {Object.entries(permissionsByModule).map(([module, modulePermissions]) => (
+                <section key={module}>
+                  <h3 className="mb-2 text-sm font-semibold text-slate-800">
+                    {moduleLabel(module)}
+                  </h3>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {modulePermissions.map((permission) => (
+                      <label key={permission.id} className="flex items-start gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          name="permission_ids"
+                          value={permission.id}
+                          defaultChecked={selected?.permission_ids.includes(permission.id) ?? false}
+                          className="mt-1"
+                        />
+                        <span className="min-w-0">
+                          <span className="block font-medium">
+                            {permissionLabel(permission.code, permission.description)}
+                          </span>
+                          <details className="mt-0.5 text-xs text-slate-500">
+                            <summary className="w-fit cursor-pointer">Technical permission code</summary>
+                            <code>{permission.code}</code>
+                          </details>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           </fieldset>

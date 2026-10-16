@@ -65,8 +65,8 @@ describe('ApprovalRulesPage', () => {
     render(<ApprovalRulesPage />);
     await screen.findByRole('heading', { name: 'Approval Rules' });
 
-    fireEvent.change(screen.getByRole('textbox', { name: /Document type/ }), {
-      target: { value: 'purchase_order' },
+    fireEvent.change(screen.getByRole('combobox', { name: /Document type/ }), {
+      target: { value: 'PURCHASE_ORDER' },
     });
     fireEvent.change(screen.getByRole('spinbutton', { name: /Minimum amount/ }), {
       target: { value: '1000.00' },
@@ -79,7 +79,7 @@ describe('ApprovalRulesPage', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Create rule' }));
 
-    await screen.findByText('PURCHASE_ORDER');
+    await screen.findByText('Purchase order');
     expect(mocks.apiRequest).toHaveBeenCalledWith(
       '/api/v1/approvals/rules',
       expect.objectContaining({
@@ -94,7 +94,7 @@ describe('ApprovalRulesPage', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Deactivate PURCHASE_ORDER approval rule' }),
+      screen.getByRole('button', { name: 'Deactivate Purchase order approval rule' }),
     );
     await screen.findByText('Inactive');
     await waitFor(() =>

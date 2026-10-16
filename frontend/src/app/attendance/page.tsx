@@ -8,6 +8,7 @@ import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/co
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import {
   attendanceCreateSchema,
   attendanceDateRangeSchema,
@@ -414,7 +415,7 @@ function AttendanceContent() {
                   <span className="font-medium">{record.employee.name}</span>
                   <span className="ml-2 text-xs text-slate-500">{record.employee.code}</span>
                 </td>
-                <td className="px-4 py-3">{record.status}</td>
+                <td className="px-4 py-3">{statusLabel(record.status)}</td>
                 <td className="px-4 py-3">{record.in_time?.slice(0, 5) ?? '—'}</td>
                 <td className="px-4 py-3">{record.out_time?.slice(0, 5) ?? '—'}</td>
                 {canUpdate && (

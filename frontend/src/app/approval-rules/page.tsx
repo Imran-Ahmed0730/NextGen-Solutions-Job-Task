@@ -8,6 +8,7 @@ import { RequiredMark } from '@/components/forms/field-error';
 import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { approvalRuleSchema } from '@/lib/auth-validation';
+import { DOCUMENT_TYPES, documentTypeLabel } from '@/lib/display-labels';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
 type RoleOption = { id: number; name: string };
@@ -164,15 +165,26 @@ function ApprovalRulesContent() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <label className="text-sm font-medium text-slate-700">
               Document type<RequiredMark />
-              <input
-                type="text"
+              <select
                 required
-                maxLength={50}
-                placeholder="e.g. PURCHASE_ORDER"
                 value={docType}
                 onChange={(event) => setDocType(event.target.value)}
                 className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2"
-              />
+              >
+                <option value="">Choose a document type</option>
+                {selected &&
+                  !DOCUMENT_TYPES.some(({ value }) => value === selected.doc_type) && (
+                    <option value={selected.doc_type}>
+                      {documentTypeLabel(selected.doc_type)} (custom type)
+                    </option>
+                  )}
+                {DOCUMENT_TYPES.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <span className="mt-1 block text-xs font-normal text-slate-500">
+                This rule applies to documents of the selected type.
+              </span>
             </label>
             <label className="text-sm font-medium text-slate-700">
               Minimum amount<RequiredMark />
@@ -253,7 +265,7 @@ function ApprovalRulesContent() {
               <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-500">No approval rules configured.</td></tr>
             ) : rules.map((rule) => (
               <tr key={rule.id} className="border-b last:border-0">
-                <td className="px-4 py-3 font-medium">{rule.doc_type}</td>
+                <td className="px-4 py-3 font-medium">{documentTypeLabel(rule.doc_type)}</td>
                 <td className="px-4 py-3">
                   {rule.min_amount} – {rule.max_amount ?? 'No maximum'}
                 </td>
@@ -265,7 +277,7 @@ function ApprovalRulesContent() {
                       {canUpdate && (
                         <IconActionButton
                           icon="edit"
-                          label={`Edit ${rule.doc_type} approval rule`}
+                          label={`Edit ${documentTypeLabel(rule.doc_type)} approval rule`}
                           tooltip="Edit approval rule"
                           disabled={busy}
                           onClick={() => editRule(rule)}
@@ -275,7 +287,7 @@ function ApprovalRulesContent() {
                       {canUpdate && (
                         <IconActionButton
                           icon={rule.is_active ? 'deactivate' : 'activate'}
-                          label={`${rule.is_active ? 'Deactivate' : 'Activate'} ${rule.doc_type} approval rule`}
+                          label={`${rule.is_active ? 'Deactivate' : 'Activate'} ${documentTypeLabel(rule.doc_type)} approval rule`}
                           tooltip={`${rule.is_active ? 'Deactivate' : 'Activate'} approval rule`}
                           disabled={busy}
                           onClick={() => void toggleActive(rule)}

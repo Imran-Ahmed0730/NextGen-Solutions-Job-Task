@@ -7,6 +7,7 @@ import { RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
+import { formatCodeLabel, moneyTransactionLabel, sourceTypeLabel } from '@/lib/display-labels';
 import { showErrorToast } from '@/lib/notifications';
 
 type AccountBalance = {
@@ -154,7 +155,7 @@ function AccountLedgerContent() {
               {accounts.map((account) => (
                 <tr key={account.account_id}>
                   <td className="px-5 py-3 font-medium">{account.account_name}</td>
-                  <td className="px-5 py-3">{account.account_type}</td>
+                  <td className="px-5 py-3">{formatCodeLabel(account.account_type)}</td>
                   <td className="px-5 py-3 text-right tabular-nums">{account.opening_balance}</td>
                   <td className="px-5 py-3 text-right tabular-nums font-semibold">{account.balance}</td>
                   <td className="px-5 py-3">
@@ -187,8 +188,8 @@ function AccountLedgerContent() {
             onChange={selectAccount}
             options={accounts.map((account) => ({
               value: String(account.account_id),
-              label: `${account.account_name} — ${account.account_type}`,
-              searchText: `${account.account_name} ${account.account_type}`,
+              label: `${account.account_name} — ${formatCodeLabel(account.account_type)}`,
+              searchText: `${account.account_name} ${formatCodeLabel(account.account_type)}`,
             }))}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
           />
@@ -248,10 +249,10 @@ function AccountLedgerContent() {
                 {ledger.entries.map((entry) => (
                   <tr key={entry.id}>
                     <td className="whitespace-nowrap px-4 py-3">{new Date(entry.txn_date).toLocaleString()}</td>
-                    <td className="px-4 py-3">{entry.txn_type}</td>
+                    <td className="px-4 py-3">{moneyTransactionLabel(entry.txn_type)}</td>
                     <td className="px-4 py-3">
                       {entry.source_type
-                        ? `${entry.source_type}${entry.source_id === null ? '' : ` #${entry.source_id}`}`
+                        ? `${sourceTypeLabel(entry.source_type)}${entry.source_id === null ? '' : ` #${entry.source_id}`}`
                         : '—'}
                     </td>
                     <td className="px-4 py-3">{entry.note ?? '—'}</td>

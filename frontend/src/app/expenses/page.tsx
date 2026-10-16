@@ -7,6 +7,7 @@ import { useSessionProfile } from '@/components/auth/session-shell';
 import { RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 import { expenseSchema } from '@/lib/auth-validation';
 
@@ -272,7 +273,7 @@ function ExpensesContent() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
-                        {item.status}
+                        {statusLabel(item.status)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{item.note || '—'}</td>
@@ -294,4 +295,3 @@ export default function ExpensesPage() {
     </ProtectedPage>
   );
 }
-

@@ -7,6 +7,7 @@ import { RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 import { goodsReceiptSchema } from '@/lib/auth-validation';
 
@@ -286,8 +287,8 @@ function GoodsReceiptsContent() {
                     onChange={chooseOrder}
                     options={options.orders.map((order) => ({
                       value: String(order.id),
-                      label: `${order.doc_no} — ${order.supplier_name} (${order.status})`,
-                      searchText: `${order.doc_no} ${order.supplier_name} ${order.status}`,
+                      label: `${order.doc_no} — ${order.supplier_name} (${statusLabel(order.status)})`,
+                      searchText: `${order.doc_no} ${order.supplier_name} ${statusLabel(order.status)}`,
                     }))}
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
                   />
@@ -434,7 +435,7 @@ function GoodsReceiptsContent() {
                         `Purchase Order ${receipt.po_id}`}
                     </td>
                     <td className="px-4 py-3 text-right">{receipt.total}</td>
-                    <td className="px-4 py-3">{receipt.status}</td>
+                    <td className="px-4 py-3">{statusLabel(receipt.status)}</td>
                     <td className="px-4 py-3">
                       <button
                         type="button"

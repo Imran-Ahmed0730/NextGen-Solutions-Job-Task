@@ -7,6 +7,7 @@ import { RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 import { physicalCountLinesSchema } from '@/lib/auth-validation';
 
@@ -329,7 +330,7 @@ function PhysicalCountsContent() {
               </h2>
               <p className="mt-1 text-sm text-slate-600">
                 {selectedCount.count_date} · {warehouseName(selectedCount.warehouse_id)} ·{' '}
-                {selectedCount.status}
+                {statusLabel(selectedCount.status)}
               </p>
             </div>
             {canCreate && selectedCount.status === 'COUNTED' && (
@@ -432,7 +433,7 @@ function PhysicalCountsContent() {
                   <td className="px-4 py-3 text-slate-600">
                     {count.counted_lines}/{count.total_lines}
                   </td>
-                  <td className="px-4 py-3">{count.status}</td>
+                  <td className="px-4 py-3">{statusLabel(count.status)}</td>
                   <td className="px-4 py-3">
                     <button
                       type="button"

@@ -8,6 +8,7 @@ import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 import { purchaseOrderSchema } from '@/lib/auth-validation';
 
@@ -495,7 +496,7 @@ function PurchaseOrdersContent() {
                     <td className="px-4 py-3">{supplierName(order.supplier_id)}</td>
                     <td className="px-4 py-3">{warehouseName(order.warehouse_id)}</td>
                     <td className="px-4 py-3 text-right">{order.total}</td>
-                    <td className="px-4 py-3">{order.status}</td>
+                    <td className="px-4 py-3">{statusLabel(order.status)}</td>
                     <td className="space-x-3 whitespace-nowrap px-4 py-3">
                       <IconActionButton
                         icon="view"

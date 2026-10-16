@@ -7,6 +7,7 @@ import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
 import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import {
   assetAssignmentSchema,
   assetMaintenanceSchema,
@@ -338,7 +339,7 @@ function AssetsContent() {
                   </h2>
                   <p className="mt-1 text-sm text-slate-600">
                     {asset.category} · {asset.location} ·{' '}
-                    {asset.status.replaceAll('_', ' ')} ·{' '}
+                    {statusLabel(asset.status)} ·{' '}
                     {asset.is_active ? 'Active' : 'Deleted'}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">

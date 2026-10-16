@@ -6,6 +6,7 @@ import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { RequiredMark } from '@/components/forms/field-error';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import {
   payrollDeductionSchema,
   payrollPostSchema,
@@ -306,7 +307,7 @@ function PayrollContent() {
                       {monthNames[run.period_month - 1]} {run.period_year}
                     </span>
                     <span className="mt-1 block text-sm text-slate-600">
-                      {run.status} · BDT {run.total_amount}
+                      {statusLabel(run.status)} · BDT {run.total_amount}
                     </span>
                     {run.doc_no && <span className="text-xs text-slate-500">{run.doc_no}</span>}
                   </button>

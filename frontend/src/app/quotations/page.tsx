@@ -8,6 +8,7 @@ import { RequiredMark, FieldError } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import { quotationConversionSchema, quotationSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
@@ -227,7 +228,7 @@ function QuotationsContent() {
         `/api/v1/sales/quotations/${quotation.id}/${action}`,
         { method: 'POST' },
       );
-      showSuccessToast(`Quotation ${updated.doc_no} ${updated.status.toLowerCase()}.`);
+      showSuccessToast(`Quotation ${updated.doc_no} ${statusLabel(updated.status).toLowerCase()}.`);
       try {
         await reload(offset);
       } catch (cause) {
@@ -552,7 +553,7 @@ function QuotationsContent() {
                       {options.customers.find((item) => item.id === quotation.customer_id)?.name ??
                         `Customer ${quotation.customer_id}`}
                     </td>
-                    <td className="px-4 py-3">{quotation.status}</td>
+                    <td className="px-4 py-3">{statusLabel(quotation.status)}</td>
                     <td className="px-4 py-3 text-right">{quotation.total}</td>
                     {(canUpdate || canConvert) && (
                       <td className="px-4 py-3">

@@ -8,6 +8,7 @@ import { FieldError, RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
+import { statusLabel } from '@/lib/display-labels';
 import {
   productionOrderCompleteSchema,
   productionOrderSchema,
@@ -394,7 +395,7 @@ function ProductionOrdersContent() {
                   {options.boms.find((bom) => bom.id === order.bom_id)?.code ?? `BOM ${order.bom_id}`}
                 </td>
                 <td className="px-4 py-3">{order.planned_qty} / {order.actual_qty ?? '—'}</td>
-                <td className="px-4 py-3">{order.status.replace('_', ' ')}</td>
+                <td className="px-4 py-3">{statusLabel(order.status)}</td>
                 <td className="px-4 py-3">
                   {order.unit_cost === null ? '—' : `${order.unit_cost} / unit`}
                 </td>

@@ -14,6 +14,7 @@ import {
 } from '@/components/forms/field-error';
 import { ActionIcon, IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
+import { DOCUMENT_TYPES, documentTypeLabel } from '@/lib/display-labels';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 import { documentNumberingSchema } from '@/lib/auth-validation';
 
@@ -81,7 +82,7 @@ function DocumentNumberingContent() {
   async function deleteSequence(sequence: SequenceRecord) {
     const confirmation = await Swal.fire({
       title: 'Delete sequence?',
-      text: `Are you sure you want to delete "${sequence.doc_type} ${sequence.year}"?`,
+      text: `Are you sure you want to delete the ${documentTypeLabel(sequence.doc_type)} sequence for ${sequence.year}?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#b91c1c',
@@ -138,9 +139,9 @@ function DocumentNumberingContent() {
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 sm:col-span-2">
             <p className="font-semibold">How document numbering works</p>
             <p className="mt-1">
-              Create one sequence for each document type and year. The type must match the
-              document being posted—for example, use <span className="font-semibold">PAYROLL</span>{' '}
-              for payroll runs. The system combines the prefix, year, and next number. With prefix
+              Create one sequence for each document type and year. Choose a document type below;
+              for example, choose <span className="font-semibold">Payroll run</span> for payroll.
+              The system combines the prefix, year, and next number. With prefix
               <span className="font-mono"> PAY-</span>, year <span className="font-mono">2026</span>,
               last number <span className="font-mono">0</span>, and padding{' '}
               <span className="font-mono">4</span>, the first number will be{' '}
@@ -154,41 +155,31 @@ function DocumentNumberingContent() {
 
           <label className="block text-sm font-medium">
             Document type<RequiredMark />
-            <input type="text"
-              name="doc_type"
-              placeholder="e.g. INVOICE"
+            <select
+              name={selected ? undefined : 'doc_type'}
               defaultValue={selected?.doc_type ?? ''}
-              maxLength={50}
               required
-              readOnly={selected !== null}
+              disabled={selected !== null}
               aria-invalid={Boolean(errors.doc_type)}
               aria-describedby={errors.doc_type ? 'doc-type-error' : undefined}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-              list="document-type-options"
-            />
-            <datalist id="document-type-options">
-              <option value="CUSTOMER_COLLECTION" label="Customer collection" />
-              <option value="DELIVERY" label="Sales delivery" />
-              <option value="DIRECT_PURCHASE" label="Direct purchase" />
-              <option value="EXPENSE" label="Expense" />
-              <option value="FUND_TRANSFER" label="Fund transfer" />
-              <option value="GOODS_RECEIPT" label="Goods receipt" />
-              <option value="INCOME" label="Income" />
-              <option value="INVOICE" label="Sales invoice" />
-              <option value="PAYROLL" label="Payroll run" />
-              <option value="PHYSICAL_COUNT" label="Physical stock count" />
-              <option value="PRODUCTION_ORDER" label="Production order" />
-              <option value="PURCHASE_ORDER" label="Purchase order" />
-              <option value="PURCHASE_RETURN" label="Purchase return" />
-              <option value="QUOTATION" label="Quotation" />
-              <option value="SALES_ORDER" label="Sales order" />
-              <option value="SALES_RETURN" label="Sales return" />
-              <option value="STOCK_ADJUSTMENT" label="Stock adjustment" />
-              <option value="STOCK_TRANSFER" label="Stock transfer" />
-              <option value="SUPPLIER_PAYMENT" label="Supplier payment" />
-            </datalist>
+            >
+              <option value="">Choose a document type</option>
+              {selected &&
+                !DOCUMENT_TYPES.some(({ value }) => value === selected.doc_type) && (
+                  <option value={selected.doc_type}>
+                    {documentTypeLabel(selected.doc_type)} (custom type)
+                  </option>
+                )}
+              {DOCUMENT_TYPES.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            {selected && (
+              <input type="hidden" name="doc_type" value={selected.doc_type} />
+            )}
             <span className="mt-1 block text-xs font-normal text-slate-500">
-              Start typing to see supported document types, then choose the matching type.
+              Choose the kind of document this sequence will number.
             </span>
             <FieldError id="doc-type-error" message={errors.doc_type} />
           </label>
@@ -304,7 +295,9 @@ function DocumentNumberingContent() {
           <tbody className="divide-y divide-slate-100">
             {sequences.map((sequence) => (
               <tr key={sequence.id} className="hover:bg-slate-50/60">
-                <td className="px-4 py-3 font-medium text-slate-900">{sequence.doc_type}</td>
+                <td className="px-4 py-3 font-medium text-slate-900">
+                  {documentTypeLabel(sequence.doc_type)}
+                </td>
                 <td className="px-4 py-3 text-slate-600">{sequence.prefix}</td>
                 <td className="px-4 py-3 text-slate-600">{sequence.year}</td>
                 <td className="px-4 py-3 text-slate-600">{sequence.last_number}</td>
@@ -313,7 +306,7 @@ function DocumentNumberingContent() {
                   {profile?.permissions.includes('master_data.document_numbering.update') && (
                     <IconActionButton
                       icon="edit"
-                      label={`Edit ${sequence.doc_type}`}
+                      label={`Edit ${documentTypeLabel(sequence.doc_type)}`}
                       onClick={() => {
                         setErrors({});
                         setSelected(sequence);
@@ -325,7 +318,7 @@ function DocumentNumberingContent() {
                   {profile?.permissions.includes('master_data.document_numbering.delete') && (
                     <IconActionButton
                       icon="delete"
-                      label={`Delete ${sequence.doc_type}`}
+                      label={`Delete ${documentTypeLabel(sequence.doc_type)}`}
                       onClick={() => void deleteSequence(sequence)}
                       className="p-2 text-rose-700 hover:bg-rose-50"
                     />
@@ -337,7 +330,7 @@ function DocumentNumberingContent() {
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                   No sequences yet. Add one for each document type and year before posting, such as
-                  PAYROLL for payroll runs.
+                  Payroll run.
                 </td>
               </tr>
             )}

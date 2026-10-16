@@ -139,14 +139,14 @@ describe('ProductionOrdersPage', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    await screen.findByText('IN PROGRESS');
+    await screen.findByText('In progress');
     fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Actual output quantity' }), {
       target: { value: '5.000' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Post production' }));
 
-    await screen.findByText('COMPLETED');
+    await screen.findByText('Completed');
     expect(mocks.apiRequest).toHaveBeenCalledWith(
       '/api/v1/production/orders/5/complete',
       expect.objectContaining({
