@@ -119,7 +119,7 @@ describe('ProductionOrdersPage', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Sales Order line' }), {
       target: { value: '6' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Planned quantity' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Planned quantity' }), {
       target: { value: '4.000' },
     });
     fireEvent.change(screen.getByRole('combobox', { name: 'Warehouse' }), {
@@ -141,7 +141,7 @@ describe('ProductionOrdersPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
     await screen.findByText('IN PROGRESS');
     fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Actual output quantity' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Actual output quantity' }), {
       target: { value: '5.000' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Post production' }));

@@ -10,10 +10,15 @@ EmployeeCode = Annotated[
 EmployeeName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=150)
 ]
-OptionalMobile = Annotated[
+EmployeeMobile = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, pattern=r"^01[3-9]\d{8}$"),
-] | None
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=11,
+        max_length=11,
+        pattern=r"^01[3-9]\d{8}$",
+    ),
+]
 OptionalDesignation = Annotated[
     str, StringConstraints(strip_whitespace=True, max_length=100)
 ] | None
@@ -26,23 +31,18 @@ BaseSalary = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=2)]
 class EmployeeCreate(BaseModel):
     code: EmployeeCode
     name: EmployeeName
-    mobile: OptionalMobile = None
+    mobile: EmployeeMobile
     email: EmailStr | None = None
     designation: OptionalDesignation = None
     department: OptionalDepartment = None
     join_date: date
     base_salary: BaseSalary
 
-    @field_validator("mobile", mode="before")
-    @classmethod
-    def blank_mobile_is_none(cls, value: object) -> object:
-        return None if isinstance(value, str) and not value.strip() else value
-
 
 class EmployeeUpdate(BaseModel):
     code: EmployeeCode | None = None
     name: EmployeeName | None = None
-    mobile: OptionalMobile = None
+    mobile: EmployeeMobile | None = None
     email: EmailStr | None = None
     designation: OptionalDesignation = None
     department: OptionalDepartment = None
@@ -51,8 +51,10 @@ class EmployeeUpdate(BaseModel):
 
     @field_validator("mobile", mode="before")
     @classmethod
-    def blank_mobile_is_none(cls, value: object) -> object:
-        return None if isinstance(value, str) and not value.strip() else value
+    def mobile_cannot_be_cleared(cls, value: object) -> object:
+        if value is None or isinstance(value, str) and not value.strip():
+            raise ValueError("Mobile number is required")
+        return value
 
 
 class EmployeeResponse(BaseModel):

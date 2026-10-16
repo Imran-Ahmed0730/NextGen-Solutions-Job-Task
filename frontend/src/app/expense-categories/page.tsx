@@ -162,7 +162,7 @@ function ExpenseCategoriesContent() {
         >
           <label className="block text-sm font-medium sm:col-span-2">
             Category name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Transport"
               defaultValue={selected?.name ?? ''}

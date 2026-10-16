@@ -160,7 +160,7 @@ function WarehousesContent() {
 
           <label className="block text-sm font-medium">
             Warehouse name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Main Store"
               defaultValue={selected?.name ?? ''}
@@ -176,7 +176,7 @@ function WarehousesContent() {
 
           <label className="block text-sm font-medium">
             Warehouse code<RequiredMark />
-            <input
+            <input type="text"
               name="code"
               placeholder="e.g. MS"
               defaultValue={selected?.code ?? ''}
@@ -192,7 +192,7 @@ function WarehousesContent() {
 
           <label className="block text-sm font-medium sm:col-span-2">
             Address
-            <input
+            <input type="text"
               name="address"
               placeholder="Optional street, area, and city"
               defaultValue={selected?.address ?? ''}

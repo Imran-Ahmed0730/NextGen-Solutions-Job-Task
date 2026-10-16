@@ -66,7 +66,7 @@ export default function ResetPasswordPage() {
         <form noValidate className="mt-6 space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
             One-time token from your email<RequiredMark />
-            <input
+            <input type="text"
               name="token"
               maxLength={512}
               placeholder="Paste the one-time token"

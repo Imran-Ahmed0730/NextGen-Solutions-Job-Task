@@ -246,7 +246,7 @@ function SupplierPaymentsContent() {
             </label>
             <label className="text-sm font-medium text-slate-700 md:col-span-2">
               Note
-              <input aria-label="Payment note" maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Optional payment note" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
+              <input type="text" aria-label="Payment note" maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Optional payment note" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
             </label>
           </div>
 

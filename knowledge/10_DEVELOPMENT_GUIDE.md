@@ -30,7 +30,7 @@ implemented; see [Section 10](#10-implementation-status).
 | Layer | Current implementation |
 |---|---|
 | Web | Next.js 14 App Router, React 18, TypeScript, Tailwind CSS |
-| Form validation | Validate in both frontend (Zod, for immediate UX feedback) and backend (Pydantic, mandatory and authoritative); keep the rules consistent and map API validation errors inline |
+| Form validation | Validate in both frontend (Zod, for immediate UX feedback) and backend (Pydantic, mandatory and authoritative); keep rules consistent, give each HTML input an explicit semantic type, and map API validation errors inline |
 | UI components | Accessible StatusSwitch toggle, standardized ActionIcon and IconActionButton controls, searchable Select2-style entity selectors, and a shared required-field marker |
 | Notifications | SweetAlert2 toast helper |
 | API | FastAPI, Pydantic, SQLAlchemy 2 |
@@ -828,7 +828,8 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 
 ### Implemented Phase 10 slice — Employee master
 
-- Employee records include unique code, name, optional contact/job details, joining date, and
+- Employee records include unique code, name, required 11-digit Bangladesh mobile number, optional
+  email/job details, joining date, and
   monthly base salary using `DECIMAL(18,2)`.
 - The module supports search, pagination, update, soft-delete/restore, audit, and four
   `employees.*` permissions. Employee activity uses the shared `is_active`/`deleted_at` fields;

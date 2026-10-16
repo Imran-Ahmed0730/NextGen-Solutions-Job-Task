@@ -137,12 +137,12 @@ function SuppliersContent() {
         >
           <label className="block text-sm font-medium">
             Code<RequiredMark />
-            <input name="code" defaultValue={selected?.code ?? ''} minLength={1} maxLength={30} required placeholder="e.g. SUP-001" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.code)} aria-describedby={errors.code ? 'supplier-code-error' : undefined} />
+            <input type="text" name="code" defaultValue={selected?.code ?? ''} minLength={1} maxLength={30} required placeholder="e.g. SUP-001" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.code)} aria-describedby={errors.code ? 'supplier-code-error' : undefined} />
             <FieldError id="supplier-code-error" message={errors.code} />
           </label>
           <label className="block text-sm font-medium">
             Name<RequiredMark />
-            <input name="name" defaultValue={selected?.name ?? ''} minLength={1} maxLength={255} required placeholder="Supplier or company name" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'supplier-name-error' : undefined} />
+            <input type="text" name="name" defaultValue={selected?.name ?? ''} minLength={1} maxLength={255} required placeholder="Supplier or company name" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'supplier-name-error' : undefined} />
             <FieldError id="supplier-name-error" message={errors.name} />
           </label>
           <label className="block text-sm font-medium">

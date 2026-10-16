@@ -192,7 +192,7 @@ function MoneyAccountsContent() {
         >
           <label className="block text-sm font-medium">
             Account name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Main Bank Account"
               defaultValue={selected?.name ?? ''}
@@ -246,7 +246,7 @@ function MoneyAccountsContent() {
 
           <label className="block text-sm font-medium">
             Account number
-            <input
+            <input type="text"
               name="account_no"
               placeholder="Optional account or wallet number"
               defaultValue={selected?.account_no ?? ''}

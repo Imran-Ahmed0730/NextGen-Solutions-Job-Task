@@ -63,11 +63,11 @@ export default function ProfilePage() {
         <form noValidate className="mt-6 max-w-xl space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
             Username
-            <input value={profile.username} placeholder="Username" readOnly className="mt-1 w-full rounded-md border bg-slate-50 px-3 py-2" />
+            <input type="text" value={profile.username} placeholder="Username" readOnly className="mt-1 w-full rounded-md border bg-slate-50 px-3 py-2" />
           </label>
           <label className="block text-sm font-medium">
             Full name<RequiredMark />
-            <input name="full_name" placeholder="Enter your full name" defaultValue={profile.full_name} minLength={1} maxLength={255} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'profile-full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input type="text" name="full_name" placeholder="Enter your full name" defaultValue={profile.full_name} minLength={1} maxLength={255} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'profile-full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="profile-full-name-error" message={errors.full_name} />
           </label>
           <label className="block text-sm font-medium">

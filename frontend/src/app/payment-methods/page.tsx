@@ -159,7 +159,7 @@ function PaymentMethodsContent() {
         >
           <label className="block text-sm font-medium">
             Name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Cash"
               defaultValue={selected?.name ?? ''}

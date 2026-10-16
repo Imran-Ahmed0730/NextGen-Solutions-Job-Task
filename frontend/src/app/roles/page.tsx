@@ -148,7 +148,7 @@ function RolesContent() {
         <form key={selected?.id ?? 'new-role'} noValidate className="space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
             Role name<RequiredMark />
-            <input name="name" placeholder="e.g. Store Manager" minLength={1} maxLength={100} required aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'role-name-error' : undefined} defaultValue={selected?.name ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input type="text" name="name" placeholder="e.g. Store Manager" minLength={1} maxLength={100} required aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'role-name-error' : undefined} defaultValue={selected?.name ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="role-name-error" message={errors.name} />
           </label>
           <label className="block text-sm font-medium">

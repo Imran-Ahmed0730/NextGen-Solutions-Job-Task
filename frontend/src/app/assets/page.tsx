@@ -195,7 +195,7 @@ function AssetsContent() {
         >
           <label className="text-sm font-medium">
             Asset code<RequiredMark />
-            <input
+            <input type="text"
               name="asset_code"
               placeholder="e.g. AST-001"
               defaultValue={selected?.asset_code ?? ''}
@@ -208,7 +208,7 @@ function AssetsContent() {
           </label>
           <label className="text-sm font-medium">
             Asset name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Office printer"
               defaultValue={selected?.name ?? ''}
@@ -221,7 +221,7 @@ function AssetsContent() {
           </label>
           <label className="text-sm font-medium">
             Category<RequiredMark />
-            <input
+            <input type="text"
               name="category"
               placeholder="e.g. Office equipment"
               defaultValue={selected?.category ?? ''}
@@ -267,7 +267,7 @@ function AssetsContent() {
           </label>
           <label className="text-sm font-medium">
             Current location<RequiredMark />
-            <input
+            <input type="text"
               name="location"
               placeholder="e.g. Main office"
               defaultValue={selected?.location ?? ''}
@@ -414,7 +414,7 @@ function AssetsContent() {
                     <>
                       <label className="text-sm font-medium">
                         Assigned location<RequiredMark />
-                        <input
+                        <input type="text"
                           name="location"
                           placeholder="e.g. Accounts office"
                           required

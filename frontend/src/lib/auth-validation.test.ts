@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   changePasswordSchema,
   customerCollectionSchema,
+  customerSchema,
+  employeeSchema,
   expenseCategorySchema,
   forgotPasswordSchema,
   incomeCategorySchema,
@@ -21,6 +23,7 @@ import {
   salesReturnSchema,
   stockAdjustmentSchema,
   supplierPaymentSchema,
+  supplierSchema,
   unitSchema,
   userSchema,
   warehouseSchema,
@@ -193,6 +196,49 @@ describe('auth-validation schemas', () => {
         mobile: '017123456', // Too short
       }).success,
     ).toBe(false);
+  });
+
+  it('requires and validates employee mobile numbers', () => {
+    const employee = {
+      code: 'EMP-001',
+      name: 'Ayesha Rahman',
+      mobile: '01712345678',
+      email: '',
+      designation: '',
+      department: '',
+      join_date: '2024-02-01',
+      base_salary: '25000.00',
+    };
+    expect(employeeSchema.safeParse(employee).success).toBe(true);
+    expect(employeeSchema.safeParse({ ...employee, mobile: '' }).success).toBe(false);
+    expect(employeeSchema.safeParse({ ...employee, mobile: 'abc' }).success).toBe(false);
+  });
+
+  it('validates optional customer and supplier mobile numbers consistently', () => {
+    const customer = {
+      code: 'CUS-001',
+      name: 'Customer',
+      mobile: 'abc',
+      email: null,
+      address: null,
+      credit_limit: '0',
+      opening_due: '0',
+      price_list_id: null,
+      is_active: true,
+    };
+    const supplier = {
+      code: 'SUP-001',
+      name: 'Supplier',
+      mobile: 'abc',
+      email: null,
+      address: null,
+      opening_due: '0',
+      is_active: true,
+    };
+    expect(customerSchema.safeParse(customer).success).toBe(false);
+    expect(supplierSchema.safeParse(supplier).success).toBe(false);
+    expect(customerSchema.safeParse({ ...customer, mobile: null }).success).toBe(true);
+    expect(supplierSchema.safeParse({ ...supplier, mobile: null }).success).toBe(true);
   });
 
   it('validates username format in userSchema', () => {

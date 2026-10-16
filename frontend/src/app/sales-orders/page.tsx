@@ -446,7 +446,7 @@ function SalesOrdersContent() {
             </label>
             <label className="space-y-1 text-sm font-medium text-slate-700">
               Discount
-              <input
+              <input type="number" step="any"
                 inputMode="decimal"
                 value={discount}
                 onChange={(event) => setDiscount(event.target.value)}
@@ -478,7 +478,7 @@ function SalesOrdersContent() {
                 </label>
                 <label className="space-y-1 text-sm text-slate-700">
                   Quantity <RequiredMark />
-                  <input
+                  <input type="number" step="any"
                     required
                     inputMode="decimal"
                     aria-label={`Quantity ${index + 1}`}
@@ -490,7 +490,7 @@ function SalesOrdersContent() {
                 </label>
                 <label className="space-y-1 text-sm text-slate-700">
                   Unit price <RequiredMark />
-                  <input
+                  <input type="number" step="any"
                     required
                     inputMode="decimal"
                     aria-label={`Unit price ${index + 1}`}
@@ -640,7 +640,7 @@ function SalesOrdersContent() {
                                   <div className="flex flex-wrap items-center gap-2">
                                     <label className="text-xs text-slate-600">
                                       Reserve quantity <RequiredMark />
-                                      <input
+                                      <input type="number" step="any"
                                         required
                                         aria-label={`Reserve quantity for line ${line.id}`}
                                         inputMode="decimal"
@@ -725,7 +725,7 @@ function SalesOrdersContent() {
                                         className="text-xs font-medium text-slate-600"
                                       >
                                         Delivery quantity for line {index + 1}
-                                        <input
+                                        <input type="number" step="any"
                                           aria-label={`Delivery quantity for line ${line.id}`}
                                           inputMode="decimal"
                                           value={deliveryQuantities[line.id] ?? ''}

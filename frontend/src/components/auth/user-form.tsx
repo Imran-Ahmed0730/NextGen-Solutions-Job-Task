@@ -122,7 +122,7 @@ export function UserForm({ userId }: { userId: number | null }) {
         <form key={record?.id ?? 'new'} noValidate className="mt-6 max-w-2xl space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
             Username<RequiredMark />
-            <input
+            <input type="text"
               name="username"
               placeholder="Choose a username"
               defaultValue={record?.username}
@@ -140,7 +140,7 @@ export function UserForm({ userId }: { userId: number | null }) {
           </label>
           <label className="block text-sm font-medium">
             Full name<RequiredMark />
-            <input name="full_name" placeholder="Enter the user's full name" defaultValue={record?.full_name} minLength={1} maxLength={255} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
+            <input type="text" name="full_name" placeholder="Enter the user's full name" defaultValue={record?.full_name} minLength={1} maxLength={255} required aria-invalid={Boolean(errors.full_name)} aria-describedby={errors.full_name ? 'full-name-error' : undefined} className="mt-1 w-full rounded-md border px-3 py-2" />
             <FieldError id="full-name-error" message={errors.full_name} />
           </label>
           <label className="block text-sm font-medium">

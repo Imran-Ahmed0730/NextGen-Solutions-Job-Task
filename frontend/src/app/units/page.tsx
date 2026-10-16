@@ -135,7 +135,7 @@ function UnitsContent() {
         >
           <label className="block text-sm font-medium">
             Unit name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Kilogram"
               defaultValue={selected?.name ?? ''}
@@ -150,7 +150,7 @@ function UnitsContent() {
           </label>
           <label className="block text-sm font-medium">
             Unit code<RequiredMark />
-            <input
+            <input type="text"
               name="code"
               placeholder="e.g. kg"
               defaultValue={selected?.code ?? ''}

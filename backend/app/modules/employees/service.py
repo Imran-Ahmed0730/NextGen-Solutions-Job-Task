@@ -37,7 +37,7 @@ def create_employee(
     employee = Employee(
         code=code,
         name=_required_text(data.get("name"), "Employee name", 150),
-        mobile=_optional_mobile(data.get("mobile")),
+        mobile=_required_mobile(data.get("mobile")),
         email=_optional_text(data.get("email"), "Email", 255),
         designation=_optional_text(data.get("designation"), "Designation", 100),
         department=_optional_text(data.get("department"), "Department", 100),
@@ -89,10 +89,12 @@ def update_employee(
     ):
         if field in data:
             updates[field] = (
-                _optional_mobile(data[field])
+                _required_mobile(data[field])
                 if field == "mobile"
                 else _optional_text(data[field], label, maximum)
             )
+    if "mobile" not in updates:
+        updates["mobile"] = _required_mobile(employee.mobile)
     if "join_date" in data:
         updates["join_date"] = _date(data["join_date"])
     if "base_salary" in data:
@@ -190,9 +192,11 @@ def _optional_text(value: object, label: str, maximum: int) -> str | None:
     return result
 
 
-def _optional_mobile(value: object) -> str | None:
-    result = _optional_text(value, "Mobile", 11)
-    if result is not None and re.fullmatch(r"01[3-9]\d{8}", result) is None:
+def _required_mobile(value: object) -> str:
+    if not isinstance(value, str):
+        raise HTTPException(status_code=422, detail="Mobile number is required")
+    result = value.strip()
+    if re.fullmatch(r"01[3-9]\d{8}", result) is None:
         raise HTTPException(
             status_code=422,
             detail="Use a valid Bangladesh mobile number, e.g. 01712345678",

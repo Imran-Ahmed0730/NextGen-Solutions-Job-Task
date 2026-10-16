@@ -55,6 +55,9 @@ describe('EmployeesPage', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Employee name' }), {
       target: { value: 'Ayesha Rahman' },
     });
+    fireEvent.change(screen.getByRole('textbox', { name: /Mobile/ }), {
+      target: { value: '01712345678' },
+    });
     fireEvent.change(screen.getByRole('textbox', { name: 'Mobile' }), {
       target: { value: 'abc' },
     });
@@ -75,7 +78,7 @@ describe('EmployeesPage', () => {
       id: 1,
       code: 'EMP-001',
       name: 'Ayesha Rahman',
-      mobile: null,
+      mobile: '01712345678',
       email: null,
       designation: null,
       department: null,
@@ -107,6 +110,9 @@ describe('EmployeesPage', () => {
     });
     fireEvent.change(screen.getByRole('textbox', { name: 'Employee name' }), {
       target: { value: 'Ayesha Rahman' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: /Mobile/ }), {
+      target: { value: '01712345678' },
     });
     fireEvent.change(screen.getByLabelText(/Joining date/), {
       target: { value: '2024-02-01' },

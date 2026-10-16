@@ -18,6 +18,13 @@ const optionalBangladeshMobile = z
     'Use a valid Bangladesh mobile number, e.g. 01712345678',
   )
   .optional();
+const optionalPartyBangladeshMobile = z
+  .string()
+  .trim()
+  .max(11, 'Use an 11-digit Bangladesh mobile number')
+  .regex(/^$|^01[3-9]\d{8}$/, 'Use a valid Bangladesh mobile number, e.g. 01712345678')
+  .nullable()
+  .optional();
 
 export const loginSchema = z.object({
   username: z
@@ -199,10 +206,9 @@ export const employeeSchema = z.object({
   mobile: z
     .string()
     .trim()
+    .min(1, 'Mobile number is required')
     .max(11, 'Use an 11-digit Bangladesh mobile number')
-    .regex(/^$|^01[3-9]\d{8}$/, 'Use a valid Bangladesh mobile number, e.g. 01712345678')
-    .nullable()
-    .optional(),
+    .regex(/^01[3-9]\d{8}$/, 'Use a valid Bangladesh mobile number, e.g. 01712345678'),
   email: z
     .string()
     .trim()
@@ -422,7 +428,7 @@ export const companySettingSchema = z.object({
 export const customerSchema = z.object({
   code: z.string().trim().min(1, 'Customer code is required').max(30, 'Use at most 30 characters'),
   name: z.string().trim().min(1, 'Customer name is required').max(255, 'Use at most 255 characters'),
-  mobile: z.string().trim().max(30, 'Use at most 30 characters').nullable().optional(),
+  mobile: optionalPartyBangladeshMobile,
   email: z.string().trim().max(255, 'Use at most 255 characters').nullable().optional(),
   address: z.string().trim().max(1000, 'Use at most 1000 characters').nullable().optional(),
   credit_limit: z.coerce.number().min(0),
@@ -434,7 +440,7 @@ export const customerSchema = z.object({
 export const supplierSchema = z.object({
   code: z.string().trim().min(1, 'Supplier code is required').max(30, 'Use at most 30 characters'),
   name: z.string().trim().min(1, 'Supplier name is required').max(255, 'Use at most 255 characters'),
-  mobile: z.string().trim().max(30, 'Use at most 30 characters').nullable().optional(),
+  mobile: optionalPartyBangladeshMobile,
   email: z.string().trim().max(255, 'Use at most 255 characters').nullable().optional(),
   address: z.string().trim().max(1000, 'Use at most 1000 characters').nullable().optional(),
   opening_due: z.coerce.number(),
@@ -685,13 +691,6 @@ export const supplierPaymentSchema = z.object({
   }
 });
 
-const optionalPartyBangladeshMobile = z
-  .string()
-  .trim()
-  .max(11, 'Use an 11-digit Bangladesh mobile number')
-  .regex(/^$|^01[3-9]\d{8}$/, 'Use a valid Bangladesh mobile number, e.g. 01712345678')
-  .nullable()
-  .optional();
 const optionalPartyEmail = z
   .string()
   .trim()

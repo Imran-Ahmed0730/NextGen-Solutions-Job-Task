@@ -266,7 +266,7 @@ function PurchaseReturnsContent() {
                 </label>
                 <label className="text-sm font-medium text-slate-700 md:col-span-2">
                   Note
-                  <input
+                  <input type="text"
                     aria-label="Return note"
                     maxLength={2000}
                     value={note}

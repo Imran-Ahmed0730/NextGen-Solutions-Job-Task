@@ -171,10 +171,10 @@ describe('SalesOrdersPage', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Product 1' }), {
       target: { value: '7' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Quantity 1' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Quantity 1' }), {
       target: { value: '2.500' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Unit price 1' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Unit price 1' }), {
       target: { value: '10.00' },
     });
 
@@ -210,17 +210,17 @@ describe('SalesOrdersPage', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Product 1' }), {
       target: { value: '7' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Quantity 1' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Quantity 1' }), {
       target: { value: '2.500' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Unit price 1' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Unit price 1' }), {
       target: { value: '10.00' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await screen.findByText('SO-20260001');
 
     fireEvent.click(screen.getByRole('button', { name: 'View' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Reserve quantity for line 1' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Reserve quantity for line 1' }), {
       target: { value: '1.000' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Reserve' }));
@@ -248,17 +248,17 @@ describe('SalesOrdersPage', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Product 1' }), {
       target: { value: '7' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Quantity 1' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Quantity 1' }), {
       target: { value: '2.500' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Unit price 1' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Unit price 1' }), {
       target: { value: '10.00' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await screen.findByText('SO-20260001');
 
     fireEvent.click(screen.getByRole('button', { name: 'View' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Delivery quantity for line 1' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Delivery quantity for line 1' }), {
       target: { value: '1.500' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Post delivery' }));

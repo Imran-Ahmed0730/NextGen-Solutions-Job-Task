@@ -64,7 +64,7 @@ function EmployeesContent() {
     const parsed = employeeSchema.safeParse({
       code: form.get('code'),
       name: form.get('name'),
-      mobile: form.get('mobile') || null,
+      mobile: form.get('mobile'),
       email: form.get('email') || null,
       designation: form.get('designation'),
       department: form.get('department'),
@@ -168,7 +168,7 @@ function EmployeesContent() {
           </h2>
           <label className="text-sm font-medium">
             Employee code<RequiredMark />
-            <input
+            <input type="text"
               name="code"
               placeholder="e.g. EMP-001"
               defaultValue={selected?.code ?? ''}
@@ -181,7 +181,7 @@ function EmployeesContent() {
           </label>
           <label className="text-sm font-medium">
             Employee name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Ayesha Rahman"
               defaultValue={selected?.name ?? ''}
@@ -193,7 +193,7 @@ function EmployeesContent() {
             <FieldError id="employee-name-error" message={errors.name} />
           </label>
           <label className="text-sm font-medium">
-            Mobile
+            Mobile<RequiredMark />
             <input
               name="mobile"
               type="tel"
@@ -201,6 +201,7 @@ function EmployeesContent() {
               placeholder="e.g. 01712345678"
               defaultValue={selected?.mobile ?? ''}
               maxLength={11}
+              required
               aria-invalid={Boolean(errors.mobile)}
               aria-describedby={errors.mobile ? 'employee-mobile-error' : undefined}
               className="mt-1 w-full rounded-md border px-3 py-2"
@@ -223,7 +224,7 @@ function EmployeesContent() {
           </label>
           <label className="text-sm font-medium">
             Designation
-            <input
+            <input type="text"
               name="designation"
               placeholder="e.g. Production supervisor"
               defaultValue={selected?.designation ?? ''}
@@ -233,7 +234,7 @@ function EmployeesContent() {
           </label>
           <label className="text-sm font-medium">
             Department
-            <input
+            <input type="text"
               name="department"
               placeholder="e.g. Production"
               defaultValue={selected?.department ?? ''}

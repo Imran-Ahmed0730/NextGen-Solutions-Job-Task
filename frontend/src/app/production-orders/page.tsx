@@ -326,7 +326,7 @@ function ProductionOrdersContent() {
             </label>
             <label className="text-sm font-medium text-slate-700">
               Planned quantity<RequiredMark />
-              <input
+              <input type="number" step="any"
                 required
                 inputMode="decimal"
                 value={plannedQty}
@@ -427,7 +427,7 @@ function ProductionOrdersContent() {
                     <form onSubmit={(event) => void completeOrder(event, order)} className="mt-3 grid min-w-64 gap-2 rounded-lg bg-slate-50 p-3">
                       <label className="text-xs text-slate-700">
                         Actual output quantity<RequiredMark />
-                        <input
+                        <input type="number" step="any"
                           required
                           inputMode="decimal"
                           value={actualQty}
@@ -438,7 +438,7 @@ function ProductionOrdersContent() {
                       </label>
                       <label className="text-xs text-slate-700">
                         Labor cost<RequiredMark />
-                        <input
+                        <input type="number" step="any"
                           required
                           inputMode="decimal"
                           value={laborCost}
@@ -449,7 +449,7 @@ function ProductionOrdersContent() {
                       </label>
                       <label className="text-xs text-slate-700">
                         Overhead cost<RequiredMark />
-                        <input
+                        <input type="number" step="any"
                           required
                           inputMode="decimal"
                           value={overheadCost}

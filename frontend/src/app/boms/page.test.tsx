@@ -80,13 +80,13 @@ describe('BOMsPage', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Finished product' }), {
       target: { value: '2' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Output quantity' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Output quantity' }), {
       target: { value: '10.000' },
     });
     fireEvent.change(screen.getByRole('combobox', { name: 'Raw material 1' }), {
       target: { value: '1' },
     });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Quantity' }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Quantity' }), {
       target: { value: '3.000' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Create BOM' }));

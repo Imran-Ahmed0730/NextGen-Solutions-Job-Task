@@ -222,7 +222,7 @@ function ProductsContent() {
 
           <label className="block text-sm font-medium">
             SKU<RequiredMark />
-            <input
+            <input type="text"
               name="sku"
               placeholder="e.g. RAW-FLOUR-01"
               defaultValue={selected?.sku ?? ''}
@@ -238,7 +238,7 @@ function ProductsContent() {
 
           <label className="block text-sm font-medium">
             Product name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Wheat Flour"
               defaultValue={selected?.name ?? ''}

@@ -202,7 +202,7 @@ function BOMsContent() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <label className="text-sm font-medium text-slate-700">
               BOM code<RequiredMark />
-              <input
+              <input type="text"
                 required
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
@@ -226,7 +226,7 @@ function BOMsContent() {
             </label>
             <label className="text-sm font-medium text-slate-700">
               Output quantity<RequiredMark />
-              <input
+              <input type="number" step="any"
                 required
                 inputMode="decimal"
                 value={outputQty}
@@ -237,7 +237,7 @@ function BOMsContent() {
             </label>
             <label className="text-sm font-medium text-slate-700">
               Default labor cost
-              <input
+              <input type="number" step="any"
                 inputMode="decimal"
                 value={laborCost}
                 onChange={(event) => setLaborCost(event.target.value)}
@@ -247,7 +247,7 @@ function BOMsContent() {
             </label>
             <label className="text-sm font-medium text-slate-700">
               Default overhead cost
-              <input
+              <input type="number" step="any"
                 inputMode="decimal"
                 value={overheadCost}
                 onChange={(event) => setOverheadCost(event.target.value)}
@@ -277,7 +277,7 @@ function BOMsContent() {
                 </label>
                 <label className="text-sm text-slate-700">
                   Quantity<RequiredMark />
-                  <input
+                  <input type="number" step="any"
                     required
                     inputMode="decimal"
                     value={line.qty}

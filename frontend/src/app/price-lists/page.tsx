@@ -271,7 +271,7 @@ function PriceListsContent() {
         >
           <label className="block text-sm font-medium sm:col-span-2">
             Price list name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Retail Price List"
               defaultValue={selected?.name ?? ''}

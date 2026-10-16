@@ -1,4 +1,6 @@
 from collections.abc import Generator
+from datetime import date
+from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
@@ -143,6 +145,49 @@ def test_employee_validation_and_permission_denial(
         json={**_employee_payload("EMP-BAD-MOBILE"), "mobile": "abc"},
     )
     assert invalid_mobile.status_code == 422
+    missing_mobile = client.post(
+        "/api/v1/employees",
+        headers=headers,
+        json={
+            key: value
+            for key, value in _employee_payload("EMP-NO-MOBILE").items()
+            if key != "mobile"
+        },
+    )
+    assert missing_mobile.status_code == 422
+    created = client.post(
+        "/api/v1/employees", headers=headers, json=_employee_payload("EMP-VALID")
+    )
+    assert created.status_code == 201
+    cleared_mobile = client.patch(
+        f"/api/v1/employees/{created.json()['id']}",
+        headers=headers,
+        json={"mobile": None},
+    )
+    assert cleared_mobile.status_code == 422
+
+    legacy = Employee(
+        code="EMP-LEGACY",
+        name="Legacy Employee",
+        mobile="not-a-phone",
+        join_date=date(2024, 2, 1),
+        base_salary=Decimal("1000.00"),
+    )
+    db_session.add(legacy)
+    db_session.commit()
+    db_session.refresh(legacy)
+    legacy_update_without_phone = client.patch(
+        f"/api/v1/employees/{legacy.id}",
+        headers=headers,
+        json={"name": "Updated Legacy Employee"},
+    )
+    assert legacy_update_without_phone.status_code == 422
+    legacy_update_with_phone = client.patch(
+        f"/api/v1/employees/{legacy.id}",
+        headers=headers,
+        json={"mobile": "01712345678"},
+    )
+    assert legacy_update_with_phone.status_code == 200
 
     admin = db_session.scalar(select(User).where(User.username == "admin"))
     assert admin is not None

@@ -348,7 +348,7 @@ function QuotationsContent() {
             </label>
             <label className="space-y-1 text-sm font-medium text-slate-700">
               Discount
-              <input
+              <input type="number" step="any"
                 inputMode="decimal"
                 value={discount}
                 onChange={(event) => setDiscount(event.target.value)}
@@ -380,7 +380,7 @@ function QuotationsContent() {
                 </label>
                 <label className="space-y-1 text-sm text-slate-700">
                   Quantity <RequiredMark />
-                  <input
+                  <input type="number" step="any"
                     required
                     inputMode="decimal"
                     value={line.qty}
@@ -391,7 +391,7 @@ function QuotationsContent() {
                 </label>
                 <label className="space-y-1 text-sm text-slate-700">
                   Unit price <RequiredMark />
-                  <input
+                  <input type="number" step="any"
                     required
                     inputMode="decimal"
                     value={line.unit_price}

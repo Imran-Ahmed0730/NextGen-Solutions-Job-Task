@@ -270,7 +270,7 @@ function DirectPurchasesContent() {
             </label>
             <label className="text-sm font-medium text-slate-700">
               Note
-              <input
+              <input type="text"
                 aria-label="Purchase note"
                 maxLength={2000}
                 value={note}

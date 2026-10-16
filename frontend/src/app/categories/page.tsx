@@ -203,7 +203,7 @@ function CategoriesContent() {
         >
           <label className="block text-sm font-medium">
             Category name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               placeholder="e.g. Raw Materials"
               defaultValue={selected?.name ?? ''}

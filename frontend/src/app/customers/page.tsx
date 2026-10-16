@@ -158,12 +158,12 @@ function CustomersContent() {
         >
           <label className="block text-sm font-medium">
             Code<RequiredMark />
-            <input name="code" defaultValue={selected?.code ?? ''} minLength={1} maxLength={30} required placeholder="e.g. CUS-001" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.code)} aria-describedby={errors.code ? 'customer-code-error' : undefined} />
+            <input type="text" name="code" defaultValue={selected?.code ?? ''} minLength={1} maxLength={30} required placeholder="e.g. CUS-001" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.code)} aria-describedby={errors.code ? 'customer-code-error' : undefined} />
             <FieldError id="customer-code-error" message={errors.code} />
           </label>
           <label className="block text-sm font-medium">
             Name<RequiredMark />
-            <input name="name" defaultValue={selected?.name ?? ''} minLength={1} maxLength={255} required placeholder="Customer or company name" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'customer-name-error' : undefined} />
+            <input type="text" name="name" defaultValue={selected?.name ?? ''} minLength={1} maxLength={255} required placeholder="Customer or company name" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'customer-name-error' : undefined} />
             <FieldError id="customer-name-error" message={errors.name} />
           </label>
           <label className="block text-sm font-medium">

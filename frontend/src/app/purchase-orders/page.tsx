@@ -357,7 +357,7 @@ function PurchaseOrdersContent() {
             </label>
             <label className="text-sm font-medium text-slate-700 lg:col-span-1">
               Note
-              <input
+              <input type="text"
                 aria-label="Note"
                 maxLength={2000}
                 value={note}

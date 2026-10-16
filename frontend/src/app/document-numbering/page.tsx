@@ -137,7 +137,7 @@ function DocumentNumberingContent() {
         >
           <label className="block text-sm font-medium">
             Document type<RequiredMark />
-            <input
+            <input type="text"
               name="doc_type"
               placeholder="e.g. INVOICE"
               defaultValue={selected?.doc_type ?? ''}
@@ -153,7 +153,7 @@ function DocumentNumberingContent() {
 
           <label className="block text-sm font-medium">
             Prefix<RequiredMark />
-            <input
+            <input type="text"
               name="prefix"
               placeholder="e.g. INV-"
               defaultValue={selected?.prefix ?? ''}

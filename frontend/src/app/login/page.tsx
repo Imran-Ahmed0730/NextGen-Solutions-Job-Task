@@ -56,7 +56,7 @@ export default function LoginPage() {
         <form noValidate className="mt-6 space-y-4" onSubmit={submit}>
           <label className="block text-sm font-medium">
             Username, email, or mobile<RequiredMark />
-            <input
+            <input type="text"
               name="username"
               placeholder="Username, email, or mobile"
               autoComplete="username"

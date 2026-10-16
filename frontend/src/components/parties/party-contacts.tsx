@@ -152,7 +152,7 @@ export function PartyContacts({
         >
           <label className="text-sm font-medium">
             Name<RequiredMark />
-            <input
+            <input type="text"
               name="name"
               required
               minLength={1}
@@ -197,7 +197,7 @@ export function PartyContacts({
           </label>
           <label className="text-sm font-medium">
             Designation
-            <input
+            <input type="text"
               name="designation"
               maxLength={100}
               defaultValue={editing?.designation ?? ''}
