@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, getFieldErrors, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
+import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import {
   assetAssignmentSchema,
@@ -344,62 +345,57 @@ function AssetsContent() {
                     Purchased {asset.purchase_date} for {asset.purchase_cost}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1">
                   {asset.is_active && profile?.permissions.includes('assets.update') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="edit"
+                      label={`Edit ${asset.name}`}
                       onClick={() => {
                         setSelected(asset);
                         setAction(null);
                       }}
-                      className="rounded border px-3 py-1.5 text-sm"
-                    >
-                      Edit
-                    </button>
+                      className="p-2 text-emerald-800 hover:bg-emerald-50"
+                    />
                   )}
                   {asset.is_active && profile?.permissions.includes('assets.delete') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="delete"
+                      label={`Delete ${asset.name}`}
                       onClick={() => void updateAssetStatus(asset, 'delete')}
-                      className="rounded border px-3 py-1.5 text-sm text-rose-700"
-                    >
-                      Delete
-                    </button>
+                      className="p-2 text-rose-700 hover:bg-rose-50"
+                    />
                   )}
                   {!asset.is_active && profile?.permissions.includes('assets.update') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="restore"
+                      label={`Restore ${asset.name}`}
                       onClick={() => void updateAssetStatus(asset, 'restore')}
-                      className="rounded border px-3 py-1.5 text-sm"
-                    >
-                      Restore
-                    </button>
+                      className="p-2 text-emerald-800 hover:bg-emerald-50"
+                    />
                   )}
                   {asset.is_active && profile?.permissions.includes('assets.assign') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="assign"
+                      label={`Assign location for ${asset.name}`}
                       onClick={() => {
                         setSelected(null);
                         setErrors({});
                         setAction({ type: 'assign', asset });
                       }}
-                      className="rounded border px-3 py-1.5 text-sm"
-                    >
-                      Assign location
-                    </button>
+                      className="p-2 text-slate-700 hover:bg-slate-100"
+                    />
                   )}
                   {asset.is_active && profile?.permissions.includes('assets.maintain') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="maintenance"
+                      label={`Record maintenance for ${asset.name}`}
                       onClick={() => {
                         setSelected(null);
                         setErrors({});
                         setAction({ type: 'maintenance', asset });
                       }}
-                      className="rounded border px-3 py-1.5 text-sm"
-                    >
-                      Add maintenance
-                    </button>
+                      className="p-2 text-slate-700 hover:bg-slate-100"
+                    />
                   )}
                 </div>
               </div>
@@ -528,13 +524,12 @@ function AssetsContent() {
                           {assignment.location}: {assignment.assigned_on} –{' '}
                           {assignment.returned_on ?? 'Current'}
                           {!assignment.returned_on && profile?.permissions.includes('assets.assign') && (
-                            <button
-                              type="button"
+                            <IconActionButton
+                              icon="return"
+                              label={`Return ${asset.name} to store`}
                               onClick={() => void returnAssignment(asset, assignment)}
-                              className="text-emerald-800 underline"
-                            >
-                              Return to store
-                            </button>
+                              className="p-1 text-emerald-800 hover:bg-emerald-50"
+                            />
                           )}
                         </li>
                       ))}

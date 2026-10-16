@@ -102,6 +102,22 @@ describe('CompanySettingsPage', () => {
     });
   });
 
+  it('blocks invalid settings and reports field errors before making requests', async () => {
+    render(<CompanySettingsPage />);
+
+    fireEvent.change(await screen.findByRole('textbox', { name: /company name/i }), {
+      target: { value: '   ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Company profile' }));
+
+    expect(await screen.findByText('Company name is required')).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([input]) =>
+        String(input).endsWith('/api/v1/company-settings/company_name'),
+      ),
+    ).toBe(false);
+  });
+
   it('uploads the selected logo file and updates its setting', async () => {
     render(<CompanySettingsPage />);
 

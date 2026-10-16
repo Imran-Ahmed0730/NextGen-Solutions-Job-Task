@@ -6,6 +6,7 @@ import { ProtectedPage } from '@/components/auth/protected-page';
 import { RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
 import { useSessionProfile } from '@/components/auth/session-shell';
+import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 import { purchaseOrderSchema } from '@/lib/auth-validation';
@@ -496,50 +497,46 @@ function PurchaseOrdersContent() {
                     <td className="px-4 py-3 text-right">{order.total}</td>
                     <td className="px-4 py-3">{order.status}</td>
                     <td className="space-x-3 whitespace-nowrap px-4 py-3">
-                      <button
-                        type="button"
+                      <IconActionButton
+                        icon="view"
+                        label={`${expandedId === order.id ? 'Hide' : 'View'} lines for ${order.doc_no}`}
+                        aria-expanded={expandedId === order.id}
                         onClick={() =>
                           setExpandedId((current) => (current === order.id ? null : order.id))
                         }
-                        className="font-medium text-emerald-800 hover:underline"
-                      >
-                        {expandedId === order.id ? 'Hide lines' : 'View lines'}
-                      </button>
+                        className="p-2 text-slate-700 hover:bg-slate-100"
+                      />
                       {order.status === 'DRAFT' && canUpdate && (
-                        <button
-                          type="button"
+                        <IconActionButton
+                          icon="edit"
+                          label={`Edit purchase order ${order.doc_no}`}
                           onClick={() => startEditing(order)}
-                          className="font-medium text-emerald-800 hover:underline"
-                        >
-                          Edit draft
-                        </button>
+                          className="p-2 text-emerald-800 hover:bg-emerald-50"
+                        />
                       )}
                       {order.status === 'DRAFT' && canSubmit && (
-                        <button
-                          type="button"
+                        <IconActionButton
+                          icon="send"
+                          label={`Submit purchase order ${order.doc_no}`}
                           onClick={() => void submitOrder(order.id)}
-                          className="font-medium text-blue-800 hover:underline"
-                        >
-                          Submit
-                        </button>
+                          className="p-2 text-blue-800 hover:bg-blue-50"
+                        />
                       )}
                       {(order.status === 'DRAFT' || order.status === 'PENDING_APPROVAL') && canApprove && (
-                        <button
-                          type="button"
+                        <IconActionButton
+                          icon="complete"
+                          label={`Approve purchase order ${order.doc_no}`}
                           onClick={() => void approveOrder(order.id)}
-                          className="font-medium text-emerald-800 hover:underline"
-                        >
-                          Approve
-                        </button>
+                          className="p-2 text-emerald-800 hover:bg-emerald-50"
+                        />
                       )}
                       {['DRAFT', 'PENDING_APPROVAL', 'APPROVED'].includes(order.status) && canCancel && (
-                        <button
-                          type="button"
+                        <IconActionButton
+                          icon="cancel"
+                          label={`Cancel purchase order ${order.doc_no}`}
                           onClick={() => void cancelOrder(order.id)}
-                          className="font-medium text-rose-800 hover:underline"
-                        >
-                          Cancel
-                        </button>
+                          className="p-2 text-rose-800 hover:bg-rose-50"
+                        />
                       )}
                     </td>
                   </tr>

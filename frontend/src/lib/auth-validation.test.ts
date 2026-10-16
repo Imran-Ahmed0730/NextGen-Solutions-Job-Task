@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   changePasswordSchema,
+  companySettingValueSchemas,
   customerCollectionSchema,
   customerSchema,
   employeeSchema,
@@ -30,6 +31,17 @@ import {
 } from './auth-validation';
 
 describe('auth-validation schemas', () => {
+  it('validates company setting values consistently with backend rules', () => {
+    expect(companySettingValueSchemas.company_name.safeParse('  ').success).toBe(false);
+    expect(companySettingValueSchemas.company_email.safeParse('bad-email').success).toBe(false);
+    expect(companySettingValueSchemas.company_phone.safeParse('letters').success).toBe(false);
+    expect(companySettingValueSchemas.currency_code.parse('bdt')).toBe('BDT');
+    expect(companySettingValueSchemas.timezone.safeParse('Not/A-Timezone').success).toBe(true);
+    expect(companySettingValueSchemas.credit_limit_mode.safeParse('INVALID').success).toBe(false);
+    expect(companySettingValueSchemas.receipt_tolerance_pct.safeParse('-1').success).toBe(false);
+    expect(companySettingValueSchemas.receipt_tolerance_pct.safeParse('0.001').success).toBe(true);
+  });
+
   it('validates sales-order draft fields and lines', () => {
     const valid = {
       doc_date: '2026-10-24',

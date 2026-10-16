@@ -8,6 +8,7 @@ import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, RequiredMark, type FieldErrors } from '@/components/forms/field-error';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { apiRequest, getApiUrl } from '@/lib/auth-api';
+import { companySettingValueSchemas } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
 type CompanySettingRecord = {
@@ -17,7 +18,7 @@ type CompanySettingRecord = {
 type BrandAssetType = 'logo' | 'favicon';
 
 type FieldDefinition = {
-  key: string;
+  key: keyof typeof companySettingValueSchemas;
   label: string;
   type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'number';
   options?: { value: string; label: string }[];
@@ -134,7 +135,7 @@ const groups: SettingsGroup[] = [
         placeholder: '0',
         required: true,
         min: '0',
-        step: '0.01',
+        step: 'any',
       },
     ],
   },
@@ -200,14 +201,12 @@ function CompanySettingsContent() {
     link.href = getAssetUrl(favicon);
   }, [values.company_favicon_path]);
 
-  async function saveGroup(group: SettingsGroup, form: HTMLFormElement) {
+  async function saveGroup(
+    group: SettingsGroup,
+    updates: { key: string; value: string }[],
+  ) {
     if (!profile?.permissions.includes('master_data.company_settings.update')) return;
     setSavingGroup(group.title);
-    const data = new FormData(form);
-    const updates = group.fields.map((field) => ({
-      key: field.key,
-      value: String(data.get(field.key) ?? ''),
-    }));
 
     try {
       await Promise.all(
@@ -289,22 +288,23 @@ function CompanySettingsContent() {
     });
   }
 
-  function handleInvalid(event: FormEvent<HTMLFormElement>) {
-    const field = event.target;
-    if (
-      (field instanceof HTMLInputElement ||
-        field instanceof HTMLTextAreaElement ||
-        field instanceof HTMLSelectElement) &&
-      field.name
-    ) {
-      setErrors((current) => ({ ...current, [field.name]: field.validationMessage }));
-    }
-  }
-
   function handleSubmit(group: SettingsGroup) {
     return (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      saveGroup(group, event.currentTarget);
+      const data = new FormData(event.currentTarget);
+      const validationErrors: FieldErrors = {};
+      const updates = group.fields.map((field) => {
+        const value = String(data.get(field.key) ?? '');
+        const parsed = companySettingValueSchemas[field.key].safeParse(value);
+        if (!parsed.success) {
+          validationErrors[field.key] = parsed.error.issues[0]?.message ?? 'Enter a valid value';
+          return { key: field.key, value };
+        }
+        return { key: field.key, value: parsed.data };
+      });
+      setErrors(validationErrors);
+      if (Object.keys(validationErrors).length > 0) return;
+      void saveGroup(group, updates);
     };
   }
 
@@ -390,8 +390,8 @@ function CompanySettingsContent() {
 
           <form
             className="grid gap-4 sm:grid-cols-2"
+            noValidate
             onSubmit={handleSubmit(group)}
-            onInvalidCapture={handleInvalid}
           >
             {group.fields.map((field) => (
               <div

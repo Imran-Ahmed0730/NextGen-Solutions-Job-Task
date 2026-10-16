@@ -6,6 +6,7 @@ import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
+import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import {
   salesDeliverySchema,
@@ -593,28 +594,27 @@ function SalesOrdersContent() {
                       <td className="px-4 py-3">{order.status}</td>
                       <td className="px-4 py-3 text-right">{order.total}</td>
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
+                        <IconActionButton
+                          icon="view"
+                          label={`${detailsId === order.id ? 'Hide' : 'View'} details for ${order.doc_no}`}
+                          aria-expanded={detailsId === order.id}
                           onClick={() =>
                             setDetailsId((current) => (current === order.id ? null : order.id))
                           }
-                          className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700"
-                        >
-                          {detailsId === order.id ? 'Hide' : 'View'}
-                        </button>
+                          className="p-2 text-slate-700 hover:bg-slate-100"
+                        />
                       </td>
                       {(canUpdate || canReserve || canDeliver) && (
                         <td className="px-4 py-3">
                           {canUpdate &&
                             order.status === 'DRAFT' &&
                             order.lines.every((line) => line.reservations.length === 0) && (
-                            <button
-                              type="button"
+                            <IconActionButton
+                              icon="edit"
+                              label={`Edit sales order ${order.doc_no}`}
                               onClick={() => editOrder(order)}
-                              className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700"
-                            >
-                              Edit
-                            </button>
+                              className="p-2 text-emerald-800 hover:bg-emerald-50"
+                            />
                           )}
                         </td>
                       )}
@@ -655,14 +655,13 @@ function SalesOrdersContent() {
                                         className="ml-2 min-h-8 w-28 rounded-md border border-slate-300 bg-white px-2"
                                       />
                                     </label>
-                                    <button
-                                      type="button"
+                                    <IconActionButton
+                                      icon="reserve"
+                                      label={`Reserve quantity for line ${line.id}`}
                                       disabled={reservationBusy}
                                       onClick={() => void reserveLine(order.id, line.id)}
-                                      className="rounded-md border border-emerald-700 px-2 py-1 text-xs text-emerald-800 disabled:opacity-50"
-                                    >
-                                      Reserve
-                                    </button>
+                                      className="p-2 text-emerald-800 hover:bg-emerald-50"
+                                    />
                                   </div>
                                 )}
                                 {line.reservations.map((reservation) => (
@@ -674,16 +673,15 @@ function SalesOrdersContent() {
                                     {reservation.qty}, consumed {reservation.qty_consumed}, released{' '}
                                     {reservation.qty_released}
                                     {canReserve && reservation.status === 'ACTIVE' && (
-                                      <button
-                                        type="button"
+                                      <IconActionButton
+                                        icon="release"
+                                        label={`Release remaining reservation ${reservation.id}`}
                                         disabled={reservationBusy}
                                         onClick={() =>
                                           void releaseReservation(order.id, reservation.id)
                                         }
-                                        className="rounded-md border border-amber-700 px-2 py-1 text-amber-800 disabled:opacity-50"
-                                      >
-                                        Release remaining
-                                      </button>
+                                        className="p-2 text-amber-800 hover:bg-amber-50"
+                                      />
                                     )}
                                   </div>
                                 ))}
@@ -741,14 +739,13 @@ function SalesOrdersContent() {
                                       </label>
                                     ))}
                                 </div>
-                                <button
-                                  type="button"
+                                <IconActionButton
+                                  icon="submit"
+                                  label={`Post delivery for ${order.doc_no}`}
                                   disabled={deliveryBusy}
                                   onClick={() => void deliverOrder(order)}
-                                  className="rounded-md border border-emerald-700 px-3 py-1.5 text-xs text-emerald-800 disabled:opacity-50"
-                                >
-                                  {deliveryBusy ? 'Posting…' : 'Post delivery'}
-                                </button>
+                                  className="p-2 text-emerald-800 hover:bg-emerald-50"
+                                />
                               </div>
                             )}
                           {order.deliveries.length > 0 && (

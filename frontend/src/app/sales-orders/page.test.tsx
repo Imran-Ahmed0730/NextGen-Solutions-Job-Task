@@ -191,7 +191,7 @@ describe('SalesOrdersPage', () => {
     await waitFor(() => {
       expect(mocks.apiRequest).toHaveBeenCalledWith('/api/v1/sales/orders?offset=0&limit=51');
     });
-    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View details for SO-20260001' }));
     expect(
       await screen.findByText(/2\.500 \/ 10\.000 \/ 0\.000 \/ 0\.000 \/ 0\.000 \/ 2\.500/),
     ).toBeInTheDocument();
@@ -219,11 +219,11 @@ describe('SalesOrdersPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await screen.findByText('SO-20260001');
 
-    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View details for SO-20260001' }));
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Reserve quantity for line 1' }), {
       target: { value: '1.000' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Reserve' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reserve quantity for line 1' }));
 
     await screen.findByText(/Reservation 91: ACTIVE/);
     expect(mocks.apiRequest).toHaveBeenCalledWith(
@@ -257,11 +257,11 @@ describe('SalesOrdersPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
     await screen.findByText('SO-20260001');
 
-    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View details for SO-20260001' }));
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Delivery quantity for line 1' }), {
       target: { value: '1.500' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Post delivery' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Post delivery for SO-20260001' }));
     await waitFor(() => expect(mocks.apiRequest).toHaveBeenCalledTimes(8));
 
     expect(mocks.apiRequest).toHaveBeenCalledWith(

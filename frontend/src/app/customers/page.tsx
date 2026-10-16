@@ -277,17 +277,21 @@ function CustomersContent() {
                     <IconActionButton icon="delete" label={`Delete ${customer.name}`} onClick={() => void setDeleted(customer, true)} className="mr-1 p-2 text-rose-700 hover:bg-rose-50" />
                   )}
                   {customer.deleted_at === null && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="contacts"
+                      label={`Manage contacts for ${customer.name}`}
                       aria-expanded={contactsCustomerId === customer.id}
                       onClick={() => setContactsCustomerId((current) => current === customer.id ? null : customer.id)}
-                      className="mr-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
-                    >
-                      Contacts
-                    </button>
+                      className="mr-1 p-2 text-slate-700 hover:bg-slate-100"
+                    />
                   )}
-                  <a href={`/customers/${customer.id}/statement`} className="mr-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50">
-                    Statement
+                  <a
+                    href={`/customers/${customer.id}/statement`}
+                    title={`View statement for ${customer.name}`}
+                    aria-label={`View statement for ${customer.name}`}
+                    className="mr-1 inline-flex items-center justify-center rounded-lg p-2 text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+                  >
+                    <ActionIcon name="statement" />
                   </a>
                   {customer.deleted_at !== null && profile?.permissions.includes('master_data.customers.update') && (
                     <IconActionButton icon="restore" label={`Restore ${customer.name}`} onClick={() => void setDeleted(customer, false)} className="p-2 text-emerald-800 hover:bg-emerald-50" />

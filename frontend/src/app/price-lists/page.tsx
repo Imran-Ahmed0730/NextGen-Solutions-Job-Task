@@ -413,13 +413,12 @@ function PriceListsContent() {
                       />
                     )}
                   {profile?.permissions.includes('master_data.price_lists.read') && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="prices"
+                      label={`Manage prices for ${priceList.name}`}
                       onClick={() => setManagedList(priceList)}
-                      className="mr-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
-                    >
-                      Prices
-                    </button>
+                      className="mr-1 p-2 text-slate-700 hover:bg-slate-100"
+                    />
                   )}
                   {priceList.deleted_at === null &&
                     profile?.permissions.includes('master_data.price_lists.delete') && (

@@ -6,6 +6,7 @@ import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { RequiredMark, FieldError } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
+import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { quotationConversionSchema, quotationSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -555,44 +556,44 @@ function QuotationsContent() {
                     <td className="px-4 py-3 text-right">{quotation.total}</td>
                     {(canUpdate || canConvert) && (
                       <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1">
                           {canUpdate && quotation.status === 'DRAFT' && (
                             <>
-                              <button
-                                type="button"
+                              <IconActionButton
+                                icon="edit"
+                                label="Edit"
+                                tooltip={`Edit quotation ${quotation.doc_no}`}
                                 onClick={() => editQuotation(quotation)}
-                                className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
+                                className="p-2 text-emerald-800 hover:bg-emerald-50"
+                              />
+                              <IconActionButton
+                                icon="send"
+                                label="Send"
+                                tooltip={`Send quotation ${quotation.doc_no}`}
                                 disabled={actionBusyId === quotation.id}
                                 onClick={() => void transitionQuotation(quotation, 'send')}
-                                className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 disabled:opacity-50"
-                              >
-                                Send
-                              </button>
+                                className="p-2 text-blue-800 hover:bg-blue-50"
+                              />
                             </>
                           )}
                           {canUpdate && quotation.status === 'SENT' && (
                             <>
-                              <button
-                                type="button"
+                              <IconActionButton
+                                icon="complete"
+                                label="Accept"
+                                tooltip={`Accept quotation ${quotation.doc_no}`}
                                 disabled={actionBusyId === quotation.id}
                                 onClick={() => void transitionQuotation(quotation, 'accept')}
-                                className="rounded-md border border-emerald-300 px-2 py-1 text-xs text-emerald-800 disabled:opacity-50"
-                              >
-                                Accept
-                              </button>
-                              <button
-                                type="button"
+                                className="p-2 text-emerald-800 hover:bg-emerald-50"
+                              />
+                              <IconActionButton
+                                icon="reject"
+                                label="Reject"
+                                tooltip={`Reject quotation ${quotation.doc_no}`}
                                 disabled={actionBusyId === quotation.id}
                                 onClick={() => void transitionQuotation(quotation, 'reject')}
-                                className="rounded-md border border-rose-300 px-2 py-1 text-xs text-rose-800 disabled:opacity-50"
-                              >
-                                Reject
-                              </button>
+                                className="p-2 text-rose-800 hover:bg-rose-50"
+                              />
                             </>
                           )}
                           {canConvert && quotation.status === 'ACCEPTED' && (
@@ -601,16 +602,16 @@ function QuotationsContent() {
                                 Converted to Sales Order {quotation.sales_order_id}
                               </span>
                             ) : (
-                              <button
-                                type="button"
+                              <IconActionButton
+                                icon="convert"
+                                label="Convert"
+                                tooltip={`Convert quotation ${quotation.doc_no} to sales order`}
                                 onClick={() => {
                                   setConversionQuotationId(quotation.id);
                                   setError('');
                                 }}
-                                className="rounded-md border border-emerald-300 px-2 py-1 text-xs text-emerald-800"
-                              >
-                                Convert
-                              </button>
+                                className="p-2 text-emerald-800 hover:bg-emerald-50"
+                              />
                             )
                           )}
                         </div>

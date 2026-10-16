@@ -6,6 +6,7 @@ import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
+import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import {
   productionOrderCompleteSchema,
@@ -398,30 +399,55 @@ function ProductionOrdersContent() {
                   {order.unit_cost === null ? '—' : `${order.unit_cost} / unit`}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-1">
                     {canUpdate && order.status === 'DRAFT' && (
                       <>
-                        <button type="button" disabled={busy} onClick={() => editOrder(order)} className="text-emerald-800">
-                          Edit
-                        </button>
-                        <button type="button" disabled={busy} onClick={() => void runAction(order, 'start')} className="text-emerald-800">
-                          Start
-                        </button>
+                        <IconActionButton
+                          icon="edit"
+                          label="Edit"
+                          tooltip={`Edit production order ${order.doc_no}`}
+                          disabled={busy}
+                          onClick={() => editOrder(order)}
+                          className="p-2 text-emerald-800 hover:bg-emerald-50"
+                        />
+                        <IconActionButton
+                          icon="start"
+                          label="Start"
+                          tooltip={`Start production order ${order.doc_no}`}
+                          disabled={busy}
+                          onClick={() => void runAction(order, 'start')}
+                          className="p-2 text-emerald-800 hover:bg-emerald-50"
+                        />
                       </>
                     )}
                     {canUpdate && order.status === 'IN_PROGRESS' && (
-                      <button type="button" disabled={busy} onClick={() => openCompletion(order)} className="text-emerald-800">
-                        Complete
-                      </button>
+                      <IconActionButton
+                        icon="complete"
+                        label="Complete"
+                        tooltip={`Complete production order ${order.doc_no}`}
+                        disabled={busy}
+                        onClick={() => openCompletion(order)}
+                        className="p-2 text-emerald-800 hover:bg-emerald-50"
+                      />
                     )}
                     {canUpdate && ['DRAFT', 'IN_PROGRESS'].includes(order.status) && (
-                      <button type="button" disabled={busy} onClick={() => void runAction(order, 'cancel')} className="text-rose-700">
-                        Cancel order
-                      </button>
+                      <IconActionButton
+                        icon="cancel"
+                        label="Cancel"
+                        tooltip={`Cancel production order ${order.doc_no}`}
+                        disabled={busy}
+                        onClick={() => void runAction(order, 'cancel')}
+                        className="p-2 text-rose-700 hover:bg-rose-50"
+                      />
                     )}
-                    <button type="button" onClick={() => setDetailId(detailId === order.id ? null : order.id)} className="text-slate-700">
-                      {detailId === order.id ? 'Hide details' : 'Details'}
-                    </button>
+                    <IconActionButton
+                      icon="view"
+                      label={detailId === order.id ? 'Hide details' : 'Details'}
+                      tooltip={`${detailId === order.id ? 'Hide' : 'View'} details for ${order.doc_no}`}
+                      aria-expanded={detailId === order.id}
+                      onClick={() => setDetailId(detailId === order.id ? null : order.id)}
+                      className="p-2 text-slate-700 hover:bg-slate-100"
+                    />
                   </div>
                   {completionId === order.id && (
                     <form onSubmit={(event) => void completeOrder(event, order)} className="mt-3 grid min-w-64 gap-2 rounded-lg bg-slate-50 p-3">

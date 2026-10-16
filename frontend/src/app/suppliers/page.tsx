@@ -235,17 +235,21 @@ function SuppliersContent() {
                     <IconActionButton icon="delete" label={`Delete ${supplier.name}`} onClick={() => void setDeleted(supplier, true)} className="mr-1 p-2 text-rose-700 hover:bg-rose-50" />
                   )}
                   {supplier.deleted_at === null && (
-                    <button
-                      type="button"
+                    <IconActionButton
+                      icon="contacts"
+                      label={`Manage contacts for ${supplier.name}`}
                       aria-expanded={contactsSupplierId === supplier.id}
                       onClick={() => setContactsSupplierId((current) => current === supplier.id ? null : supplier.id)}
-                      className="mr-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50"
-                    >
-                      Contacts
-                    </button>
+                      className="mr-1 p-2 text-slate-700 hover:bg-slate-100"
+                    />
                   )}
-                  <a href={`/suppliers/${supplier.id}/statement`} className="mr-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50">
-                    Statement
+                  <a
+                    href={`/suppliers/${supplier.id}/statement`}
+                    title={`View statement for ${supplier.name}`}
+                    aria-label={`View statement for ${supplier.name}`}
+                    className="mr-1 inline-flex items-center justify-center rounded-lg p-2 text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+                  >
+                    <ActionIcon name="statement" />
                   </a>
                   {supplier.deleted_at !== null && profile?.permissions.includes('master_data.suppliers.update') && (
                     <IconActionButton icon="restore" label={`Restore ${supplier.name}`} onClick={() => void setDeleted(supplier, false)} className="p-2 text-emerald-800 hover:bg-emerald-50" />

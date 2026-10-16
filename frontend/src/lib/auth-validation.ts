@@ -425,6 +425,56 @@ export const companySettingSchema = z.object({
   value: z.string(),
 });
 
+const companyPhonePattern = /^\+?[0-9][0-9 ()-]{5,28}[0-9]$/;
+const timezonePattern = /^[A-Za-z][A-Za-z0-9._+-]*(?:\/[A-Za-z0-9._+-]+)+$/;
+const decimalSettingPattern = /^\+?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+
+export const companySettingValueSchemas = {
+  company_name: z.string().trim().min(1, 'Company name is required').max(255),
+  company_email: z
+    .string()
+    .trim()
+    .max(255, 'Use at most 255 characters')
+    .email('Enter a valid email address')
+    .or(z.literal('')),
+  company_phone: z
+    .string()
+    .trim()
+    .max(30, 'Use at most 30 characters')
+    .refine(
+      (value) => value === '' || companyPhonePattern.test(value),
+      'Enter a valid phone number with 7 to 30 digits',
+    ),
+  company_address: z.string().trim().max(1000, 'Use at most 1000 characters'),
+  currency_code: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{3}$/, 'Enter a three-letter currency code')
+    .transform((value) => value.toUpperCase()),
+  timezone: z
+    .string()
+    .trim()
+    .max(100, 'Use at most 100 characters')
+    .refine(
+      (value) => value === 'UTC' || timezonePattern.test(value),
+      'Enter UTC or an IANA-style timezone',
+    ),
+  invoice_footer: z.string().max(1000, 'Use at most 1000 characters'),
+  credit_limit_mode: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .refine((value) => value === 'WARN' || value === 'BLOCK', 'Choose WARN or BLOCK'),
+  receipt_tolerance_pct: z
+    .string()
+    .trim()
+    .regex(decimalSettingPattern, 'Enter a non-negative number')
+    .refine(
+      (value) => Number(value) >= 0,
+      'Receiving tolerance must be non-negative',
+    ),
+} satisfies Record<string, z.ZodType<string>>;
+
 export const customerSchema = z.object({
   code: z.string().trim().min(1, 'Customer code is required').max(30, 'Use at most 30 characters'),
   name: z.string().trim().min(1, 'Customer name is required').max(255, 'Use at most 255 characters'),

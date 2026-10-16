@@ -6,6 +6,7 @@ import { ProtectedPage } from '@/components/auth/protected-page';
 import { useSessionProfile } from '@/components/auth/session-shell';
 import { FieldError, RequiredMark } from '@/components/forms/field-error';
 import { SearchableSelect } from '@/components/forms/searchable-select';
+import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { bomSchema } from '@/lib/auth-validation';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
@@ -362,21 +363,30 @@ function BOMsContent() {
                   <td className="px-4 py-3">
                     {bom.deleted_at ? (
                       canUpdate && (
-                        <button type="button" onClick={() => void setActive(bom, true)} className="text-emerald-800">
-                          Restore
-                        </button>
+                        <IconActionButton
+                          icon="restore"
+                          label={`Restore BOM ${bom.code}`}
+                          onClick={() => void setActive(bom, true)}
+                          className="p-2 text-emerald-800 hover:bg-emerald-50"
+                        />
                       )
                     ) : (
-                      <div className="flex gap-3">
+                      <div className="flex gap-1">
                         {canUpdate && (
-                          <button type="button" onClick={() => editBOM(bom)} className="text-emerald-800">
-                            Edit
-                          </button>
+                          <IconActionButton
+                            icon="edit"
+                            label={`Edit BOM ${bom.code}`}
+                            onClick={() => editBOM(bom)}
+                            className="p-2 text-emerald-800 hover:bg-emerald-50"
+                          />
                         )}
                         {canDelete && (
-                          <button type="button" onClick={() => void setActive(bom, false)} className="text-rose-700">
-                            Delete
-                          </button>
+                          <IconActionButton
+                            icon="delete"
+                            label={`Delete BOM ${bom.code}`}
+                            onClick={() => void setActive(bom, false)}
+                            className="p-2 text-rose-700 hover:bg-rose-50"
+                          />
                         )}
                       </div>
                     )}
