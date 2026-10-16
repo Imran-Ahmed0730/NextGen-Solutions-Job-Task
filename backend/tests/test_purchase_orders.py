@@ -256,7 +256,7 @@ def test_purchase_order_routes_require_permissions(
     assert client.get("/api/v1/purchase/orders/options", headers=headers).status_code == 403
     assert client.post("/api/v1/purchase/orders", headers=headers, json=payload).status_code == 403
     assert client.post("/api/v1/purchase/orders/1/submit", headers=headers).status_code == 403
-    assert client.post("/api/v1/purchase/orders/1/approve", headers=headers).status_code == 403
+    assert client.get("/api/v1/approvals/requests", headers=headers).status_code == 403
     assert client.post("/api/v1/purchase/orders/1/cancel", headers=headers).status_code == 403
 
 
@@ -274,19 +274,14 @@ def test_purchase_order_lifecycle_transitions(
     po_id = created.json()["id"]
     assert created.json()["status"] == "DRAFT"
 
-    # Submit
+    # No matching approval rule allows the order to proceed without an approval wait.
     submitted = client.post(f"/api/v1/purchase/orders/{po_id}/submit", headers=headers)
     assert submitted.status_code == 200
-    assert submitted.json()["status"] == "PENDING_APPROVAL"
+    assert submitted.json()["status"] == "APPROVED"
 
     # Cannot submit again
     invalid_submit = client.post(f"/api/v1/purchase/orders/{po_id}/submit", headers=headers)
     assert invalid_submit.status_code == 409
-
-    # Approve
-    approved = client.post(f"/api/v1/purchase/orders/{po_id}/approve", headers=headers)
-    assert approved.status_code == 200
-    assert approved.json()["status"] == "APPROVED"
 
     # Cancel approved PO
     cancelled = client.post(f"/api/v1/purchase/orders/{po_id}/cancel", headers=headers)

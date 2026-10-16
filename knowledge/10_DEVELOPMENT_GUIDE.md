@@ -874,22 +874,42 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 - The approved scope is monthly base salary less manual deductions; allowances and overtime are not
   included.
 
-### Phase 11 slice — Approval Rules
+### Phase 11 — Approvals
 
-- Approval rules select a document type, inclusive minimum/optional maximum amount, and active
-  approver role. Active amount ranges for one document type cannot overlap.
-- `/approval-rules` supports create, update, activate/deactivate, role options, and status visibility.
-  Every change is audited and protected by `approvals.rules.read/create/update`.
-- Rules are configuration only in this slice. Approval requests, decisions, the pending inbox, and
-  purchase/expense/adjustment workflow hooks have not been implemented yet.
+- Approval rules select a supported document type, inclusive minimum/optional maximum amount, and
+  active approver role. Active ranges for one type cannot overlap. The supported types are Purchase
+  Order, Expense, and Stock Adjustment; invoice, payroll, and income approvals are not in this
+  phase.
+- `/approval-rules` supports create, update, activate/deactivate, and role selection. Rule changes
+  are audited and require `approvals.rules.read/create/update`.
+- Submission evaluates PO total after discount, expense amount, or the sum of absolute adjustment
+  quantities multiplied by the product average costs captured when submitted. Adjustment amounts
+  are rounded to cents. The evaluated amount and unit-cost snapshots are retained for the request;
+  a later average-cost change does not silently change the amount being approved or posted. If no
+  active rule matches, the existing workflow proceeds without approval.
+- `GET /api/v1/approvals/requests` lists pending requests only for the caller's active approver role
+  and excludes requests submitted by that caller. `POST /api/v1/approvals/requests/{id}/approve`
+  and `/reject` require `approvals.requests.decide`; the backend also enforces approver-role
+  membership and prevents self-approval.
+- A matched PO remains `PENDING_APPROVAL` until the decision changes it to `APPROVED` or returns it
+  to `DRAFT`. Pending POs cannot be cancelled and cannot be received.
+- Matched expenses and adjustments remain `PENDING_APPROVAL` with no money/stock ledger effect.
+  Approval posts the effect in the decision transaction; if posting fails, the request and action
+  remain pending/unwritten. Rejection returns the document to editable `DRAFT`. Editing and
+  resubmitting creates a new request when a rule matches; earlier requests and action records remain
+  intact.
+- Request decisions are stored in append-only `approval_actions` rows. Request/document status
+  transitions are audited. The `/pending-approvals` screen provides the simple decision inbox.
+- Migration `20261109_approval_workflow` creates the request/action tables and assigns the new
+  approval and rejected-document edit permissions to Administrator. Backend workflow tests cover
+  matching, all three document hooks, self-approval, rejection/resubmission, and posting rollback.
 
 ### Planned, not yet implemented
 
-The remaining roadmap includes approval requests and workflow hooks, reports/dashboard, and
-full-cycle hardening. Consult
+The remaining roadmap includes reports/dashboard and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
-these workflows work end-to-end until their modules, persistence, permissions, tests, and screens
-are actually delivered.
+planned work is complete until its modules, persistence, permissions, tests, and screens are
+actually delivered.
 
 ## 11. Project documentation map
 

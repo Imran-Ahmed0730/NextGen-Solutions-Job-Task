@@ -155,7 +155,7 @@ report invalid rows while allowing valid rows in the same workbook to be saved.
 
 ## 11. Approvals
 **approval_rules**: id, doc_type, min_amount, max_amount(null), approver_role_id(FK), is_active
-**approval_requests**: id, doc_type, doc_id, requested_by, rule_id(FK), status(PENDING/APPROVED/REJECTED), requested_at, decided_at
+**approval_requests**: id, doc_type, doc_id, amount(DECIMAL 18,2; snapshot used for rule matching), requested_by, rule_id(FK), status(PENDING/APPROVED/REJECTED), requested_at, decided_at
 **approval_actions**: id, request_id(FK), user_id, action(APPROVE/REJECT), note, acted_at
 
 Approval rule ranges are inclusive and active ranges for the same document type cannot overlap.

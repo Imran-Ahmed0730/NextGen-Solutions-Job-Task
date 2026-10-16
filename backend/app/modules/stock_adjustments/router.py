@@ -54,3 +54,15 @@ def get_adjustment(
     if adjustment is None:
         raise HTTPException(status_code=404, detail="Stock adjustment not found")
     return adjustment
+
+
+@router.put("/{adjustment_id}", response_model=StockAdjustmentResponse)
+def update_rejected_adjustment(
+    adjustment_id: int,
+    payload: StockAdjustmentCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    actor: User = Depends(require_permission("inventory.adjustments.update")),
+) -> StockAdjustment:
+    ip = request.client.host if request.client else None
+    return service.update_rejected_adjustment(db, adjustment_id, payload, actor, ip)

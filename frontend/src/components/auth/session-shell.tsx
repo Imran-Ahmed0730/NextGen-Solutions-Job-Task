@@ -109,6 +109,12 @@ const navigation = [
         icon: 'settings',
         permissions: ['approvals.rules.read'],
       },
+      {
+        href: '/pending-approvals',
+        label: 'Pending Approvals',
+        icon: 'list',
+        permissions: ['approvals.requests.read'],
+      },
     ],
   },
   {

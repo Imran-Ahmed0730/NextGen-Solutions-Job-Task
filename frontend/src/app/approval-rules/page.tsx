@@ -8,7 +8,7 @@ import { RequiredMark } from '@/components/forms/field-error';
 import { IconActionButton } from '@/components/ui/action-icon';
 import { apiRequest } from '@/lib/auth-api';
 import { approvalRuleSchema } from '@/lib/auth-validation';
-import { DOCUMENT_TYPES, documentTypeLabel } from '@/lib/display-labels';
+import { documentTypeLabel } from '@/lib/display-labels';
 import { showErrorToast, showSuccessToast } from '@/lib/notifications';
 
 type RoleOption = { id: number; name: string };
@@ -21,6 +21,12 @@ type ApprovalRule = {
   approver_role: RoleOption;
   is_active: boolean;
 };
+
+const APPROVAL_DOCUMENT_TYPES = [
+  { value: 'PURCHASE_ORDER', label: 'Purchase order' },
+  { value: 'EXPENSE', label: 'Expense' },
+  { value: 'STOCK_ADJUSTMENT', label: 'Stock adjustment' },
+];
 
 function ApprovalRulesContent() {
   const permissions = useSessionProfile()?.permissions ?? [];
@@ -173,12 +179,12 @@ function ApprovalRulesContent() {
               >
                 <option value="">Choose a document type</option>
                 {selected &&
-                  !DOCUMENT_TYPES.some(({ value }) => value === selected.doc_type) && (
+                  !APPROVAL_DOCUMENT_TYPES.some(({ value }) => value === selected.doc_type) && (
                     <option value={selected.doc_type}>
                       {documentTypeLabel(selected.doc_type)} (custom type)
                     </option>
                   )}
-                {DOCUMENT_TYPES.map(({ value, label }) => (
+                {APPROVAL_DOCUMENT_TYPES.map(({ value, label }) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>

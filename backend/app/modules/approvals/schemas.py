@@ -21,9 +21,7 @@ DocumentType = Annotated[
         pattern=r"^[A-Z][A-Z0-9_]*$",
     ),
 ]
-Threshold = Annotated[
-    Decimal, Field(ge=0, max_digits=18, decimal_places=2, allow_inf_nan=False)
-]
+Threshold = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=2, allow_inf_nan=False)]
 PositiveRoleId = Annotated[int, Field(gt=0)]
 
 
@@ -89,3 +87,22 @@ class ApprovalRuleResponse(BaseModel):
 class ApprovalRoleOption(BaseModel):
     id: int
     name: str
+
+
+class ApprovalRequestResponse(BaseModel):
+    id: int
+    doc_type: str
+    doc_id: int
+    doc_no: str
+    doc_status: str
+    amount: Decimal
+    requested_by: int
+    requester_name: str
+    approver_role_id: int
+    approver_role_name: str
+    requested_at: datetime
+    status: str
+
+
+class ApprovalDecision(BaseModel):
+    note: str | None = Field(default=None, max_length=1000)

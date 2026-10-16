@@ -22,3 +22,14 @@ def get_adjustment(db: Session, adjustment_id: int) -> StockAdjustment | None:
         .where(StockAdjustment.id == adjustment_id)
     )
     return db.scalar(statement)
+
+
+def get_adjustment_for_update(db: Session, adjustment_id: int) -> StockAdjustment | None:
+    statement = (
+        select(StockAdjustment)
+        .options(selectinload(StockAdjustment.lines))
+        .where(StockAdjustment.id == adjustment_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    return db.scalar(statement)

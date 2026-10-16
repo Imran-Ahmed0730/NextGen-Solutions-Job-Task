@@ -3,19 +3,30 @@
 Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is its exit check.
 
 ## Open questions (do not let AI guess; decide and record)
-- [ ] Credit-limit check: warn or block?
-- [ ] Receiving tolerance over PO qty (percent)?
 - [ ] Invoice/report language: English only or English + Bangla?
-- [ ] Warehouse-level or company-level average cost? (default: company-level)
 - [ ] Password minimum length/complexity policy? (Current implementation requires at least 8 characters.)
+- No open Phase 11 business questions remain; see the recorded approval decisions below.
 
 ## Decisions made
 - Quotations transition `DRAFT → SENT → ACCEPTED` or `REJECTED`; only ACCEPTED quotations can be
   converted, and each quotation can create at most one Sales Order.
+- Credit-limit enforcement is configurable through `credit_limit_mode`: `WARN` or `BLOCK`.
+- Purchase receipt overage is controlled by the configurable `receipt_tolerance_pct` setting.
+- Weighted-average cost is company-level, not warehouse-level.
+- Approval rules apply to purchase orders, expenses, and stock adjustments only. Invoice, payroll,
+  and income approvals are out of the Phase 11 scope.
+- Approval amounts use PO total after discount, the expense amount, and stock-adjustment absolute
+  quantity × average cost captured when submitted (rounded to two decimals). The evaluated amount
+  is snapshotted on each approval request.
+- If no active rule matches, a PO becomes APPROVED and an expense or adjustment posts normally.
+- Rejection returns the document to an editable DRAFT and preserves the rejected request/action
+  history. Resubmission creates a new request if a rule still matches.
+- A purchase order cannot be cancelled while its approval request is pending.
 - Password recovery uses one-time reset links sent to the user's registered email address.
 - Lock an account for 15 minutes after 5 consecutive failed login attempts.
 - Payroll is limited to monthly base salary less manual deductions; no allowances or overtime.
 - A money account's `opening_balance` is the pre-ledger baseline; later opening adjustments use signed `OPENING` ledger rows. The baseline is immutable after the first money transaction.
+- The current password minimum is 8 characters; a stronger minimum/complexity policy remains undecided.
 
 ## Phase 0 — Foundation
 - [x] Create monorepo and git repository
@@ -164,11 +175,12 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 
 ## Phase 11 — Approvals
 - [x] Approval rule configuration with approver roles, amount ranges, permissions, and audit
-- [ ] Approval requests, actions
-- [ ] Hooks: PO, expense, adjustment
+- [x] Approval requests and append-only decision actions with audit history
+- [x] Rule matching and posting gates for purchase orders, expenses, and stock adjustments
 - [x] Screen: Approval Rules
-- [ ] Screen: Pending Approvals
-- [ ] Exit: block-until-approved and self-approval tests
+- [x] Screen: Pending Approvals
+- [x] Rejection returns documents to editable drafts; edits can be resubmitted with history retained
+- [x] Exit: matching documents wait for approval, self-approval is blocked, and failed posting rolls back approval
 
 ## Phase 12 — Reports & Dashboard
 - [ ] DB views (stock, due, balances, profit, KPIs)

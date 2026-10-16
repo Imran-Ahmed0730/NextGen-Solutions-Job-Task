@@ -37,9 +37,11 @@ function ExpensesContent() {
   const profile = useSessionProfile();
   const canRead = profile?.permissions.includes('money.expenses.read') ?? false;
   const canCreate = profile?.permissions.includes('money.expenses.create') ?? false;
+  const canUpdate = profile?.permissions.includes('money.expenses.update') ?? false;
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [accounts, setAccounts] = useState<MoneyAccount[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [docDate, setDocDate] = useState(today);
   const [categoryId, setCategoryId] = useState('');
   const [accountId, setAccountId] = useState('');
@@ -97,11 +99,19 @@ function ExpensesContent() {
     setError('');
     setSaving(true);
     try {
-      const created = await apiRequest<Expense>('/api/v1/expenses', {
-        method: 'POST',
-        body: JSON.stringify(parsed.data),
-      });
-      showSuccessToast(`Expense ${created.doc_no} recorded successfully.`);
+      const created = await apiRequest<Expense>(
+        editingId ? `/api/v1/expenses/${editingId}` : '/api/v1/expenses',
+        {
+          method: editingId ? 'PUT' : 'POST',
+          body: JSON.stringify(parsed.data),
+        },
+      );
+      showSuccessToast(
+        created.status === 'PENDING_APPROVAL'
+          ? `Expense ${created.doc_no} submitted for approval.`
+          : `Expense ${created.doc_no} recorded successfully.`,
+      );
+      setEditingId(null);
       setAmount('');
       setPaidTo('');
       setNote('');
@@ -113,6 +123,28 @@ function ExpensesContent() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function editExpense(item: Expense) {
+    setEditingId(item.id);
+    setDocDate(item.doc_date);
+    setCategoryId(String(item.category_id));
+    setAccountId(String(item.account_id));
+    setAmount(item.amount);
+    setPaidTo(item.paid_to ?? '');
+    setNote(item.note ?? '');
+    setError('');
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setDocDate(today());
+    setCategoryId('');
+    setAccountId('');
+    setAmount('');
+    setPaidTo('');
+    setNote('');
+    setError('');
   }
 
   if (!canRead) {
@@ -137,12 +169,14 @@ function ExpensesContent() {
         </p>
       </header>
 
-      {canCreate && (
+      {(canCreate || editingId !== null) && (
         <form
           onSubmit={(e) => void submit(e)}
           className="space-y-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
         >
-          <h2 className="text-lg font-semibold text-slate-900">Record Expense</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            {editingId ? 'Edit rejected expense' : 'Record Expense'}
+          </h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <label className="text-sm font-medium text-slate-700">
               Document date<RequiredMark />
@@ -232,8 +266,18 @@ function ExpensesContent() {
             disabled={saving}
             className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
           >
-            {saving ? 'Recording…' : 'Record expense'}
+            {saving ? 'Saving…' : editingId ? 'Resubmit expense' : 'Record expense'}
           </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              disabled={saving}
+              className="ml-2 rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            >
+              Cancel edit
+            </button>
+          )}
         </form>
       )}
 
@@ -258,6 +302,7 @@ function ExpensesContent() {
                   <th className="px-4 py-3 text-right">Amount</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Note</th>
+                  <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -277,6 +322,17 @@ function ExpensesContent() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{item.note || '—'}</td>
+                    <td className="px-4 py-3">
+                      {item.status === 'DRAFT' && canUpdate && (
+                        <button
+                          type="button"
+                          onClick={() => editExpense(item)}
+                          className="font-medium text-emerald-800 hover:underline"
+                        >
+                          Edit and resubmit
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

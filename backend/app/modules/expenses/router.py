@@ -55,3 +55,14 @@ def get_expense(
         raise HTTPException(status_code=404, detail="Expense not found")
     return expense
 
+
+@router.put("/{expense_id}", response_model=ExpenseResponse)
+def update_rejected_expense(
+    expense_id: int,
+    payload: ExpenseCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    actor: User = Depends(require_permission("money.expenses.update")),
+) -> Expense:
+    ip = request.client.host if request.client else None
+    return service.update_rejected_expense(db, expense_id, payload, actor, ip)

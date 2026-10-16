@@ -147,13 +147,18 @@ reporting invalid or duplicate rows. Basic Payroll now snapshots active employee
 salaries, permits draft deductions, and posts each nonzero net salary to the Money ledger atomically.
 
 ## Phase 11 — Approvals
-**Build:** approval rules, requests, actions, pending inbox, hooks on PO / expense / adjustment / (optionally invoice, payroll).
+**Build:** approval rules, requests, actions, pending inbox, and hooks on PO / expense / adjustment. Invoice, payroll, and income approvals are outside the current Phase 11 scope.
 **Screens:** Approval Rules, Pending Approvals.
 **Exit:** matching document blocked until approved; self-approval blocked.
 
-**Progress:** Approval rule configuration is implemented with role selection, validated
-non-overlapping inclusive amount ranges, audit history, and permissions. Approval requests/actions,
-the pending inbox, and document workflow hooks remain pending.
+**Progress:** Approval rules, append-only request/action history, and a role-filtered pending inbox
+are implemented. Matching POs wait for approval before they become APPROVED; matching expenses and
+stock adjustments do not post money or stock effects until an approver decides. Approval decisions,
+document status changes, and posting effects are atomic and audited. Requesters cannot approve their
+own documents, and approval amounts are snapshotted for history. Rejection returns documents to an
+editable draft; resubmission creates a new request. No matching rule preserves the normal flow.
+Backend tests cover rule matching, all three hooks, role/self-approval checks, rejection/resubmission,
+and rollback when posting fails.
 
 ## Phase 12 — Reports & Dashboard
 **Build:** database views, report services, Report Center + Report Viewer, PDF/CSV export, management dashboard.

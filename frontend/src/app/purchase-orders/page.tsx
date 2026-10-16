@@ -69,7 +69,6 @@ function PurchaseOrdersContent() {
   const canCreate = profile?.permissions.includes('purchase.orders.create') ?? false;
   const canUpdate = profile?.permissions.includes('purchase.orders.update') ?? false;
   const canSubmit = profile?.permissions.includes('purchase.orders.submit') ?? false;
-  const canApprove = profile?.permissions.includes('purchase.orders.approve') ?? false;
   const canCancel = profile?.permissions.includes('purchase.orders.cancel') ?? false;
   const [options, setOptions] = useState<PurchaseOrderOptions>({
     suppliers: [],
@@ -220,17 +219,6 @@ function PurchaseOrdersContent() {
       await reload(offset);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : 'Could not submit purchase order';
-      showErrorToast(message);
-    }
-  }
-
-  async function approveOrder(id: number) {
-    try {
-      await apiRequest(`/api/v1/purchase/orders/${id}/approve`, { method: 'POST' });
-      showSuccessToast('Purchase order approved');
-      await reload(offset);
-    } catch (cause) {
-      const message = cause instanceof Error ? cause.message : 'Could not approve purchase order';
       showErrorToast(message);
     }
   }
@@ -523,15 +511,7 @@ function PurchaseOrdersContent() {
                           className="p-2 text-blue-800 hover:bg-blue-50"
                         />
                       )}
-                      {(order.status === 'DRAFT' || order.status === 'PENDING_APPROVAL') && canApprove && (
-                        <IconActionButton
-                          icon="complete"
-                          label={`Approve purchase order ${order.doc_no}`}
-                          onClick={() => void approveOrder(order.id)}
-                          className="p-2 text-emerald-800 hover:bg-emerald-50"
-                        />
-                      )}
-                      {['DRAFT', 'PENDING_APPROVAL', 'APPROVED'].includes(order.status) && canCancel && (
+                      {['DRAFT', 'APPROVED'].includes(order.status) && canCancel && (
                         <IconActionButton
                           icon="cancel"
                           label={`Cancel purchase order ${order.doc_no}`}

@@ -118,6 +118,7 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("money.supplier_payments.create", "money", "Post supplier payments"),
     PermissionDefinition("money.expenses.read", "money", "View expenses"),
     PermissionDefinition("money.expenses.create", "money", "Create expenses"),
+    PermissionDefinition("money.expenses.update", "money", "Edit rejected expenses"),
     PermissionDefinition("money.incomes.read", "money", "View incomes"),
     PermissionDefinition("money.incomes.create", "money", "Create incomes"),
     PermissionDefinition("money.transfers.read", "money", "View fund transfers"),
@@ -188,6 +189,9 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("inventory.transfers.create", "inventory", "Post stock transfers"),
     PermissionDefinition("inventory.adjustments.read", "inventory", "View stock adjustments"),
     PermissionDefinition("inventory.adjustments.create", "inventory", "Post stock adjustments"),
+    PermissionDefinition(
+        "inventory.adjustments.update", "inventory", "Edit rejected stock adjustments"
+    ),
     PermissionDefinition("inventory.physical_counts.read", "inventory", "View physical counts"),
     PermissionDefinition("inventory.physical_counts.create", "inventory", "Manage physical counts"),
     PermissionDefinition("purchase.orders.read", "purchase", "View purchase orders"),
@@ -233,6 +237,12 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("approvals.rules.create", "approvals", "Create approval rules"),
     PermissionDefinition(
         "approvals.rules.update", "approvals", "Update and activate approval rules"
+    ),
+    PermissionDefinition(
+        "approvals.requests.read", "approvals", "View pending approval requests"
+    ),
+    PermissionDefinition(
+        "approvals.requests.decide", "approvals", "Approve or reject approval requests"
     ),
 )
 

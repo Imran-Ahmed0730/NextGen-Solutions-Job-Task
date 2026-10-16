@@ -20,6 +20,15 @@ def get_expense(db: Session, expense_id: int) -> Expense | None:
     return db.get(Expense, expense_id)
 
 
+def get_expense_for_update(db: Session, expense_id: int) -> Expense | None:
+    return db.scalar(
+        select(Expense)
+        .where(Expense.id == expense_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+
+
 def get_category_for_update(db: Session, category_id: int) -> ExpenseCategory | None:
     return db.scalar(
         select(ExpenseCategory)
@@ -36,4 +45,3 @@ def get_account_for_update(db: Session, account_id: int) -> MoneyAccount | None:
         .with_for_update()
         .execution_options(populate_existing=True)
     )
-

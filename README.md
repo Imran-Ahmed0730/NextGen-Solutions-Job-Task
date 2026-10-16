@@ -1,15 +1,28 @@
 # Sabuj Pran Business Management Platform
 
-This repository is the foundation for the Sabuj Pran modular monolith described in the product blueprint.
+Sabuj Pran is a modular-monolith ERP-lite for a small manufacturing and trading business. It
+combines purchasing, inventory, production, sales, money management, assets, employees, and
+administration in one FastAPI API and Next.js web application backed by MySQL.
 
-## Included foundation
+## Project status
 
-- Monorepo structure and Docker Compose development setup
-- FastAPI backend with Alembic and a health endpoint
-- Next.js frontend with TypeScript, Tailwind CSS, and shared UI primitives
-- Ruff, Mypy, Pytest, Vitest, and CI checks
-- Phase 1 authentication, role-based permissions, audit logging, and administration screens
-- Phase 2 Units and hierarchical product-category master-data modules
+Phases 0–11 are implemented, including authentication and administration, master data, parties,
+inventory, purchasing, money workflows, sales, production, assets, attendance, and basic payroll.
+Approval rules and requests, the pending-approvals inbox, and PO/expense/adjustment posting gates
+are complete. Reports/dashboard and final hardening/delivery work remain planned.
+
+See [the phased plan](./knowledge/05_PLAN.md), [the current checklist](./knowledge/06_TODO.md), and
+[the implementation guide](./knowledge/10_DEVELOPMENT_GUIDE.md) for details. The business and
+engineering requirements in [04_RULES.md](./knowledge/04_RULES.md) govern implementation.
+
+## Included
+
+- FastAPI backend with SQLAlchemy, Alembic, and MySQL 8
+- Next.js App Router frontend with TypeScript, Tailwind CSS, and Zod validation
+- Role-based permissions, authentication, audit logging, and administration
+- Inventory and money ledgers with transactional posting services
+- Purchasing, sales, production, assets, employee, attendance, and payroll workflows
+- Ruff, Mypy, Pytest, Vitest, TypeScript checks, and CI
 
 ## Stack
 
@@ -90,9 +103,11 @@ the API; reset tokens are never displayed in the Users screen or written to the 
 - The sign-out action is available to roles granted `auth.session.logout`; role managers should
   assign it to every role that needs to sign out through the UI.
 
-## Phase 2 progress
+## Documentation
 
-The Units master-data slice is implemented at `/units`. Product categories are managed at
-`/categories`, including parent-child hierarchies. Both support create, update, soft-delete, restore,
-permission checks, and audit logging. Other Phase 2 master-data modules remain in the project plan
-and are not yet implemented.
+- [Project overview](./knowledge/01_PROJECT.md)
+- [Product requirements](./knowledge/03_PRD.md)
+- [Business and engineering rules](./knowledge/04_RULES.md)
+- [Application workflows](./knowledge/08_APP_FLOW.md)
+- [Database schema](./knowledge/09_SCHEMA.md)
+- [Development guide](./knowledge/10_DEVELOPMENT_GUIDE.md)

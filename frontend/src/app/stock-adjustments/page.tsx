@@ -61,9 +61,11 @@ function StockAdjustmentsContent() {
   const profile = useSessionProfile();
   const canRead = profile?.permissions.includes('inventory.adjustments.read') ?? false;
   const canCreate = profile?.permissions.includes('inventory.adjustments.create') ?? false;
+  const canUpdate = profile?.permissions.includes('inventory.adjustments.update') ?? false;
   const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [adjustments, setAdjustments] = useState<StockAdjustment[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [linkedAdjustment, setLinkedAdjustment] = useState<StockAdjustment | null>(null);
   const [warehouseId, setWarehouseId] = useState('');
   const [docDate, setDocDate] = useState(today);
@@ -153,11 +155,21 @@ function StockAdjustmentsContent() {
     setError('');
     setSaving(true);
     try {
-      const posted = await apiRequest<StockAdjustment>('/api/v1/inventory/adjustments', {
-        method: 'POST',
-        body: JSON.stringify(parsed.data),
-      });
-      showSuccessToast(`Adjustment ${posted.doc_no} posted.`);
+      const saved = await apiRequest<StockAdjustment>(
+        editingId
+          ? `/api/v1/inventory/adjustments/${editingId}`
+          : '/api/v1/inventory/adjustments',
+        {
+          method: editingId ? 'PUT' : 'POST',
+          body: JSON.stringify(parsed.data),
+        },
+      );
+      showSuccessToast(
+        saved.status === 'PENDING_APPROVAL'
+          ? `Adjustment ${saved.doc_no} submitted for approval.`
+          : `Adjustment ${saved.doc_no} posted.`,
+      );
+      setEditingId(null);
       setReason('');
       setLines([{ product_id: '', direction: 'IN', qty: '' }]);
       setOffset(0);
@@ -176,6 +188,30 @@ function StockAdjustmentsContent() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function editAdjustment(adjustment: StockAdjustment) {
+    setEditingId(adjustment.id);
+    setWarehouseId(String(adjustment.warehouse_id));
+    setDocDate(adjustment.doc_date);
+    setReason(adjustment.reason);
+    setLines(
+      adjustment.lines.map((line) => ({
+        product_id: String(line.product_id),
+        direction: line.qty_signed.startsWith('-') ? 'OUT' : 'IN',
+        qty: line.qty_signed.replace('-', ''),
+      })),
+    );
+    setError('');
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setWarehouseId('');
+    setDocDate(today());
+    setReason('');
+    setLines([{ product_id: '', direction: 'IN', qty: '' }]);
+    setError('');
   }
 
   async function changePage(nextOffset: number) {
@@ -235,12 +271,14 @@ function StockAdjustmentsContent() {
         </aside>
       )}
 
-      {canCreate && (
+      {(canCreate || editingId !== null) && (
         <form
           onSubmit={(event) => void submit(event)}
           className="space-y-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
         >
-          <h2 className="text-lg font-semibold text-slate-900">New adjustment</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            {editingId ? 'Edit rejected adjustment' : 'New adjustment'}
+          </h2>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-medium text-slate-700">
               Adjustment date<RequiredMark />
@@ -376,8 +414,18 @@ function StockAdjustmentsContent() {
             disabled={saving || warehouses.length === 0 || products.length === 0}
             className="min-h-10 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving ? 'Posting…' : 'Post adjustment'}
+            {saving ? 'Saving…' : editingId ? 'Resubmit adjustment' : 'Post adjustment'}
           </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              disabled={saving}
+              className="ml-2 min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700"
+            >
+              Cancel edit
+            </button>
+          )}
         </form>
       )}
 
@@ -404,6 +452,7 @@ function StockAdjustmentsContent() {
                 <th className="px-4 py-3">Reason</th>
                 <th className="px-4 py-3">Products</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -433,18 +482,29 @@ function StockAdjustmentsContent() {
                       {statusLabel(adjustment.status)}
                     </span>
                   </td>
+                  <td className="px-4 py-3">
+                    {adjustment.status === 'DRAFT' && canUpdate && (
+                      <button
+                        type="button"
+                        onClick={() => editAdjustment(adjustment)}
+                        className="font-medium text-emerald-800 hover:underline"
+                      >
+                        Edit and resubmit
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {!loading && adjustments.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
                     No stock adjustments have been posted.
                   </td>
                 </tr>
               )}
               {loading && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-slate-500" role="status">
+                  <td colSpan={7} className="px-4 py-10 text-center text-slate-500" role="status">
                     Loading adjustments…
                   </td>
                 </tr>

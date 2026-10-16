@@ -23,7 +23,13 @@ ID_TYPE = (
 
 class StockAdjustment(Base):
     __tablename__ = "stock_adjustments"
-    __table_args__ = (UniqueConstraint("doc_no", name="uq_stock_adjustments_doc_no"),)
+    __table_args__ = (
+        UniqueConstraint("doc_no", name="uq_stock_adjustments_doc_no"),
+        CheckConstraint(
+            "status IN ('DRAFT', 'PENDING_APPROVAL', 'POSTED')",
+            name="ck_stock_adjustments_status",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)
     doc_no: Mapped[str] = mapped_column(String(50), nullable=False)

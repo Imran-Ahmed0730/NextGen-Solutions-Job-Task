@@ -30,7 +30,10 @@ class Expense(Base):
     __table_args__ = (
         UniqueConstraint("doc_no", name="uq_expenses_doc_no"),
         CheckConstraint("amount > 0", name="ck_expenses_positive_amount"),
-        CheckConstraint("status = 'POSTED'", name="ck_expenses_posted_status"),
+        CheckConstraint(
+            "status IN ('DRAFT', 'PENDING_APPROVAL', 'POSTED')",
+            name="ck_expenses_status",
+        ),
         Index("ix_expenses_category_id", "category_id"),
         Index("ix_expenses_account_id", "account_id"),
     )
@@ -54,4 +57,3 @@ class Expense(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
-
