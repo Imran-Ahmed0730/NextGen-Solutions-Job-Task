@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
 
 EmployeeCode = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)
@@ -10,7 +10,10 @@ EmployeeCode = Annotated[
 EmployeeName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=150)
 ]
-OptionalMobile = Annotated[str, StringConstraints(strip_whitespace=True, max_length=30)] | None
+OptionalMobile = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, pattern=r"^01[3-9]\d{8}$"),
+] | None
 OptionalDesignation = Annotated[
     str, StringConstraints(strip_whitespace=True, max_length=100)
 ] | None
@@ -30,6 +33,11 @@ class EmployeeCreate(BaseModel):
     join_date: date
     base_salary: BaseSalary
 
+    @field_validator("mobile", mode="before")
+    @classmethod
+    def blank_mobile_is_none(cls, value: object) -> object:
+        return None if isinstance(value, str) and not value.strip() else value
+
 
 class EmployeeUpdate(BaseModel):
     code: EmployeeCode | None = None
@@ -40,6 +48,11 @@ class EmployeeUpdate(BaseModel):
     department: OptionalDepartment = None
     join_date: date | None = None
     base_salary: BaseSalary | None = None
+
+    @field_validator("mobile", mode="before")
+    @classmethod
+    def blank_mobile_is_none(cls, value: object) -> object:
+        return None if isinstance(value, str) and not value.strip() else value
 
 
 class EmployeeResponse(BaseModel):

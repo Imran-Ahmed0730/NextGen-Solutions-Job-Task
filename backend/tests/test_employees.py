@@ -137,6 +137,12 @@ def test_employee_validation_and_permission_denial(
         json={**_employee_payload("EMP-BAD"), "base_salary": "-1.00"},
     )
     assert invalid.status_code == 422
+    invalid_mobile = client.post(
+        "/api/v1/employees",
+        headers=headers,
+        json={**_employee_payload("EMP-BAD-MOBILE"), "mobile": "abc"},
+    )
+    assert invalid_mobile.status_code == 422
 
     admin = db_session.scalar(select(User).where(User.username == "admin"))
     assert admin is not None

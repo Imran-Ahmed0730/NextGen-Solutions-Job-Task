@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import Swal from 'sweetalert2';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
@@ -38,13 +38,18 @@ function EmployeesContent() {
   const [includeInactive, setIncludeInactive] = useState(false);
   const [search, setSearch] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
+  const listRequestId = useRef(0);
 
   const reload = useCallback(async () => {
+    const requestId = ++listRequestId.current;
     const params = new URLSearchParams();
     if (includeInactive) params.set('include_inactive', 'true');
     if (search.trim()) params.set('search', search.trim());
     const query = params.size ? `?${params.toString()}` : '';
-    setEmployees(await apiRequest<EmployeeRecord[]>(`/api/v1/employees${query}`));
+    const result = await apiRequest<EmployeeRecord[]>(`/api/v1/employees${query}`, {
+      cache: 'no-store',
+    });
+    if (requestId === listRequestId.current) setEmployees(result);
   }, [includeInactive, search]);
 
   useEffect(() => {
@@ -59,7 +64,7 @@ function EmployeesContent() {
     const parsed = employeeSchema.safeParse({
       code: form.get('code'),
       name: form.get('name'),
-      mobile: form.get('mobile'),
+      mobile: form.get('mobile') || null,
       email: form.get('email') || null,
       designation: form.get('designation'),
       department: form.get('department'),
@@ -191,11 +196,16 @@ function EmployeesContent() {
             Mobile
             <input
               name="mobile"
-              placeholder="Optional phone number"
+              type="tel"
+              inputMode="numeric"
+              placeholder="e.g. 01712345678"
               defaultValue={selected?.mobile ?? ''}
-              maxLength={30}
+              maxLength={11}
+              aria-invalid={Boolean(errors.mobile)}
+              aria-describedby={errors.mobile ? 'employee-mobile-error' : undefined}
               className="mt-1 w-full rounded-md border px-3 py-2"
             />
+            <FieldError id="employee-mobile-error" message={errors.mobile} />
           </label>
           <label className="text-sm font-medium">
             Email

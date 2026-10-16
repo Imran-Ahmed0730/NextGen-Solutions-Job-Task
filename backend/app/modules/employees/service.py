@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 
@@ -36,7 +37,7 @@ def create_employee(
     employee = Employee(
         code=code,
         name=_required_text(data.get("name"), "Employee name", 150),
-        mobile=_optional_text(data.get("mobile"), "Mobile", 30),
+        mobile=_optional_mobile(data.get("mobile")),
         email=_optional_text(data.get("email"), "Email", 255),
         designation=_optional_text(data.get("designation"), "Designation", 100),
         department=_optional_text(data.get("department"), "Department", 100),
@@ -87,7 +88,11 @@ def update_employee(
         ("department", "Department", 100),
     ):
         if field in data:
-            updates[field] = _optional_text(data[field], label, maximum)
+            updates[field] = (
+                _optional_mobile(data[field])
+                if field == "mobile"
+                else _optional_text(data[field], label, maximum)
+            )
     if "join_date" in data:
         updates["join_date"] = _date(data["join_date"])
     if "base_salary" in data:
@@ -182,6 +187,16 @@ def _optional_text(value: object, label: str, maximum: int) -> str | None:
         return None
     if len(result) > maximum:
         raise HTTPException(status_code=422, detail=f"{label} is too long")
+    return result
+
+
+def _optional_mobile(value: object) -> str | None:
+    result = _optional_text(value, "Mobile", 11)
+    if result is not None and re.fullmatch(r"01[3-9]\d{8}", result) is None:
+        raise HTTPException(
+            status_code=422,
+            detail="Use a valid Bangladesh mobile number, e.g. 01712345678",
+        )
     return result
 
 

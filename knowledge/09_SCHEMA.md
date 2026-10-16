@@ -134,7 +134,7 @@ Assets use soft deletion. Assignment history is location-only in Phase 9; the nu
 added by a later migration.
 
 ## 10. Employees
-**employees**: id, code(U), name, mobile(null), email(null), designation(null), department(null), join_date, base_salary(DECIMAL 18,2), is_active, deleted_at, created_at, updated_at
+**employees**: id, code(U), name, mobile(null, valid Bangladesh mobile number), email(null), designation(null), department(null), join_date, base_salary(DECIMAL 18,2), is_active, deleted_at, created_at, updated_at
 **attendance**: id, employee_id(FK), att_date, status(PRESENT/ABSENT/LEAVE/LATE), in_time, out_time, (U employee_id+att_date)
 **payroll_runs**: id, doc_no, period_month, period_year, status, total_amount
 **payroll_lines**: id, run_id(FK), employee_id(FK), base_salary, additions, deductions, net_pay, paid_txn_id(FK→money_transactions, null)

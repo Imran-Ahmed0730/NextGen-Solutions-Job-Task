@@ -196,7 +196,13 @@ export const assetMaintenanceSchema = z.object({
 export const employeeSchema = z.object({
   code: z.string().trim().min(1, 'Employee code is required').max(50),
   name: z.string().trim().min(1, 'Employee name is required').max(150),
-  mobile: z.string().trim().max(30).optional(),
+  mobile: z
+    .string()
+    .trim()
+    .max(11, 'Use an 11-digit Bangladesh mobile number')
+    .regex(/^$|^01[3-9]\d{8}$/, 'Use a valid Bangladesh mobile number, e.g. 01712345678')
+    .nullable()
+    .optional(),
   email: z
     .string()
     .trim()
