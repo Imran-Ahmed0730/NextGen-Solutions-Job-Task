@@ -100,6 +100,9 @@ The Phase 4 `inventory` module provides the append-only stock transaction ledger
 balance projection, the sole stock-posting service, and authenticated stock and ledger read APIs.
 The separate `stock_transfers` module uses that posting service to move stock between warehouses
 atomically.
+The Phase 9 `assets` module manages the asset register, location assignment/return history, and
+maintenance records. Assignment records are location-only until the employee master is delivered
+in Phase 10.
 
 The protected app shell uses a permission-filtered, grouped sidebar on desktop and a toggleable
 drawer on smaller screens. The top bar shows the current route and signed-in account.
@@ -138,6 +141,7 @@ The frontend route tree currently includes:
 | `/sales-invoices` | Post invoices from deliveries, apply credit-limit mode, and browse invoice/COGS history |
 | `/sales-returns` | Return remaining invoiced quantities, restore stock at original COGS, and reduce customer due |
 | `/boms` | Create, edit, browse, soft-delete, and restore Bills of Materials |
+| `/assets` | Register/edit assets, assign/return locations, and review maintenance history |
 | `/production-orders` | Create/edit drafts, start/cancel orders, post actual production, and review costs |
 | `/supplier-payments` | Post supplier payments with optional bill allocation and view history |
 | `/expenses` | Record operational expenses paid from any money account and browse expense history |
@@ -295,6 +299,12 @@ The implemented auth API is:
 | `POST /api/v1/production/orders/{id}/start` | `production.orders.update` | Check material availability and start a draft |
 | `POST /api/v1/production/orders/{id}/complete` | `production.orders.update` | Atomically post material consumption, output, and production costs |
 | `POST /api/v1/production/orders/{id}/cancel` | `production.orders.update` | Cancel a draft or in-progress order |
+| `GET /api/v1/assets` | `assets.read` | List active assets; `include_inactive=true` includes soft-deleted assets |
+| `POST /api/v1/assets` / `PATCH /api/v1/assets/{id}` | `assets.create/update` | Create or edit the asset register |
+| `DELETE /api/v1/assets/{id}` / `POST /api/v1/assets/{id}/restore` | `assets.delete/update` | Soft-delete or restore an asset |
+| `POST /api/v1/assets/{id}/assignments` | `assets.assign` | Assign an asset to a location and add assignment history |
+| `POST /api/v1/assets/{id}/assignments/{assignment_id}/return` | `assets.assign` | Return an active location assignment to store |
+| `POST /api/v1/assets/{id}/maintenance` | `assets.maintain` | Record maintenance cost, description, and optional next due date |
 | `GET /api/v1/sales/quotations` / `GET /api/v1/sales/quotations/{id}` | `sales.quotations.read` | List or view quotation drafts |
 | `GET /api/v1/sales/quotations/options` | `sales.quotations.read` | Read active customers and products for quotation entry |
 | `POST /api/v1/sales/quotations` | `sales.quotations.create` | Create a numbered quotation draft and audit snapshot |
@@ -801,8 +811,19 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
 
 ### Planned, not yet implemented
 
-The remaining roadmap includes the rest of Sales, production, assets, employees,
-approvals, reports/dashboard, and full-cycle hardening. Consult
+### Implemented Phase 9 — Assets
+
+- Asset register with code uniqueness, nonnegative purchase cost, status, update, soft-delete, and
+  restore.
+- Location assignment/return history prevents a second active assignment and is audited.
+- Maintenance records capture date, description, cost, and optional next due date.
+- Six `assets.*` permissions are included in the migration and administrator seed.
+- The `/assets` screen is permission-aware and shows assignment and maintenance history.
+- Employee-linked assignments remain deferred until Phase 10 because the employee master is not
+  yet available. Backend lifecycle, audit, validation, and permission-denial tests are in
+  `backend/tests/test_assets.py`.
+
+The remaining roadmap includes employees, approvals, reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens
 are actually delivered.

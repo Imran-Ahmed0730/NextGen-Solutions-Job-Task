@@ -171,6 +171,28 @@ export const warehouseSchema = z.object({
   is_active: z.boolean(),
 });
 
+export const assetSchema = z.object({
+  asset_code: z.string().trim().min(1, 'Asset code is required').max(50),
+  name: z.string().trim().min(1, 'Asset name is required').max(150),
+  category: z.string().trim().min(1, 'Category is required').max(100),
+  purchase_date: z.string().min(1, 'Purchase date is required'),
+  purchase_cost: z.coerce.number().min(0, 'Cost cannot be negative'),
+  location: z.string().trim().min(1, 'Location is required').max(150),
+  status: z.enum(['IN_USE', 'IN_STORE', 'UNDER_MAINTENANCE', 'DISPOSED']),
+});
+
+export const assetAssignmentSchema = z.object({
+  location: z.string().trim().min(1, 'Location is required').max(150),
+  assigned_on: z.string().min(1, 'Assigned date is required'),
+});
+
+export const assetMaintenanceSchema = z.object({
+  maintenance_date: z.string().min(1, 'Maintenance date is required'),
+  description: z.string().trim().min(1, 'Description is required').max(2000),
+  cost: z.coerce.number().min(0, 'Cost cannot be negative'),
+  next_due_date: z.string().optional(),
+});
+
 export const bomSchema = z.object({
   code: z.string().trim().min(1, 'BOM code is required').max(50, 'Use at most 50 characters'),
   finished_product_id: z.number().int().positive('Choose a finished product'),

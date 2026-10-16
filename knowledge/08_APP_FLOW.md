@@ -149,7 +149,9 @@ Sales Order details.
 Employee master → daily/monthly Attendance → Payroll run (salary, deductions) → Approve → Pay via Money (account ↓, expense recorded) → payslip.
 
 ### 5.6 Assets
-Register asset → assign to employee/location → log maintenance → view history.
+Register asset → assign to a location → return to store → log maintenance → review assignment and
+maintenance history. Employee-linked assignment is deferred until the Phase 10 employee master is
+implemented; the current assignment history records locations only.
 
 ### 5.7 Approvals
 ```

@@ -106,6 +106,17 @@ const navigation = [
     ],
   },
   {
+    label: 'Operations',
+    items: [
+      {
+        href: '/assets',
+        label: 'Assets',
+        icon: 'box',
+        permissions: ['assets.read'],
+      },
+    ],
+  },
+  {
     label: 'Parties',
     items: [
       {

@@ -6,6 +6,7 @@ from app.api.health import router as health_router
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.security import require_permission
+from app.modules.assets.router import router as assets_router
 from app.modules.auth.models import User
 from app.modules.auth.router import router as auth_router
 from app.modules.boms.router import router as boms_router
@@ -56,6 +57,7 @@ app.add_middleware(
 register_exception_handlers(app)
 app.include_router(health_router)
 app.include_router(auth_router)
+app.include_router(assets_router)
 app.include_router(company_settings_router)
 app.include_router(customers_router)
 app.include_router(document_numbering_router)

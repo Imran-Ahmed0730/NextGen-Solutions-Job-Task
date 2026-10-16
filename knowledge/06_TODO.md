@@ -65,7 +65,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Customer/supplier contact management screens
 - [x] Search, pagination, input validation, and permission denial coverage
 - [x] Exit: party/contact CRUD, audit, permissions, and opening-balance statement behavior tested
-- [ ] Extend customer statements with posted invoices and returns (Phase 7)
+- [x] Extend customer statements with posted invoices and returns (Phase 7)
 - [x] Extend customer statements with posted collections (Phase 6)
 - [x] Extend supplier statements with posted Purchase Returns (Phase 5)
 - [x] Extend supplier statements with supplier payments (Phase 6)
@@ -84,7 +84,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Product Stock Ledger screen with filters, running balances, and source-document links
 - [x] Phase 4 reservation balance service (reserve/release/consume) with partial quantity tracking
 - [x] Minimal sales-order/line persistence and reservation foreign-key target
-- [ ] Integrate reservations with Sales order workflow in Phase 7
+- [x] Integrate reservations with Sales order workflow in Phase 7
 - [x] Physical count snapshot, counted quantities, variance review, and atomic posting
 - [x] Physical Count screen with permission gating
 - [x] Invariant, negative-stock and concurrency tests
@@ -142,8 +142,11 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Exit: cost, stock, shortage-link, and rollback effects tested
 
 ## Phase 9 — Assets
-- [ ] Asset, assignment, maintenance models + services
-- [ ] Screens: Asset List, Add/Edit, Assignment & Maintenance
+- [x] Asset register, location assignment history, and maintenance models + services, migration,
+      permissions, and audit
+- [x] Screens: Asset List, Add/Edit, Location Assignment/Return, Maintenance History
+- [x] Exit: CRUD, validation, history, permission denial, and audit tests pass
+- [ ] Employee-linked asset assignment (deferred until Phase 10 employee master)
 
 ## Phase 10 — Employees
 - [ ] Employee master

@@ -124,9 +124,10 @@ updates the line's Produced quantity with audit in the same completion transacti
 output beyond the order line's unreserved, undelivered remaining quantity. Phase 8 exit checks pass.
 
 ## Phase 9 — Assets
-**Build:** asset register, assignment, maintenance.
-**Screens:** Asset List, Asset Add/Edit, Asset Assignment & Maintenance.
-**Exit:** CRUD, history, permissions, audit.
+**Build:** asset register, location assignment history, maintenance log. Employee-linked assignment
+is deferred until Phase 10 because the employee master does not exist yet.
+**Screens:** Asset List, Add/Edit, Location Assignment/Return, Maintenance History.
+**Exit:** CRUD, location and maintenance history, permissions, audit, and validation tests pass.
 
 ## Phase 10 — Employees
 **Build:** employee master, attendance, basic payroll, salary payment through Money.

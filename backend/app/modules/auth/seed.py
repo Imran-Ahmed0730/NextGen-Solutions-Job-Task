@@ -202,6 +202,12 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("purchase.direct_purchases.create", "purchase", "Post direct purchases"),
     PermissionDefinition("purchase.returns.read", "purchase", "View purchase returns"),
     PermissionDefinition("purchase.returns.create", "purchase", "Post purchase returns"),
+    PermissionDefinition("assets.read", "assets", "View assets"),
+    PermissionDefinition("assets.create", "assets", "Create assets"),
+    PermissionDefinition("assets.update", "assets", "Update and restore assets"),
+    PermissionDefinition("assets.delete", "assets", "Delete assets"),
+    PermissionDefinition("assets.assign", "assets", "Assign assets to locations"),
+    PermissionDefinition("assets.maintain", "assets", "Record asset maintenance"),
 )
 
 

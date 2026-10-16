@@ -125,9 +125,13 @@ returns reduce customer due in the statement calculation.
 **fund_transfers**: id, doc_no, doc_date, from_account_id, to_account_id, amount, status, note
 
 ## 9. Assets
-**assets**: id, asset_code(U), name, category, purchase_date, purchase_cost, location, status(IN_USE/IN_STORE/UNDER_MAINTENANCE/DISPOSED)
-**asset_assignments**: id, asset_id(FK), employee_id(FK, null), location, assigned_on, returned_on
-**asset_maintenance**: id, asset_id(FK), maintenance_date, description, cost, next_due_date
+**assets**: id, asset_code(U), name, category, purchase_date, purchase_cost(DECIMAL 18,2), location, status(IN_USE/IN_STORE/UNDER_MAINTENANCE/DISPOSED), is_active, deleted_at, created_by, created_at, updated_at
+**asset_assignments**: id, asset_id(FK), location, assigned_on, returned_on, created_at
+**asset_maintenance**: id, asset_id(FK), maintenance_date, description, cost(DECIMAL 18,2), next_due_date, created_by, created_at
+
+Assets use soft deletion. Assignment history is location-only in Phase 9; the nullable
+`employee_id` from the target design is deferred until the Phase 10 employee master and will be
+added by a later migration.
 
 ## 10. Employees
 **employees**: id, code(U), name, mobile, email, designation, department, join_date, base_salary, status
