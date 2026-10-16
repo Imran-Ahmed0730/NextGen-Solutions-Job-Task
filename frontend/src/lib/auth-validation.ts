@@ -254,6 +254,23 @@ export const attendanceDateRangeSchema = z
     path: ['to_date'],
   });
 
+export const payrollRunSchema = z.object({
+  period_month: z.number().int().min(1).max(12),
+  period_year: z.number().int().min(2000).max(9999),
+});
+
+export const payrollDeductionSchema = z.object({
+  deductions: z
+    .string()
+    .trim()
+    .regex(/^\d{1,16}(?:\.\d{1,2})?$/, 'Enter a nonnegative amount with up to 2 decimals'),
+});
+
+export const payrollPostSchema = z.object({
+  account_id: z.number().int().positive('Choose a money account'),
+  paid_on: z.string().date('Enter a valid payment date'),
+});
+
 export const bomSchema = z.object({
   code: z.string().trim().min(1, 'BOM code is required').max(50, 'Use at most 50 characters'),
   finished_product_id: z.number().int().positive('Choose a finished product'),

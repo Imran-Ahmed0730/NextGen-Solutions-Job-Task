@@ -132,15 +132,16 @@ is deferred until Phase 10 because the employee master does not exist yet.
 ## Phase 10 — Employees
 **Build:** employee master (first slice), attendance, basic payroll, salary payment through Money.
 Use the shared `is_active`/`deleted_at` soft-delete behavior for employee status; defer user account
-linkage and payroll to their own slices.
+linkage and employee-linked asset assignment to separate integration slices.
 **Screens:** Employee List, Employee Add/Edit, Attendance, Basic Payroll.
 **Exit:** payroll totals correct; salary payment posts to money ledger.
 
 **Progress:** Employee Master is implemented. Attendance now records one audited status per
 employee/date, supports corrections, and provides `.xlsx` template, import, and date-range export.
 Imports match employees by code, reject existing employee/date rows, and import valid rows while
-reporting invalid or duplicate rows. User-account linkage, employee-linked asset assignment, and
-payroll remain separate pending slices.
+reporting invalid or duplicate rows. Basic Payroll now snapshots active employees' monthly base
+salaries, permits draft deductions, and posts each nonzero net salary to the Money ledger atomically.
+User-account linkage and employee-linked asset assignment remain separate pending integrations.
 
 ## Phase 11 — Approvals
 **Build:** approval rules, requests, actions, pending inbox, hooks on PO / expense / adjustment / (optionally invoice, payroll).

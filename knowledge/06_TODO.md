@@ -5,7 +5,6 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 ## Open questions (do not let AI guess; decide and record)
 - [ ] Credit-limit check: warn or block?
 - [ ] Receiving tolerance over PO qty (percent)?
-- [ ] Payroll scope: salary + deductions only, or allowances/overtime too?
 - [ ] Invoice/report language: English only or English + Bangla?
 - [ ] Warehouse-level or company-level average cost? (default: company-level)
 - [ ] Password minimum length/complexity policy? (Current implementation requires at least 8 characters.)
@@ -15,6 +14,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
   converted, and each quotation can create at most one Sales Order.
 - Password recovery uses one-time reset links sent to the user's registered email address.
 - Lock an account for 15 minutes after 5 consecutive failed login attempts.
+- Payroll is limited to monthly base salary less manual deductions; no allowances or overtime.
 - A money account's `opening_balance` is the pre-ledger baseline; later opening adjustments use signed `OPENING` ledger rows. The baseline is immutable after the first money transaction.
 
 ## Phase 0 — Foundation
@@ -155,9 +155,10 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Complete Phase 9 employee-linked asset assignment now that employee master exists
 - [x] Attendance register with employee/date uniqueness, status/time validation, audit, and permissions
 - [x] Attendance screen with edit/update, `.xlsx` template/import, and date-range export
-- [ ] Payroll + salary payment via Money
+- [x] Basic payroll: monthly base salary snapshots, draft deductions, immutable posted runs,
+      and salary payment through append-only Money transactions
 - [x] Screens: Employee List and Add/Edit
-- [ ] Screens: Basic Payroll
+- [x] Screen: Basic Payroll
 
 ## Phase 11 — Approvals
 - [ ] Rules, requests, actions

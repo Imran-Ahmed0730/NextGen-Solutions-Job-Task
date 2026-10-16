@@ -15,6 +15,9 @@ import {
   loginSchema,
   moneyAccountSchema,
   paymentMethodSchema,
+  payrollDeductionSchema,
+  payrollPostSchema,
+  payrollRunSchema,
   productCategorySchema,
   productSchema,
   profileSchema,
@@ -50,6 +53,17 @@ describe('auth-validation schemas', () => {
       from_date: '2026-10-17',
       to_date: '2026-10-16',
     }).success).toBe(false);
+  });
+
+  it('validates payroll periods, deductions, and salary payment details', () => {
+    expect(payrollRunSchema.safeParse({ period_month: 10, period_year: 2026 }).success).toBe(true);
+    expect(payrollRunSchema.safeParse({ period_month: 13, period_year: 2026 }).success).toBe(false);
+    expect(payrollDeductionSchema.safeParse({ deductions: '125.50' }).success).toBe(true);
+    expect(payrollDeductionSchema.safeParse({ deductions: '-1.00' }).success).toBe(false);
+    expect(payrollPostSchema.safeParse({ account_id: 2, paid_on: '2026-10-17' }).success).toBe(
+      true,
+    );
+    expect(payrollPostSchema.safeParse({ account_id: 0, paid_on: 'invalid' }).success).toBe(false);
   });
 
   it('validates company setting values consistently with backend rules', () => {

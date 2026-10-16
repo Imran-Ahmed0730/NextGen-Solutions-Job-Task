@@ -126,6 +126,12 @@ const navigation = [
         icon: 'users',
         permissions: ['employees.attendance.read'],
       },
+      {
+        href: '/payroll',
+        label: 'Payroll',
+        icon: 'account',
+        permissions: ['employees.payroll.read'],
+      },
     ],
   },
   {

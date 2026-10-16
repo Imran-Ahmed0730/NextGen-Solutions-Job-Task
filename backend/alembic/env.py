@@ -21,6 +21,7 @@ from app.modules.money_collections.models import CustomerCollection  # noqa: F40
 from app.modules.money_transactions.models import MoneyTransaction  # noqa: F401
 from app.modules.parties.models import PartyContact  # noqa: F401
 from app.modules.payment_methods.models import PaymentMethod  # noqa: F401
+from app.modules.payroll.models import PayrollLine, PayrollRun  # noqa: F401
 from app.modules.physical_counts.models import PhysicalCount, PhysicalCountLine  # noqa: F401
 from app.modules.price_lists.models import PriceList, ProductPrice  # noqa: F401
 from app.modules.product_categories.models import ProductCategory  # noqa: F401

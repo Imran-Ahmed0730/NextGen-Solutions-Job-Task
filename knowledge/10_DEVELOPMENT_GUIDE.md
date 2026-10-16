@@ -58,6 +58,7 @@ is protected.
 │   │   ├── modules/production_orders/ # Production orders, posting, and costing
 │   │   ├── modules/employees/   # Employee master data (Phase 10)
 │   │   ├── modules/attendance/  # Daily attendance and Excel import/export
+│   │   ├── modules/payroll/     # Monthly salary runs and Money ledger posting
 │   │   ├── modules/inventory/   # Stock ledger, balances, posting service, read APIs
 │   │   ├── modules/stock_transfers/ # Atomic inter-warehouse transfers
 │   │   ├── modules/units/       # Measurement-unit master-data reference module
@@ -854,9 +855,22 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   `employees.attendance.update`. API and UI tests cover creation, correction, validation, import
   partial-failure reporting, and permission denial.
 
+### Implemented Phase 10 slice — Basic Payroll
+
+- Creating a monthly run snapshots every active, non-deleted employee who joined by period end.
+  One run per month is enforced; deductions default to zero and cannot exceed base salary.
+- Draft deductions remain editable with audit history. Posting makes the run immutable, assigns a
+  central `PAYROLL` document number, and posts each nonzero net salary as a `SALARY` ledger
+  transaction against the selected active money account in the same database transaction.
+- `/payroll` provides draft creation, deduction editing, run totals/history, and salary posting.
+  Permissions are `employees.payroll.read/create/update/post`; backend tests cover calculations,
+  duplicate periods, insufficient-funds rollback, ledger links, immutable posting, and permissions.
+- The approved scope is monthly base salary less manual deductions; allowances and overtime are not
+  included. User-account linkage and employee-linked asset assignment remain pending integrations.
+
 ### Planned, not yet implemented
 
-The remaining roadmap includes user-account and asset assignment links, payroll, approvals,
+The remaining roadmap includes user-account and asset assignment links, approvals,
 reports/dashboard, and full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 these workflows work end-to-end until their modules, persistence, permissions, tests, and screens

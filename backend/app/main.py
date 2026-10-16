@@ -28,6 +28,7 @@ from app.modules.money_accounts.router import router as money_accounts_router
 from app.modules.money_collections.router import router as money_collections_router
 from app.modules.money_transactions.router import router as money_transactions_router
 from app.modules.payment_methods.router import router as payment_methods_router
+from app.modules.payroll.router import router as payroll_router
 from app.modules.physical_counts.router import router as physical_counts_router
 from app.modules.price_lists.router import router as price_lists_router
 from app.modules.product_categories.router import router as product_categories_router
@@ -61,6 +62,7 @@ app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(assets_router)
 app.include_router(attendance_router)
+app.include_router(payroll_router)
 app.include_router(company_settings_router)
 app.include_router(customers_router)
 app.include_router(document_numbering_router)

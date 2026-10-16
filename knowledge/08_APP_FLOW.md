@@ -149,9 +149,10 @@ Sales Order details.
 Maintain employee code, contact and job details, joining date, and monthly base salary in Employee
 List/Add/Edit. Employees are soft-deleted and can be restored. The Attendance screen records one
 status per employee/date, supports corrections, imports valid rows from `.xlsx` while reporting
-invalid rows, and exports a selected date range. User-account linking, employee-linked asset
-assignment, and payroll remain separate pending slices; payroll details remain subject to the open
-scope decision in `06_TODO.md`.
+invalid rows, and exports a selected date range. Basic Payroll creates one draft per month from
+active eligible employees' salary snapshots, allows deductions up to base salary, and posts nonzero
+net salaries as append-only Money transactions. Posted payroll is immutable. User-account linking
+and employee-linked asset assignment remain separate pending integration slices.
 
 ### 5.6 Assets
 Register asset → assign to a location → return to store → log maintenance → review assignment and

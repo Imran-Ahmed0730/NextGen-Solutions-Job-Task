@@ -136,12 +136,18 @@ added by a later migration.
 ## 10. Employees
 **employees**: id, code(U), name, mobile(nullable for legacy rows; all writes require a valid 11-digit Bangladesh number), email(null), designation(null), department(null), join_date, base_salary(DECIMAL 18,2), is_active, deleted_at, created_at, updated_at
 **attendance**: id, employee_id(FK), att_date, status(PRESENT/ABSENT/LEAVE/LATE), in_time, out_time, (U employee_id+att_date)
-**payroll_runs**: id, doc_no, period_month, period_year, status, total_amount
-**payroll_lines**: id, run_id(FK), employee_id(FK), base_salary, additions, deductions, net_pay, paid_txn_id(FK→money_transactions, null)
+**payroll_runs**: id, doc_no(null until post), period_month, period_year, status(DRAFT/POSTED), total_amount, paid_on, account_id(FK→money_accounts), created_by(FK→users), created_at, (U period_month+period_year)
+**payroll_lines**: id, run_id(FK), employee_id(FK), base_salary(snapshot), deductions, net_pay, paid_txn_id(FK→money_transactions, null)
 
 The employee master uses `is_active` and `deleted_at` for status/soft deletion; it does not add a
 second status field. `users.employee_id` remains nullable and will receive its FK in a later Phase
 10 migration.
+
+Payroll snapshots eligible active employees' base salaries when a monthly draft is created.
+Deductions are entered on the draft and cannot exceed base salary; the selected scope has no
+allowances or overtime. Posting generates the central `PAYROLL` document number and, in one
+transaction, writes one `SALARY` money-ledger row per employee with a nonzero net pay. Posted runs
+are immutable.
 
 Attendance records are unique per employee and date and retain status/time corrections in the
 audit log. Excel imports identify employees by code, reject duplicate employee/date records, and

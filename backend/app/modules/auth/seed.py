@@ -221,6 +221,14 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition(
         "employees.attendance.update", "employees", "Update employee attendance"
     ),
+    PermissionDefinition("employees.payroll.read", "employees", "View payroll"),
+    PermissionDefinition("employees.payroll.create", "employees", "Create payroll runs"),
+    PermissionDefinition(
+        "employees.payroll.update", "employees", "Update draft payroll deductions"
+    ),
+    PermissionDefinition(
+        "employees.payroll.post", "employees", "Post payroll salary payments"
+    ),
 )
 
 
