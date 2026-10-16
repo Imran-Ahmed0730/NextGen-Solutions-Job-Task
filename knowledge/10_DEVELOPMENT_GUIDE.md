@@ -174,7 +174,7 @@ The HTTP interface is REST-style: collection reads/creates use `GET`/`POST`, res
 updated through `PATCH` on the category resource; restoration from soft deletion uses its explicit
 restore action.
 
-`backend/app/main.py` registers the health, authentication, units, and product-category routers,
+`backend/app/main.py` registers health, authentication, master-data, sales, and production routers,
 configures CORS for `FRONTEND_ORIGIN`, and protects the API root. The auth router is mounted under
 `/api/v1/auth`.
 
@@ -279,6 +279,12 @@ The implemented auth API is:
 | `GET /api/v1/customers?search=&offset=0&limit=50` | `master_data.customers.read` | Search and page through customers; `include_inactive=true` includes inactive/deleted records |
 | `POST /api/v1/customers` / `PATCH /api/v1/customers/{id}` | `master_data.customers.create/update` | Create or update customer details and opening due |
 | `GET /api/v1/customers/{id}/statement` | `master_data.customers.read` | Read the current opening-balance statement |
+| `GET /api/v1/production/boms` | `production.boms.read` | List active BOMs; `include_inactive=true` includes deleted BOMs |
+| `GET /api/v1/production/boms/options` | `production.boms.read` | Read active raw-material and finished-product options |
+| `POST /api/v1/production/boms` | `production.boms.create` | Create a BOM with its component lines |
+| `PUT /api/v1/production/boms/{id}` | `production.boms.update` | Replace BOM fields and component lines |
+| `DELETE /api/v1/production/boms/{id}` | `production.boms.delete` | Soft-delete a BOM |
+| `POST /api/v1/production/boms/{id}/activate` | `production.boms.update` | Restore a soft-deleted BOM |
 | `GET /api/v1/sales/quotations` / `GET /api/v1/sales/quotations/{id}` | `sales.quotations.read` | List or view quotation drafts |
 | `GET /api/v1/sales/quotations/options` | `sales.quotations.read` | Read active customers and products for quotation entry |
 | `POST /api/v1/sales/quotations` | `sales.quotations.create` | Create a numbered quotation draft and audit snapshot |
@@ -713,6 +719,12 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   enforces the overdraft guard on the source account. The `FUND_TRANSFER` document sequence must
   be configured before posting. Permissions: `money.transfers.read`, `money.transfers.create`.
   Frontend: `/fund-transfers`.
+- **Bills of Materials** — A BOM defines a stocked FINISHED product, output quantity, and one or
+  more unique stocked RAW material lines. The service validates product types, active state,
+  stockability, and whole-quantity units; quantities use three decimals and default labor/overhead
+  use two. Create, full replacement, soft-delete, and restore operations are audited. Permissions:
+  `production.boms.read`, `production.boms.create`, `production.boms.update`, and
+  `production.boms.delete` (assigned to Administrator). Frontend: `/boms`.
 - **Quotations** — Quotations are created with status `DRAFT`; the service validates active
   customers and products, calculates line totals and subtotal using decimal arithmetic, checks that
   the discount does not exceed subtotal, allocates the central `QUOTATION` number, and writes audit

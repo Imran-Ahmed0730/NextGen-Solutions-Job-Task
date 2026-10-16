@@ -132,7 +132,8 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Exit: end-to-end order → delivery → invoice → collection test verifies stock, COGS, and due
 
 ## Phase 8 — Production
-- [ ] BOM + lines
+- [x] BOM + lines with raw/finished product validation, default costs, audit, and permissions
+- [x] BOM List and Create/Edit screen
 - [ ] Production order (draft → in progress → completed)
 - [ ] Consumption + output posting through inventory service
 - [ ] Cost calculation (materials + labor + overhead)

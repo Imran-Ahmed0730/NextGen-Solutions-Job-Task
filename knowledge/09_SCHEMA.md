@@ -66,11 +66,14 @@ their respective transaction workflows.
 **purchase_return_lines**: id, return_id(FK), receipt_line_id(FK), product_id, qty, unit_cost, line_total
 
 ## 6. Production
-**boms**: id, code(U), finished_product_id(FK), output_qty, labor_cost_default, overhead_cost_default, is_active
-**bom_lines**: id, bom_id(FK), raw_product_id(FK), qty
+**boms**: id, code(U), finished_product_id(FK), output_qty, labor_cost_default, overhead_cost_default, is_active, deleted_at
+**bom_lines**: id, bom_id(FK), raw_product_id(FK), qty; unique(bom_id, raw_product_id)
 **production_orders**: id, doc_no, doc_date, bom_id(FK), finished_product_id, planned_qty, actual_qty, warehouse_id, sales_order_id(FK, null), status(DRAFT/IN_PROGRESS/COMPLETED/CANCELLED), labor_cost, overhead_cost, material_cost, total_cost, unit_cost
 **production_consumption**: id, production_order_id(FK), product_id, qty, unit_cost, line_cost
 **production_outputs**: id, production_order_id(FK), product_id, qty, unit_cost
+
+BOMs require a stocked `FINISHED` product and unique stocked `RAW` material lines. Quantities use
+three decimal places; default labor and overhead costs use two. Deletion is soft and audited.
 
 ## 7. Sales
 **quotations**: id, doc_no, doc_date, customer_id(FK), valid_until, status(DRAFT/SENT/ACCEPTED/REJECTED), subtotal, discount, total, note, created_by(FK), created_at, updated_at

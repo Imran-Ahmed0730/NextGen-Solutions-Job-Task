@@ -216,6 +216,17 @@ const navigation = [
     ],
   },
   {
+    label: 'Production',
+    items: [
+      {
+        href: '/boms',
+        label: 'Bills of Materials',
+        icon: 'warehouse',
+        permissions: ['production.boms.read'],
+      },
+    ],
+  },
+  {
     label: 'Money',
     items: [
       {

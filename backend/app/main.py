@@ -8,6 +8,7 @@ from app.core.exceptions import register_exception_handlers
 from app.core.security import require_permission
 from app.modules.auth.models import User
 from app.modules.auth.router import router as auth_router
+from app.modules.boms.router import router as boms_router
 from app.modules.company_settings.router import router as company_settings_router
 from app.modules.company_settings.storage import MEDIA_ROOT
 from app.modules.customers.router import router as customers_router
@@ -69,6 +70,7 @@ app.include_router(quotations_router)
 app.include_router(sales_orders_router)
 app.include_router(sales_invoices_router)
 app.include_router(sales_returns_router)
+app.include_router(boms_router)
 app.include_router(suppliers_router)
 app.include_router(units_router)
 app.include_router(product_categories_router)

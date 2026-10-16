@@ -171,6 +171,37 @@ export const warehouseSchema = z.object({
   is_active: z.boolean(),
 });
 
+export const bomSchema = z.object({
+  code: z.string().trim().min(1, 'BOM code is required').max(50, 'Use at most 50 characters'),
+  finished_product_id: z.number().int().positive('Choose a finished product'),
+  output_qty: z
+    .string()
+    .regex(/^(?:0|[1-9]\d{0,14})(?:\.\d{1,3})?$/, 'Output quantity must have at most 3 decimals')
+    .refine((value) => Number(value) > 0, 'Output quantity must be greater than zero'),
+  labor_cost_default: z
+    .string()
+    .regex(/^(?:0|[1-9]\d{0,15})(?:\.\d{1,2})?$/, 'Labor cost must have at most 2 decimals'),
+  overhead_cost_default: z
+    .string()
+    .regex(/^(?:0|[1-9]\d{0,15})(?:\.\d{1,2})?$/, 'Overhead cost must have at most 2 decimals'),
+  lines: z
+    .array(
+      z.object({
+        raw_product_id: z.number().int().positive('Choose a raw material'),
+        qty: z
+          .string()
+          .regex(/^(?:0|[1-9]\d{0,14})(?:\.\d{1,3})?$/, 'Quantity must have at most 3 decimals')
+          .refine((value) => Number(value) > 0, 'Quantity must be greater than zero'),
+      }),
+    )
+    .min(1, 'Add at least one raw material')
+    .max(500, 'A BOM may contain at most 500 raw materials')
+    .refine(
+      (lines) => new Set(lines.map((line) => line.raw_product_id)).size === lines.length,
+      'A raw material may only appear once',
+    ),
+});
+
 export const stockTransferSchema = z
   .object({
     doc_date: z.string().date('Enter a valid transfer date'),

@@ -93,7 +93,8 @@ Supplier Payment [Supplier Due ↓, account ↓] · Expense [account ↓] · Inc
 - **Stock Ledger:** product + warehouse + date filters → every movement with running balance and source document link.
 
 ### 5.3 Production
-1. BOM defines inputs per unit of finished good.
+1. Maintain a BOM with a stocked finished good, output quantity, raw-material quantities, and
+   default labor/overhead costs. BOM List and Create/Edit are available at `/boms`.
 2. Create Production Order (FG, qty, BOM, optional link to sales order).
 3. Start → check raw availability; shortage blocks with message.
 4. Complete → enter actual output qty, labor/overhead → Post: consume raw (`PRODUCTION_CONSUME`), add FG (`PRODUCTION_OUTPUT`), compute unit cost, update FG average cost.

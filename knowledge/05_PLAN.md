@@ -114,6 +114,10 @@ balance.
 **Screens:** BOM List, BOM Create/Edit, Production Order List, Create/Edit Production Order, Production Details & Costing.
 **Exit:** raw stock falls, finished stock rises, finished-good average cost is correct, shortages are blocked, and eligible sales-order shortages can be linked to production orders.
 
+**Progress:** BOM and BOM line setup is implemented with raw/finished product validation, default
+labor/overhead inputs, audit, permissions, soft-delete/restore, and the `/boms` screen. Production
+orders, posting, and costing remain the next slices.
+
 ## Phase 9 — Assets
 **Build:** asset register, assignment, maintenance.
 **Screens:** Asset List, Asset Add/Edit, Asset Assignment & Maintenance.
