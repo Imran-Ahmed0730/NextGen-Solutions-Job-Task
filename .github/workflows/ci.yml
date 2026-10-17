@@ -20,6 +20,7 @@ jobs:
       - name: Lint, type-check, and tests
         run: |
           cd backend
+          export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
           ruff check .
           ruff format --check .
           mypy app

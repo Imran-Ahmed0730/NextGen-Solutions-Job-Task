@@ -34,7 +34,14 @@ engineering requirements in [04_RULES.md](./knowledge/04_RULES.md) govern implem
 ## Quick start
 
 1. Copy `.env.example` to `.env`.
-2. Replace the example `SECRET_KEY` with a private random value.
+2. Generate and set a private signing key (minimum 32 characters):
+
+   ```powershell
+   python -c "import secrets; print(secrets.token_urlsafe(48))"
+   ```
+
+   Replace the example `SECRET_KEY` value in `.env` with the generated value. The API refuses to
+   start if `SECRET_KEY` is missing, a known placeholder, or shorter than 32 characters.
 3. Start infrastructure: `docker compose up --build`
 4. API: http://localhost:8000/health
 5. Web: http://localhost:3000/login

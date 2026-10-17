@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,7 +10,7 @@ class Settings(BaseSettings):
     database_url: str = (
         "mysql+pymysql://sabuj_pran:local-dev-password@localhost:3306/sabuj_pran?charset=utf8mb4"
     )
-    secret_key: str = "change-me"
+    secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
@@ -27,6 +28,17 @@ class Settings(BaseSettings):
     smtp_timeout_seconds: int = 10
     media_root: str = "media"
 
+    @field_validator("secret_key")
+    @classmethod
+    def validate_secret_key(cls, value: str) -> str:
+        secret = value.strip()
+        if len(secret) < 32 or secret.lower() in {
+            "change-me",
+            "change-me-in-production",
+        }:
+            raise ValueError("SECRET_KEY must be at least 32 characters and not a placeholder.")
+        return secret
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -37,4 +49,4 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings()  # type: ignore[call-arg]  # Values are loaded from the environment or .env.
