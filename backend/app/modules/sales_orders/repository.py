@@ -27,9 +27,7 @@ def get_sales_order(
     db: Session, sales_order_id: int, *, for_update: bool = False
 ) -> SalesOrder | None:
     statement = (
-        select(SalesOrder)
-        .options(*_sales_order_options())
-        .where(SalesOrder.id == sales_order_id)
+        select(SalesOrder).options(*_sales_order_options()).where(SalesOrder.id == sales_order_id)
     )
     if for_update:
         statement = statement.with_for_update()

@@ -47,6 +47,7 @@ def test_password_reset_email_uses_configured_tls_and_link(monkeypatch: Any) -> 
 
     assert calls == ["starttls", "login"]
     assert sent_messages[0]["To"] == "user@example.com"
-    assert "https://erp.example.com/reset-password?token=one-time-token" in sent_messages[
-        0
-    ].get_content()
+    assert (
+        "https://erp.example.com/reset-password?token=one-time-token"
+        in sent_messages[0].get_content()
+    )

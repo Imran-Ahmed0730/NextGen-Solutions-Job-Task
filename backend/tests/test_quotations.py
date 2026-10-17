@@ -320,12 +320,8 @@ def test_quotation_lifecycle_and_single_conversion(
     assert order["discount"] == quotation["discount"]
     assert order["total"] == quotation["total"]
     assert [
-        (line["qty_ordered"], line["unit_price"], line["line_total"])
-        for line in order["lines"]
-    ] == [
-        (line["qty"], line["unit_price"], line["line_total"])
-        for line in quotation["lines"]
-    ]
+        (line["qty_ordered"], line["unit_price"], line["line_total"]) for line in order["lines"]
+    ] == [(line["qty"], line["unit_price"], line["line_total"]) for line in quotation["lines"]]
 
     duplicate = client.post(
         f"{quotation_path}/convert",
@@ -338,9 +334,12 @@ def test_quotation_lifecycle_and_single_conversion(
     assert refreshed_quotation.json()["status"] == "ACCEPTED"
     assert refreshed_quotation.json()["sales_order_id"] == order["id"]
     assert db_session.scalar(select(func.count(SalesOrder.id))) == 1
-    assert db_session.scalar(
-        select(func.count(AuditLog.id)).where(AuditLog.entity_type == "quotation")
-    ) == 4
+    assert (
+        db_session.scalar(
+            select(func.count(AuditLog.id)).where(AuditLog.entity_type == "quotation")
+        )
+        == 4
+    )
 
 
 def test_sent_quotation_can_be_rejected_and_cannot_be_converted(

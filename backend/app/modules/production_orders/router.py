@@ -64,9 +64,7 @@ def update_production_order(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("production.orders.update")),
 ) -> ProductionOrder:
-    return service.update_production_order(
-        db, production_order_id, payload, actor, _ip(request)
-    )
+    return service.update_production_order(db, production_order_id, payload, actor, _ip(request))
 
 
 @router.post("/{production_order_id}/start", response_model=ProductionOrderResponse)
@@ -87,9 +85,7 @@ def complete_production_order(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("production.orders.update")),
 ) -> ProductionOrder:
-    return service.complete_production_order(
-        db, production_order_id, payload, actor, _ip(request)
-    )
+    return service.complete_production_order(db, production_order_id, payload, actor, _ip(request))
 
 
 @router.post("/{production_order_id}/cancel", response_model=ProductionOrderResponse)

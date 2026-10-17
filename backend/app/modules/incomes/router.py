@@ -54,4 +54,3 @@ def get_income(
     if income is None:
         raise HTTPException(status_code=404, detail="Income not found")
     return income
-

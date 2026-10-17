@@ -158,9 +158,7 @@ def test_price_list_crud_default_dates_product_prices_and_audit(
     active = [item["id"] for item in client.get("/api/v1/price-lists", headers=headers).json()]
     assert first_id not in active
 
-    restored = client.post(
-        f"/api/v1/price-lists/{first_id}/activate", headers=headers
-    )
+    restored = client.post(f"/api/v1/price-lists/{first_id}/activate", headers=headers)
     assert restored.status_code == 200
     assert restored.json()["deleted_at"] is None
 
@@ -174,9 +172,7 @@ def test_price_list_crud_default_dates_product_prices_and_audit(
     assert actions.count("STATUS") == 1
 
     product_price_audits = list(
-        db_session.scalars(
-            select(AuditLog).where(AuditLog.entity_type == "product_price")
-        )
+        db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "product_price"))
     )
     price_actions = [entry.action for entry in product_price_audits]
     assert price_actions.count("CREATE") == 1
@@ -184,9 +180,7 @@ def test_price_list_crud_default_dates_product_prices_and_audit(
     assert price_actions.count("DELETE") == 1
 
 
-def test_price_list_permission_denial(
-    client: TestClient, db_session: Session
-) -> None:
+def test_price_list_permission_denial(client: TestClient, db_session: Session) -> None:
     user = User(
         username="readonly",
         full_name="Read Only",

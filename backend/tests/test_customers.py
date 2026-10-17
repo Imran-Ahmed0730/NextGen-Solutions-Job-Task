@@ -196,12 +196,10 @@ def test_customer_permission_denial(client, db_session):
 
     assert client.get("/api/v1/customers", headers=headers).status_code == 403
     assert (
-        client.get(f"/api/v1/customers/{customer.id}/statement", headers=headers).status_code
-        == 403
+        client.get(f"/api/v1/customers/{customer.id}/statement", headers=headers).status_code == 403
     )
     assert (
-        client.get(f"/api/v1/customers/{customer.id}/contacts", headers=headers).status_code
-        == 403
+        client.get(f"/api/v1/customers/{customer.id}/contacts", headers=headers).status_code == 403
     )
     assert (
         client.post(

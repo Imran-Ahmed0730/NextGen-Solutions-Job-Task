@@ -129,9 +129,7 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("sales.orders.read", "sales", "View sales orders"),
     PermissionDefinition("sales.orders.create", "sales", "Create sales orders"),
     PermissionDefinition("sales.orders.update", "sales", "Update draft sales orders"),
-    PermissionDefinition(
-        "sales.orders.reserve", "sales", "Reserve and release sales order stock"
-    ),
+    PermissionDefinition("sales.orders.reserve", "sales", "Reserve and release sales order stock"),
     PermissionDefinition("sales.deliveries.create", "sales", "Post sales deliveries"),
     PermissionDefinition("sales.invoices.read", "sales", "View sales invoices"),
     PermissionDefinition("sales.invoices.create", "sales", "Post sales invoices"),
@@ -216,31 +214,21 @@ ADMIN_PERMISSION_CATALOG = (
     PermissionDefinition("employees.create", "employees", "Create employees"),
     PermissionDefinition("employees.update", "employees", "Update and restore employees"),
     PermissionDefinition("employees.delete", "employees", "Delete employees"),
-    PermissionDefinition(
-        "employees.attendance.read", "employees", "View employee attendance"
-    ),
-    PermissionDefinition(
-        "employees.attendance.create", "employees", "Record employee attendance"
-    ),
-    PermissionDefinition(
-        "employees.attendance.update", "employees", "Update employee attendance"
-    ),
+    PermissionDefinition("employees.attendance.read", "employees", "View employee attendance"),
+    PermissionDefinition("employees.attendance.create", "employees", "Record employee attendance"),
+    PermissionDefinition("employees.attendance.update", "employees", "Update employee attendance"),
     PermissionDefinition("employees.payroll.read", "employees", "View payroll"),
     PermissionDefinition("employees.payroll.create", "employees", "Create payroll runs"),
     PermissionDefinition(
         "employees.payroll.update", "employees", "Update draft payroll deductions"
     ),
-    PermissionDefinition(
-        "employees.payroll.post", "employees", "Post payroll salary payments"
-    ),
+    PermissionDefinition("employees.payroll.post", "employees", "Post payroll salary payments"),
     PermissionDefinition("approvals.rules.read", "approvals", "View approval rules"),
     PermissionDefinition("approvals.rules.create", "approvals", "Create approval rules"),
     PermissionDefinition(
         "approvals.rules.update", "approvals", "Update and activate approval rules"
     ),
-    PermissionDefinition(
-        "approvals.requests.read", "approvals", "View pending approval requests"
-    ),
+    PermissionDefinition("approvals.requests.read", "approvals", "View pending approval requests"),
     PermissionDefinition(
         "approvals.requests.decide", "approvals", "Approve or reject approval requests"
     ),

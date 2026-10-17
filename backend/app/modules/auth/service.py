@@ -71,14 +71,10 @@ def login(db: Session, identifier: str, password: str, ip: str | None = None) ->
     return issue_session(db, user, ip)
 
 
-def rotate_refresh_token(
-    db: Session, token: str, ip: str | None = None
-) -> dict[str, object]:
+def rotate_refresh_token(db: Session, token: str, ip: str | None = None) -> dict[str, object]:
     now = datetime.now(UTC)
     stored = db.scalar(
-        select(RefreshToken)
-        .where(RefreshToken.token_hash == hash_token(token))
-        .with_for_update()
+        select(RefreshToken).where(RefreshToken.token_hash == hash_token(token)).with_for_update()
     )
     if stored is None or stored.revoked_at is not None or _as_utc(stored.expires_at) <= now:
         raise _invalid_refresh_token()
@@ -195,16 +191,10 @@ def request_password_reset(db: Session, email: str, ip: str | None = None) -> st
 
 def reset_password(db: Session, token: str, new_password: str, ip: str | None = None) -> None:
     reset = db.scalar(
-        select(PasswordReset)
-        .where(PasswordReset.token_hash == hash_token(token))
-        .with_for_update()
+        select(PasswordReset).where(PasswordReset.token_hash == hash_token(token)).with_for_update()
     )
     now = datetime.now(UTC)
-    if (
-        reset is None
-        or reset.used_at is not None
-        or _as_utc(reset.expires_at) <= now
-    ):
+    if reset is None or reset.used_at is not None or _as_utc(reset.expires_at) <= now:
         raise HTTPException(status_code=400, detail="Reset token is invalid or expired")
     user = get_user(db, reset.user_id)
     if user is None or not user.is_active:
@@ -255,10 +245,7 @@ def change_password(
 
 def get_profile(user: User) -> dict[str, object]:
     permission_codes = {
-        permission.code
-        for role in user.roles
-        if role.is_active
-        for permission in role.permissions
+        permission.code for role in user.roles if role.is_active for permission in role.permissions
     }
     return {
         "id": user.id,
@@ -309,9 +296,7 @@ def list_users(db: Session, offset: int, limit: int) -> list[User]:
     )
 
 
-def create_user(
-    db: Session, data: dict[str, object], actor: User, ip: str | None = None
-) -> User:
+def create_user(db: Session, data: dict[str, object], actor: User, ip: str | None = None) -> User:
     _ensure_unique_contact(db, data)
     employee_id = data.get("employee_id")
     if employee_id is not None and (
@@ -369,11 +354,7 @@ def update_user(
         employee_id = data["employee_id"]
         if employee_id is None:
             setattr(target, "employee_id", None)
-        elif (
-            not isinstance(employee_id, int)
-            or isinstance(employee_id, bool)
-            or employee_id <= 0
-        ):
+        elif not isinstance(employee_id, int) or isinstance(employee_id, bool) or employee_id <= 0:
             raise HTTPException(status_code=422, detail="Employee must be active")
         elif employee_id != target.employee_id:
             target.employee_id = employee_service.get_active_employee(db, employee_id).id
@@ -443,17 +424,11 @@ def set_user_active(
 
 def list_roles(db: Session) -> list[Role]:
     return list(
-        db.scalars(
-            select(Role)
-            .options(selectinload(Role.permissions))
-            .order_by(Role.name)
-        )
+        db.scalars(select(Role).options(selectinload(Role.permissions)).order_by(Role.name))
     )
 
 
-def create_role(
-    db: Session, data: dict[str, object], actor: User, ip: str | None = None
-) -> Role:
+def create_role(db: Session, data: dict[str, object], actor: User, ip: str | None = None) -> Role:
     name = str(data["name"]).strip()
     if not name:
         raise HTTPException(status_code=422, detail="Role name is required")
@@ -522,9 +497,7 @@ def update_role(
     return get_role(db, role.id) or role
 
 
-def activate_role(
-    db: Session, role: Role, actor: User, ip: str | None = None
-) -> Role:
+def activate_role(db: Session, role: Role, actor: User, ip: str | None = None) -> Role:
     if role.is_active:
         return role
     before = _role_snapshot(role)
@@ -543,9 +516,7 @@ def activate_role(
     return get_role(db, role.id) or role
 
 
-def deactivate_role(
-    db: Session, role: Role, actor: User, ip: str | None = None
-) -> Role:
+def deactivate_role(db: Session, role: Role, actor: User, ip: str | None = None) -> Role:
     if not role.is_active:
         return role
     if role.name.casefold() == "administrator":
@@ -577,12 +548,7 @@ def list_permissions(db: Session) -> list[Permission]:
 
 def list_audit_logs(db: Session, offset: int, limit: int) -> list[AuditLog]:
     return list(
-        db.scalars(
-            select(AuditLog)
-            .order_by(AuditLog.id.desc())
-            .offset(offset)
-            .limit(limit)
-        )
+        db.scalars(select(AuditLog).order_by(AuditLog.id.desc()).offset(offset).limit(limit))
     )
 
 
@@ -604,9 +570,7 @@ def _ensure_unique_contact(
             raise HTTPException(status_code=409, detail=f"{field} is already in use")
 
 
-def _ensure_unique_role_name(
-    db: Session, name: str, exclude_role_id: int | None = None
-) -> None:
+def _ensure_unique_role_name(db: Session, name: str, exclude_role_id: int | None = None) -> None:
     statement = select(Role.id).where(func.lower(Role.name) == name.casefold())
     if exclude_role_id is not None:
         statement = statement.where(Role.id != exclude_role_id)

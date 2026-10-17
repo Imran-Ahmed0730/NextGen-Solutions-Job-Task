@@ -110,9 +110,7 @@ def test_warehouse_crud_soft_delete_restore_and_audit(
     assert restored.json()["is_active"] is True
     assert restored.json()["is_default"] is False
 
-    audits = list(
-        db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "warehouse"))
-    )
+    audits = list(db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "warehouse")))
     actions = [entry.action for entry in audits]
     assert actions.count("CREATE") == 2
     assert actions.count("UPDATE") == 1
@@ -120,9 +118,7 @@ def test_warehouse_crud_soft_delete_restore_and_audit(
     assert actions.count("STATUS") == 1
 
 
-def test_only_one_default_warehouse(
-    client: TestClient, db_session: Session
-) -> None:
+def test_only_one_default_warehouse(client: TestClient, db_session: Session) -> None:
     headers = _login_admin(client, db_session)
 
     first = client.post(

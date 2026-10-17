@@ -54,4 +54,3 @@ def get_transfer(
     if transfer is None:
         raise HTTPException(status_code=404, detail="Fund transfer not found")
     return transfer
-

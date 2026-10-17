@@ -14,9 +14,7 @@ def list_suppliers(
 ) -> list[Supplier]:
     statement = select(Supplier)
     if not include_inactive:
-        statement = statement.where(
-            Supplier.is_active.is_(True), Supplier.deleted_at.is_(None)
-        )
+        statement = statement.where(Supplier.is_active.is_(True), Supplier.deleted_at.is_(None))
     if search:
         pattern = f"%{search.strip()}%"
         statement = statement.where(
@@ -28,9 +26,7 @@ def list_suppliers(
             )
         )
     return list(
-        db.scalars(
-            statement.order_by(Supplier.name, Supplier.id).offset(offset).limit(limit)
-        )
+        db.scalars(statement.order_by(Supplier.name, Supplier.id).offset(offset).limit(limit))
     )
 
 

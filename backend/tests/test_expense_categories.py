@@ -111,16 +111,12 @@ def test_expense_category_crud_hierarchy_soft_delete_and_audit(
     active = client.get("/api/v1/expense-categories", headers=headers).json()
     assert len(active) == 1
 
-    restored = client.post(
-        f"/api/v1/expense-categories/{parent_id}/activate", headers=headers
-    )
+    restored = client.post(f"/api/v1/expense-categories/{parent_id}/activate", headers=headers)
     assert restored.status_code == 200
     assert restored.json()["deleted_at"] is None
 
     audits = list(
-        db_session.scalars(
-            select(AuditLog).where(AuditLog.entity_type == "expense_category")
-        )
+        db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "expense_category"))
     )
     actions = [entry.action for entry in audits]
     assert actions.count("CREATE") == 3
@@ -129,9 +125,7 @@ def test_expense_category_crud_hierarchy_soft_delete_and_audit(
     assert actions.count("STATUS") == 1
 
 
-def test_expense_category_permission_denial(
-    client: TestClient, db_session: Session
-) -> None:
+def test_expense_category_permission_denial(client: TestClient, db_session: Session) -> None:
     user = User(
         username="readonly",
         full_name="Read Only",
@@ -160,6 +154,4 @@ def test_expense_category_permission_denial(
         == 403
     )
     assert client.delete("/api/v1/expense-categories/1", headers=headers).status_code == 403
-    assert (
-        client.post("/api/v1/expense-categories/1/activate", headers=headers).status_code == 403
-    )
+    assert client.post("/api/v1/expense-categories/1/activate", headers=headers).status_code == 403

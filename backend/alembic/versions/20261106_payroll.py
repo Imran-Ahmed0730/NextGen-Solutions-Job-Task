@@ -40,17 +40,13 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint("period_month BETWEEN 1 AND 12", name="ck_payroll_runs_month"),
-        sa.CheckConstraint(
-            "status IN ('DRAFT', 'POSTED')", name="ck_payroll_runs_status"
-        ),
+        sa.CheckConstraint("status IN ('DRAFT', 'POSTED')", name="ck_payroll_runs_status"),
         sa.CheckConstraint("total_amount >= 0", name="ck_payroll_runs_total_nonnegative"),
         sa.ForeignKeyConstraint(["account_id"], ["money_accounts.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("doc_no", name="uq_payroll_runs_doc_no"),
-        sa.UniqueConstraint(
-            "period_month", "period_year", name="uq_payroll_runs_period"
-        ),
+        sa.UniqueConstraint("period_month", "period_year", name="uq_payroll_runs_period"),
         mysql_engine="InnoDB",
         mysql_charset="utf8mb4",
     )
@@ -60,17 +56,11 @@ def upgrade() -> None:
         sa.Column("run_id", ID, nullable=False),
         sa.Column("employee_id", ID, nullable=False),
         sa.Column("base_salary", sa.Numeric(18, 2), nullable=False),
-        sa.Column(
-            "deductions", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False
-        ),
+        sa.Column("deductions", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False),
         sa.Column("net_pay", sa.Numeric(18, 2), nullable=False),
         sa.Column("paid_txn_id", ID, nullable=True),
-        sa.CheckConstraint(
-            "base_salary >= 0", name="ck_payroll_lines_salary_nonnegative"
-        ),
-        sa.CheckConstraint(
-            "deductions >= 0", name="ck_payroll_lines_deductions_nonnegative"
-        ),
+        sa.CheckConstraint("base_salary >= 0", name="ck_payroll_lines_salary_nonnegative"),
+        sa.CheckConstraint("deductions >= 0", name="ck_payroll_lines_deductions_nonnegative"),
         sa.CheckConstraint(
             "deductions <= base_salary", name="ck_payroll_lines_deductions_within_salary"
         ),

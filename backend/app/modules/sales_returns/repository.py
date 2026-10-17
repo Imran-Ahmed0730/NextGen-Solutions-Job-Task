@@ -51,9 +51,9 @@ def list_returnable_invoices(db: Session, *, limit: int = 200) -> list[SalesInvo
     statement = (
         select(SalesInvoice)
         .options(
-            selectinload(SalesInvoice.lines).joinedload(SalesInvoiceLine.product).joinedload(
-                Product.unit
-            ),
+            selectinload(SalesInvoice.lines)
+            .joinedload(SalesInvoiceLine.product)
+            .joinedload(Product.unit),
             joinedload(SalesInvoice.delivery),
         )
         .where(SalesInvoice.status == "POSTED")
@@ -79,8 +79,12 @@ def list_return_lines_by_invoice_ids(
     if not invoice_ids:
         return {}
     statement = (
-        select(SalesReturn.invoice_id, SalesReturnLine.invoice_line_id,
-               func.sum(SalesReturnLine.qty), func.sum(SalesReturnLine.line_total))
+        select(
+            SalesReturn.invoice_id,
+            SalesReturnLine.invoice_line_id,
+            func.sum(SalesReturnLine.qty),
+            func.sum(SalesReturnLine.line_total),
+        )
         .join(SalesReturnLine, SalesReturnLine.return_id == SalesReturn.id)
         .where(SalesReturn.invoice_id.in_(invoice_ids), SalesReturn.status == "POSTED")
         .group_by(SalesReturn.invoice_id, SalesReturnLine.invoice_line_id)

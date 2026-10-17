@@ -34,10 +34,7 @@ def get_income_options(db: Session) -> IncomeOptionsResponse:
     categories = income_category_service.list_categories(db, limit=200)
     accounts = money_account_service.list_money_accounts(db, limit=200)
     return IncomeOptionsResponse(
-        categories=[
-            IncomeCategoryOption(id=item.id, name=item.name)
-            for item in categories
-        ],
+        categories=[IncomeCategoryOption(id=item.id, name=item.name) for item in categories],
         accounts=[
             IncomeAccountOption(id=item.id, name=item.name, type=item.type.value)
             for item in accounts

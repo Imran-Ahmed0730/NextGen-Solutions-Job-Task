@@ -4,9 +4,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
 
-CustomerCode = Annotated[
-    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=30)
-]
+CustomerCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=30)]
 CustomerName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)
 ]

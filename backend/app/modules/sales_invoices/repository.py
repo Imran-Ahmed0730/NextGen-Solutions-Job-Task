@@ -7,9 +7,7 @@ from app.modules.sales_invoices.models import SalesInvoice
 
 def get_delivery_customer_id_for_update(db: Session, delivery_id: int) -> int | None:
     statement = (
-        select(SalesDelivery.customer_id)
-        .where(SalesDelivery.id == delivery_id)
-        .with_for_update()
+        select(SalesDelivery.customer_id).where(SalesDelivery.id == delivery_id).with_for_update()
     )
     return db.scalar(statement)
 

@@ -85,10 +85,7 @@ def _run_reporting_views_migration(
     direction: Literal["upgrade", "downgrade"],
 ) -> None:
     migration_path = (
-        Path(__file__).parents[1]
-        / "alembic"
-        / "versions"
-        / "20261111_reporting_views.py"
+        Path(__file__).parents[1] / "alembic" / "versions" / "20261111_reporting_views.py"
     )
     spec = spec_from_file_location("reporting_views_migration", migration_path)
     if spec is None or spec.loader is None:
@@ -164,13 +161,19 @@ def test_dashboard_returns_ledger_backed_balances_and_period_expenses(
     _run_reporting_views_migration(db_session, "upgrade")
     _run_reporting_views_migration(db_session, "upgrade")
 
-    stock_view = db_session.execute(
-        text(
-            "SELECT qty_on_hand, qty_reserved, qty_available, inventory_value "
-            "FROM v_current_stock WHERE product_id = :product_id AND warehouse_id = :warehouse_id"
-        ),
-        {"product_id": product.id, "warehouse_id": warehouse.id},
-    ).mappings().one()
+    stock_view = (
+        db_session.execute(
+            text(
+                "SELECT qty_on_hand, qty_reserved, qty_available, inventory_value "
+                "FROM v_current_stock "
+                "WHERE product_id = :product_id "
+                "AND warehouse_id = :warehouse_id"
+            ),
+            {"product_id": product.id, "warehouse_id": warehouse.id},
+        )
+        .mappings()
+        .one()
+    )
     assert Decimal(str(stock_view["qty_on_hand"])) == Decimal("3.000")
     assert Decimal(str(stock_view["qty_reserved"])) == Decimal("1.000")
     assert Decimal(str(stock_view["qty_available"])) == Decimal("2.000")
@@ -192,13 +195,17 @@ def test_dashboard_returns_ledger_backed_balances_and_period_expenses(
     assert Decimal(str(customer_due_view)) == Decimal("17.00")
     assert Decimal(str(supplier_due_view)) == Decimal("19.00")
 
-    kpi_view = db_session.execute(
-        text(
-            "SELECT expenses, inventory_value, cash_balance, customer_due, supplier_due, "
-            "estimated_profit FROM v_dashboard_kpis WHERE activity_date = :activity_date"
-        ),
-        {"activity_date": today},
-    ).mappings().one()
+    kpi_view = (
+        db_session.execute(
+            text(
+                "SELECT expenses, inventory_value, cash_balance, customer_due, supplier_due, "
+                "estimated_profit FROM v_dashboard_kpis WHERE activity_date = :activity_date"
+            ),
+            {"activity_date": today},
+        )
+        .mappings()
+        .one()
+    )
     assert Decimal(str(kpi_view["expenses"])) == Decimal("12.50")
     assert Decimal(str(kpi_view["inventory_value"])) == Decimal("15.000000")
     assert Decimal(str(kpi_view["cash_balance"])) == Decimal("125.00")
@@ -242,9 +249,12 @@ def test_dashboard_returns_ledger_backed_balances_and_period_expenses(
         Decimal("0"),
     ) == Decimal(str(payload["inventory_value"]))
     _run_reporting_views_migration(db_session, "downgrade")
-    assert db_session.scalar(
-        text("SELECT COUNT(*) FROM sqlite_master WHERE type = 'view' AND name LIKE 'v_%'")
-    ) == 0
+    assert (
+        db_session.scalar(
+            text("SELECT COUNT(*) FROM sqlite_master WHERE type = 'view' AND name LIKE 'v_%'")
+        )
+        == 0
+    )
 
 
 def test_dashboard_figures_reconcile_with_seeded_report_totals(
@@ -275,9 +285,7 @@ def test_dashboard_figures_reconcile_with_seeded_report_totals(
         opening_balance=Decimal("100.00"),
     )
     expense_category = ExpenseCategory(name="Reconciliation expense")
-    db_session.add_all(
-        [category, unit, warehouse, customer, supplier, account, expense_category]
-    )
+    db_session.add_all([category, unit, warehouse, customer, supplier, account, expense_category])
     db_session.flush()
     product = Product(
         sku="REC-ACTIVE",
@@ -533,9 +541,7 @@ def test_dashboard_figures_reconcile_with_seeded_report_totals(
     low_stock_rows = report_rows("low_stock")
     _run_reporting_views_migration(db_session, "upgrade")
     pending_orders_from_status = db_session.scalar(
-        text(
-            "SELECT COUNT(DISTINCT order_id) FROM v_order_status WHERE qty_remaining > 0"
-        )
+        text("SELECT COUNT(DISTINCT order_id) FROM v_order_status WHERE qty_remaining > 0")
     )
 
     def total(rows: list[dict[str, object]], key: str) -> Decimal:
@@ -543,6 +549,7 @@ def test_dashboard_figures_reconcile_with_seeded_report_totals(
             (Decimal(str(row[key])) for row in rows),
             Decimal("0.00"),
         )
+
     assert Decimal(str(dashboard["sales"])) == total(sales_rows, "amount")
     assert Decimal(str(dashboard["purchases"])) == total(purchase_rows, "amount")
     assert Decimal(str(dashboard["collections"])) == sum(
@@ -550,11 +557,7 @@ def test_dashboard_figures_reconcile_with_seeded_report_totals(
         Decimal("0.00"),
     )
     assert Decimal(str(dashboard["expenses"])) == sum(
-        (
-            Decimal(str(row["amount"]))
-            for row in expense_income_rows
-            if row["type"] == "Expense"
-        ),
+        (Decimal(str(row["amount"])) for row in expense_income_rows if row["type"] == "Expense"),
         Decimal("0.00"),
     )
     assert Decimal(str(dashboard["customer_due"])) == total(customer_due_rows, "due")

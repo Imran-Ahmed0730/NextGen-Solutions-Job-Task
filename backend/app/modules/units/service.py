@@ -13,14 +13,10 @@ from app.modules.units.models import Unit
 def list_units(
     db: Session, *, include_inactive: bool = False, offset: int = 0, limit: int = 50
 ) -> list[Unit]:
-    return repository.list_units(
-        db, include_inactive=include_inactive, offset=offset, limit=limit
-    )
+    return repository.list_units(db, include_inactive=include_inactive, offset=offset, limit=limit)
 
 
-def create_unit(
-    db: Session, data: dict[str, object], actor: User, ip: str | None = None
-) -> Unit:
+def create_unit(db: Session, data: dict[str, object], actor: User, ip: str | None = None) -> Unit:
     name = str(data["name"]).strip()
     code = str(data["code"]).strip()
     _validate_name_and_code(name, code)

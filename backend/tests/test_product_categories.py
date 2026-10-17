@@ -88,27 +88,21 @@ def test_product_category_crud_hierarchy_restore_and_audit(
     assert deleted.status_code == 200
     assert deleted.json()["is_active"] is False
     assert deleted.json()["deleted_at"] is not None
-    assert [item["name"] for item in client.get(
-        "/api/v1/product-categories", headers=headers
-    ).json()] == ["Packaging Materials"]
+    assert [
+        item["name"] for item in client.get("/api/v1/product-categories", headers=headers).json()
+    ] == ["Packaging Materials"]
 
-    inactive = client.get(
-        "/api/v1/product-categories?include_inactive=true", headers=headers
-    )
+    inactive = client.get("/api/v1/product-categories?include_inactive=true", headers=headers)
     assert inactive.status_code == 200
     assert len(inactive.json()) == 2
 
-    restored = client.post(
-        f"/api/v1/product-categories/{parent_id}/activate", headers=headers
-    )
+    restored = client.post(f"/api/v1/product-categories/{parent_id}/activate", headers=headers)
     assert restored.status_code == 200
     assert restored.json()["is_active"] is True
     assert restored.json()["deleted_at"] is None
 
     category_audits = list(
-        db_session.scalars(
-            select(AuditLog).where(AuditLog.entity_type == "product_category")
-        )
+        db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "product_category"))
     )
     assert [entry.action for entry in category_audits].count("CREATE") == 2
     assert [entry.action for entry in category_audits].count("UPDATE") == 1
@@ -128,9 +122,7 @@ def test_product_category_rejects_invalid_parent_and_hierarchy_cycle(
     )
     assert missing_parent.status_code == 422
 
-    root = client.post(
-        "/api/v1/product-categories", headers=headers, json={"name": "Root"}
-    ).json()
+    root = client.post("/api/v1/product-categories", headers=headers, json={"name": "Root"}).json()
     child = client.post(
         "/api/v1/product-categories",
         headers=headers,
@@ -255,12 +247,9 @@ def test_product_category_permission_denial(client: TestClient, db_session: Sess
         == 403
     )
     assert (
-        client.delete("/api/v1/product-categories/1", headers=read_only_headers).status_code
-        == 403
+        client.delete("/api/v1/product-categories/1", headers=read_only_headers).status_code == 403
     )
     assert (
-        client.post(
-            "/api/v1/product-categories/1/activate", headers=read_only_headers
-        ).status_code
+        client.post("/api/v1/product-categories/1/activate", headers=read_only_headers).status_code
         == 403
     )

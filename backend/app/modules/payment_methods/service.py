@@ -170,7 +170,5 @@ def _snapshot(payment_method: PaymentMethod) -> dict[str, object]:
         if hasattr(payment_method.type, "value")
         else str(payment_method.type),
         "is_active": payment_method.is_active,
-        "deleted_at": payment_method.deleted_at.isoformat()
-        if payment_method.deleted_at
-        else None,
+        "deleted_at": payment_method.deleted_at.isoformat() if payment_method.deleted_at else None,
     }

@@ -53,9 +53,7 @@ def _login_admin(client: TestClient, db: Session) -> dict[str, str]:
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
-def test_unit_crud_soft_delete_restore_and_audit(
-    client: TestClient, db_session: Session
-) -> None:
+def test_unit_crud_soft_delete_restore_and_audit(client: TestClient, db_session: Session) -> None:
     headers = _login_admin(client, db_session)
     created = client.post(
         "/api/v1/units",
@@ -114,9 +112,7 @@ def test_unit_crud_soft_delete_restore_and_audit(
     assert restored.json()["deleted_at"] is None
     assert len(client.get("/api/v1/units", headers=headers).json()) == 2
 
-    unit_audits = list(
-        db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "unit"))
-    )
+    unit_audits = list(db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "unit")))
     actions = [entry.action for entry in unit_audits]
     assert actions.count("CREATE") == 2
     assert actions.count("UPDATE") == 1
@@ -125,9 +121,7 @@ def test_unit_crud_soft_delete_restore_and_audit(
     assert db_session.get(Unit, unit_id) is not None
 
 
-def test_unit_validation_and_permission_denial(
-    client: TestClient, db_session: Session
-) -> None:
+def test_unit_validation_and_permission_denial(client: TestClient, db_session: Session) -> None:
     admin_headers = _login_admin(client, db_session)
     invalid = client.post(
         "/api/v1/units",
@@ -168,6 +162,4 @@ def test_unit_validation_and_permission_denial(
         == 403
     )
     assert client.delete("/api/v1/units/1", headers=read_only_headers).status_code == 403
-    assert (
-        client.post("/api/v1/units/1/activate", headers=read_only_headers).status_code == 403
-    )
+    assert client.post("/api/v1/units/1/activate", headers=read_only_headers).status_code == 403

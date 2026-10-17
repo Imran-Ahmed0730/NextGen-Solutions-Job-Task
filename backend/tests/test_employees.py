@@ -77,9 +77,7 @@ def test_employee_crud_search_soft_delete_restore_and_audit(
     employee_id = created.json()["id"]
     assert created.json()["base_salary"] == "25000.00"
 
-    duplicate = client.post(
-        "/api/v1/employees", headers=headers, json=_employee_payload("emp-001")
-    )
+    duplicate = client.post("/api/v1/employees", headers=headers, json=_employee_payload("emp-001"))
     assert duplicate.status_code == 409
 
     updated = client.patch(
@@ -111,17 +109,11 @@ def test_employee_crud_search_soft_delete_restore_and_audit(
     assert inactive.status_code == 200
     assert len(inactive.json()) == 1
 
-    restored = client.post(
-        f"/api/v1/employees/{employee_id}/restore", headers=headers
-    )
+    restored = client.post(f"/api/v1/employees/{employee_id}/restore", headers=headers)
     assert restored.status_code == 200
     assert restored.json()["is_active"] is True
 
-    audit = list(
-        db_session.scalars(
-            select(AuditLog).where(AuditLog.entity_type == "employee")
-        )
-    )
+    audit = list(db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "employee")))
     assert [row.action for row in audit].count("CREATE") == 1
     assert [row.action for row in audit].count("UPDATE") == 1
     assert [row.action for row in audit].count("DELETE") == 1
@@ -129,9 +121,7 @@ def test_employee_crud_search_soft_delete_restore_and_audit(
     assert db_session.get(Employee, employee_id) is not None
 
 
-def test_employee_validation_and_permission_denial(
-    client: TestClient, db_session: Session
-) -> None:
+def test_employee_validation_and_permission_denial(client: TestClient, db_session: Session) -> None:
     headers = _login_admin(client, db_session)
     invalid = client.post(
         "/api/v1/employees",
@@ -155,9 +145,7 @@ def test_employee_validation_and_permission_denial(
         },
     )
     assert missing_mobile.status_code == 422
-    created = client.post(
-        "/api/v1/employees", headers=headers, json=_employee_payload("EMP-VALID")
-    )
+    created = client.post("/api/v1/employees", headers=headers, json=_employee_payload("EMP-VALID"))
     assert created.status_code == 201
     cleared_mobile = client.patch(
         f"/api/v1/employees/{created.json()['id']}",
@@ -191,9 +179,7 @@ def test_employee_validation_and_permission_denial(
 
     admin = db_session.scalar(select(User).where(User.username == "admin"))
     assert admin is not None
-    employee_read = db_session.scalar(
-        select(Permission).where(Permission.code == "employees.read")
-    )
+    employee_read = db_session.scalar(select(Permission).where(Permission.code == "employees.read"))
     assert employee_read is not None
     admin.roles[0].permissions.remove(employee_read)
 

@@ -27,9 +27,7 @@ def list_boms(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("production.boms.read")),
 ) -> list[BOM]:
-    return service.list_boms(
-        db, include_inactive=include_inactive, offset=offset, limit=limit
-    )
+    return service.list_boms(db, include_inactive=include_inactive, offset=offset, limit=limit)
 
 
 @router.post("", response_model=BOMResponse, status_code=status.HTTP_201_CREATED)

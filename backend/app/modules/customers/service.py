@@ -392,9 +392,7 @@ def update_contact(
     return contact
 
 
-def delete_contact(
-    db: Session, contact: PartyContact, actor: User, ip: str | None = None
-) -> None:
+def delete_contact(db: Session, contact: PartyContact, actor: User, ip: str | None = None) -> None:
     record_audit(
         db,
         actor_id=actor.id,
@@ -430,8 +428,7 @@ def get_customer_statement(db: Session, customer: Customer) -> dict[str, object]
     from app.modules.sales_invoices.service import list_customer_invoices
 
     entries.extend(
-        invoice_due_entry_data(invoice)
-        for invoice in list_customer_invoices(db, customer.id)
+        invoice_due_entry_data(invoice) for invoice in list_customer_invoices(db, customer.id)
     )
     from app.modules.sales_returns.service import due_entry_data as sales_return_due_entry_data
     from app.modules.sales_returns.service import list_customer_returns

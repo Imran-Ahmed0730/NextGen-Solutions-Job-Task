@@ -47,9 +47,7 @@ def get_invoice_print_data(
     customer = customer_service.get_customer(db, invoice.customer_id)
     if customer is None:
         raise HTTPException(status_code=500, detail="Invoice customer could not be loaded")
-    products = product_service.get_products_by_ids(
-        db, {line.product_id for line in invoice.lines}
-    )
+    products = product_service.get_products_by_ids(db, {line.product_id for line in invoice.lines})
     products_by_id = {product.id: product for product in products}
     missing_product_ids = {line.product_id for line in invoice.lines} - products_by_id.keys()
     if missing_product_ids:

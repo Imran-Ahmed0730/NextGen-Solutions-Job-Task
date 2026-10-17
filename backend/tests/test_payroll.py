@@ -76,9 +76,7 @@ def _create_employee(client: TestClient, headers: dict[str, str], code: str) -> 
     return response.json()["id"]
 
 
-def _create_money_account(
-    client: TestClient, headers: dict[str, str], opening_balance: str
-) -> int:
+def _create_money_account(client: TestClient, headers: dict[str, str], opening_balance: str) -> int:
     response = client.post(
         "/api/v1/money-accounts",
         headers=headers,
@@ -161,9 +159,12 @@ def test_payroll_draft_deductions_and_salary_posting_are_atomic(
     assert sum((item.amount_signed for item in transactions), Decimal("0.00")) == Decimal(
         "-1900.00"
     )
-    assert [item.action for item in db_session.scalars(
-        select(AuditLog).where(AuditLog.entity_type == "payroll_run")
-    )] == ["CREATE", "UPDATE", "POST"]
+    assert [
+        item.action
+        for item in db_session.scalars(
+            select(AuditLog).where(AuditLog.entity_type == "payroll_run")
+        )
+    ] == ["CREATE", "UPDATE", "POST"]
 
     duplicate = client.post(
         "/api/v1/payroll/runs",
@@ -210,14 +211,10 @@ def test_payroll_rejects_excess_deduction_and_rolls_back_insufficient_funds(
         json={"account_id": account_id, "paid_on": "2026-10-31"},
     )
     assert failed.status_code == 409
-    run_after_failure = client.get(
-        f"/api/v1/payroll/runs/{run['id']}", headers=headers
-    ).json()
+    run_after_failure = client.get(f"/api/v1/payroll/runs/{run['id']}", headers=headers).json()
     assert run_after_failure["status"] == "DRAFT"
     assert (
-        db_session.scalar(
-            select(MoneyTransaction).where(MoneyTransaction.source_type == "PAYROLL")
-        )
+        db_session.scalar(select(MoneyTransaction).where(MoneyTransaction.source_type == "PAYROLL"))
         is None
     )
 

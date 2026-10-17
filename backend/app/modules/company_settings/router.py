@@ -103,9 +103,7 @@ def create_setting(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("master_data.company_settings.create")),
 ) -> CompanySetting:
-    return service.create_setting_from_payload(
-        db, payload.model_dump(), actor, _ip(request)
-    )
+    return service.create_setting_from_payload(db, payload.model_dump(), actor, _ip(request))
 
 
 @router.put("/{key}", response_model=CompanySettingResponse)

@@ -82,9 +82,7 @@ class SalesOrder(Base):
         lazy="selectin",
         order_by="SalesOrderLine.id",
     )
-    quotation: Mapped["Quotation | None"] = relationship(
-        "Quotation", back_populates="sales_order"
-    )
+    quotation: Mapped["Quotation | None"] = relationship("Quotation", back_populates="sales_order")
     deliveries: Mapped[list["SalesDelivery"]] = relationship(
         back_populates="sales_order",
         lazy="selectin",

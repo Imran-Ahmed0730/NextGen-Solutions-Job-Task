@@ -57,9 +57,7 @@ def upgrade() -> None:
             name="ck_production_orders_positive_actual_qty",
         ),
         sa.ForeignKeyConstraint(["bom_id"], ["boms.id"], ondelete="RESTRICT"),
-        sa.ForeignKeyConstraint(
-            ["finished_product_id"], ["products.id"], ondelete="RESTRICT"
-        ),
+        sa.ForeignKeyConstraint(["finished_product_id"], ["products.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["warehouse_id"], ["warehouses.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["created_by"], ["users.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
@@ -107,9 +105,7 @@ def upgrade() -> None:
         sa.Column("qty", sa.Numeric(18, 3), nullable=False),
         sa.Column("unit_cost", sa.Numeric(18, 4), nullable=False),
         sa.CheckConstraint("qty > 0", name="ck_production_outputs_positive_qty"),
-        sa.CheckConstraint(
-            "unit_cost >= 0", name="ck_production_outputs_nonnegative_unit_cost"
-        ),
+        sa.CheckConstraint("unit_cost >= 0", name="ck_production_outputs_nonnegative_unit_cost"),
         sa.ForeignKeyConstraint(
             ["production_order_id"], ["production_orders.id"], ondelete="RESTRICT"
         ),

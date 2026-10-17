@@ -39,10 +39,7 @@ def get_sales_return_options(db: Session) -> SalesReturnOptionsResponse:
         db, [invoice.id for invoice in invoices]
     )
     returned = {
-        invoice_id: {
-            line_id: (qty, amount)
-            for line_id, qty, amount in invoice_returns
-        }
+        invoice_id: {line_id: (qty, amount) for line_id, qty, amount in invoice_returns}
         for invoice_id, invoice_returns in prior_lines.items()
     }
     options: list[SalesReturnInvoiceOption] = []

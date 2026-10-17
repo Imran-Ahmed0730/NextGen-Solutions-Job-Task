@@ -4,19 +4,13 @@ from sqlalchemy.orm import Session, selectinload
 from app.modules.assets.models import Asset
 
 
-def list_assets(
-    db: Session, *, include_inactive: bool, offset: int, limit: int
-) -> list[Asset]:
+def list_assets(db: Session, *, include_inactive: bool, offset: int, limit: int) -> list[Asset]:
     statement = select(Asset).options(
         selectinload(Asset.assignments), selectinload(Asset.maintenance)
     )
     if not include_inactive:
         statement = statement.where(Asset.is_active.is_(True), Asset.deleted_at.is_(None))
-    return list(
-        db.scalars(
-            statement.order_by(Asset.name, Asset.id).offset(offset).limit(limit)
-        )
-    )
+    return list(db.scalars(statement.order_by(Asset.name, Asset.id).offset(offset).limit(limit)))
 
 
 def get_asset(db: Session, asset_id: int, *, for_update: bool = False) -> Asset | None:

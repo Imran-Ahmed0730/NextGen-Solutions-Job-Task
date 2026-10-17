@@ -16,13 +16,9 @@ def list_quotations(db: Session, *, offset: int = 0, limit: int = 50) -> list[Qu
     return list(db.scalars(statement))
 
 
-def get_quotation(
-    db: Session, quotation_id: int, *, for_update: bool = False
-) -> Quotation | None:
+def get_quotation(db: Session, quotation_id: int, *, for_update: bool = False) -> Quotation | None:
     statement = (
-        select(Quotation)
-        .options(selectinload(Quotation.lines))
-        .where(Quotation.id == quotation_id)
+        select(Quotation).options(selectinload(Quotation.lines)).where(Quotation.id == quotation_id)
     )
     if for_update:
         statement = statement.with_for_update()
@@ -41,6 +37,4 @@ def get_accepted_quotation_for_update(db: Session, quotation_id: int) -> Quotati
 
 
 def get_sales_order_id(db: Session, quotation_id: int) -> int | None:
-    return db.scalar(
-        select(SalesOrder.id).where(SalesOrder.quotation_id == quotation_id)
-    )
+    return db.scalar(select(SalesOrder.id).where(SalesOrder.quotation_id == quotation_id))

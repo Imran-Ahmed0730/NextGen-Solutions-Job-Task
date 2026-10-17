@@ -65,9 +65,7 @@ def seed_demo_data(db: Session, actor: User) -> int:
 
     category = db.scalar(select(ProductCategory).where(ProductCategory.name == "Demo Products"))
     if category is None:
-        category = product_category_service.create_category(
-            db, {"name": "Demo Products"}, actor
-        )
+        category = product_category_service.create_category(db, {"name": "Demo Products"}, actor)
         created += 1
 
     warehouse = db.scalar(select(Warehouse).where(Warehouse.code == "DEMO-WH"))

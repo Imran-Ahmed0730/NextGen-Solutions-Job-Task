@@ -27,9 +27,7 @@ def list_assets(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("assets.read")),
 ) -> list[Asset]:
-    return service.list_assets(
-        db, include_inactive=include_inactive, offset=offset, limit=limit
-    )
+    return service.list_assets(db, include_inactive=include_inactive, offset=offset, limit=limit)
 
 
 @router.post("", response_model=AssetResponse, status_code=status.HTTP_201_CREATED)
@@ -102,9 +100,7 @@ def return_asset(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("assets.assign")),
 ) -> Asset:
-    return service.return_asset(
-        db, asset_id, assignment_id, returned_on, actor, _ip(request)
-    )
+    return service.return_asset(db, asset_id, assignment_id, returned_on, actor, _ip(request))
 
 
 @router.post(
@@ -119,9 +115,7 @@ def add_maintenance(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("assets.maintain")),
 ) -> Asset:
-    return service.add_maintenance(
-        db, asset_id, payload.model_dump(), actor, _ip(request)
-    )
+    return service.add_maintenance(db, asset_id, payload.model_dump(), actor, _ip(request))
 
 
 def _ip(request: Request) -> str | None:

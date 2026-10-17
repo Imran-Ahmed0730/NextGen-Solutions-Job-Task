@@ -93,9 +93,7 @@ def upgrade() -> None:
         mysql_engine="InnoDB",
         mysql_charset="utf8mb4",
     )
-    op.create_index(
-        "ix_payment_allocations_source", "payment_allocations", ["ref_type", "ref_id"]
-    )
+    op.create_index("ix_payment_allocations_source", "payment_allocations", ["ref_type", "ref_id"])
 
 
 def downgrade() -> None:

@@ -9,13 +9,9 @@ def list_price_lists(
 ) -> list[PriceList]:
     statement = select(PriceList)
     if not include_inactive:
-        statement = statement.where(
-            PriceList.is_active.is_(True), PriceList.deleted_at.is_(None)
-        )
+        statement = statement.where(PriceList.is_active.is_(True), PriceList.deleted_at.is_(None))
     return list(
-        db.scalars(
-            statement.order_by(PriceList.name, PriceList.id).offset(offset).limit(limit)
-        )
+        db.scalars(statement.order_by(PriceList.name, PriceList.id).offset(offset).limit(limit))
     )
 
 
@@ -23,9 +19,7 @@ def get_price_list(db: Session, price_list_id: int) -> PriceList | None:
     return db.get(PriceList, price_list_id)
 
 
-def list_default_price_lists(
-    db: Session, *, exclude_id: int | None = None
-) -> list[PriceList]:
+def list_default_price_lists(db: Session, *, exclude_id: int | None = None) -> list[PriceList]:
     statement = select(PriceList).where(
         PriceList.is_default.is_(True), PriceList.deleted_at.is_(None)
     )

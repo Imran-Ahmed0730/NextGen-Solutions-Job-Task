@@ -23,15 +23,11 @@ def _validate_setting_value(key: str, value: str) -> str:
         if len(value) > 255:
             raise HTTPException(status_code=422, detail="Company name is too long")
     elif key == "company_email":
-        if value and (
-            len(value) > 255
-            or re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", value) is None
-        ):
+        if value and (len(value) > 255 or re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", value) is None):
             raise HTTPException(status_code=422, detail="Company email is invalid")
     elif key == "company_phone":
         if value and (
-            len(value) > 30
-            or re.fullmatch(r"\+?[0-9][0-9 ()-]{5,28}[0-9]", value) is None
+            len(value) > 30 or re.fullmatch(r"\+?[0-9][0-9 ()-]{5,28}[0-9]", value) is None
         ):
             raise HTTPException(status_code=422, detail="Company phone is invalid")
     elif key == "company_address" and len(value) > 1000:
@@ -43,16 +39,13 @@ def _validate_setting_value(key: str, value: str) -> str:
     elif key == "timezone":
         if len(value) > 100 or (
             value != "UTC"
-            and re.fullmatch(r"[A-Za-z][A-Za-z0-9._+-]*(?:/[A-Za-z0-9._+-]+)+", value)
-            is None
+            and re.fullmatch(r"[A-Za-z][A-Za-z0-9._+-]*(?:/[A-Za-z0-9._+-]+)+", value) is None
         ):
             raise HTTPException(status_code=422, detail="Timezone must be an IANA-style name")
     elif key == "credit_limit_mode":
         value = value.upper()
         if value not in {"WARN", "BLOCK"}:
-            raise HTTPException(
-                status_code=422, detail="Credit limit mode must be WARN or BLOCK"
-            )
+            raise HTTPException(status_code=422, detail="Credit limit mode must be WARN or BLOCK")
     elif key == "receipt_tolerance_pct":
         try:
             percentage = Decimal(value)
@@ -61,9 +54,7 @@ def _validate_setting_value(key: str, value: str) -> str:
                 status_code=422, detail="Receiving tolerance must be a number"
             ) from exc
         if not percentage.is_finite() or percentage < 0:
-            raise HTTPException(
-                status_code=422, detail="Receiving tolerance must be non-negative"
-            )
+            raise HTTPException(status_code=422, detail="Receiving tolerance must be non-negative")
         value = str(percentage)
     return value
 
@@ -199,9 +190,7 @@ def save_setting_from_payload(
     return save_setting(db, key, value, actor, ip)
 
 
-def delete_setting(
-    db: Session, key: str, actor: User, ip: str | None = None
-) -> None:
+def delete_setting(db: Session, key: str, actor: User, ip: str | None = None) -> None:
     setting = repository.get_setting(db, key)
     if setting is None:
         raise HTTPException(status_code=404, detail="Company setting not found")

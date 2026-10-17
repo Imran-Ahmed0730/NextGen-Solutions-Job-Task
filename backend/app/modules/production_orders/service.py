@@ -42,9 +42,7 @@ def list_production_orders(
     return repository.list_production_orders(db, offset=offset, limit=limit)
 
 
-def get_production_order(
-    db: Session, production_order_id: int
-) -> ProductionOrder | None:
+def get_production_order(db: Session, production_order_id: int) -> ProductionOrder | None:
     return repository.get_production_order(db, production_order_id)
 
 
@@ -192,9 +190,7 @@ def start_production_order(
             warehouse_id=order.warehouse_id,
             for_update=True,
         )
-        _check_material_availability(
-            db, bom, order.planned_qty, order.warehouse_id
-        )
+        _check_material_availability(db, bom, order.planned_qty, order.warehouse_id)
         before = _snapshot(order)
         order.status = "IN_PROGRESS"
         order.updated_at = datetime.now(UTC)
@@ -302,18 +298,14 @@ def complete_production_order(
             )
         if material_cost > MAX_MONEY:
             raise HTTPException(status_code=422, detail="PRODUCTION_COST_EXCEEDS_LIMIT")
-        total_cost = (
-            material_cost + payload.labor_cost + payload.overhead_cost
-        ).quantize(CENT, rounding=ROUND_HALF_UP)
+        total_cost = (material_cost + payload.labor_cost + payload.overhead_cost).quantize(
+            CENT, rounding=ROUND_HALF_UP
+        )
         if total_cost > MAX_MONEY:
             raise HTTPException(status_code=422, detail="PRODUCTION_COST_EXCEEDS_LIMIT")
-        unit_cost = (total_cost / payload.actual_qty).quantize(
-            FOUR_PLACES, rounding=ROUND_HALF_UP
-        )
+        unit_cost = (total_cost / payload.actual_qty).quantize(FOUR_PLACES, rounding=ROUND_HALF_UP)
 
-        old_finished_qty = inventory_service.get_product_total_on_hand(
-            db, finished_product.id
-        )
+        old_finished_qty = inventory_service.get_product_total_on_hand(db, finished_product.id)
         next_average = inventory_service.weighted_average_cost(
             old_qty=old_finished_qty,
             old_avg_cost=finished_product.avg_cost,
@@ -463,9 +455,7 @@ def _check_material_availability(
 ) -> None:
     quantities = _scaled_ingredients(bom, output_qty)
     raw_products = {
-        product_id: _lock_active_product(
-            db, product_id, expected_type=ProductType.RAW
-        )
+        product_id: _lock_active_product(db, product_id, expected_type=ProductType.RAW)
         for product_id in sorted(quantities)
     }
     pairs = {(product_id, warehouse_id) for product_id in quantities}
@@ -488,9 +478,7 @@ def _snapshot(order: ProductionOrder) -> dict[str, object]:
         "warehouse_id": order.warehouse_id,
         "status": order.status,
         "labor_cost": str(order.labor_cost) if order.labor_cost is not None else None,
-        "overhead_cost": (
-            str(order.overhead_cost) if order.overhead_cost is not None else None
-        ),
+        "overhead_cost": (str(order.overhead_cost) if order.overhead_cost is not None else None),
         "material_cost": str(order.material_cost) if order.material_cost is not None else None,
         "total_cost": str(order.total_cost) if order.total_cost is not None else None,
         "unit_cost": str(order.unit_cost) if order.unit_cost is not None else None,

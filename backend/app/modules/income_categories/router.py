@@ -85,9 +85,7 @@ def activate_category(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("master_data.income_categories.update")),
 ) -> IncomeCategory:
-    return service.activate_category(
-        db, _category_or_404(db, category_id), actor, _ip(request)
-    )
+    return service.activate_category(db, _category_or_404(db, category_id), actor, _ip(request))
 
 
 def _ip(request: Request) -> str | None:

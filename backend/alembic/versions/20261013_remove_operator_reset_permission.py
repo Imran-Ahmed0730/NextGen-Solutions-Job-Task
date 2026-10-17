@@ -23,9 +23,7 @@ def upgrade() -> None:
             "(SELECT id FROM permissions WHERE code = 'auth.users.reset_password')"
         )
     )
-    op.execute(
-        sa.text("DELETE FROM permissions WHERE code = 'auth.users.reset_password'")
-    )
+    op.execute(sa.text("DELETE FROM permissions WHERE code = 'auth.users.reset_password'"))
 
 
 def downgrade() -> None:

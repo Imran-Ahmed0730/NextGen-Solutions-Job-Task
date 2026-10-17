@@ -14,9 +14,7 @@ def list_customers(
 ) -> list[Customer]:
     statement = select(Customer)
     if not include_inactive:
-        statement = statement.where(
-            Customer.is_active.is_(True), Customer.deleted_at.is_(None)
-        )
+        statement = statement.where(Customer.is_active.is_(True), Customer.deleted_at.is_(None))
     if search:
         pattern = f"%{search.strip()}%"
         statement = statement.where(
@@ -28,9 +26,7 @@ def list_customers(
             )
         )
     return list(
-        db.scalars(
-            statement.order_by(Customer.name, Customer.id).offset(offset).limit(limit)
-        )
+        db.scalars(statement.order_by(Customer.name, Customer.id).offset(offset).limit(limit))
     )
 
 

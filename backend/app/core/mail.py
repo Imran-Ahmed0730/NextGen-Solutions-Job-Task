@@ -31,8 +31,7 @@ def send_password_reset_email(email: str, token: str) -> None:
     if smtp_host is None or from_email is None:
         raise MailDeliveryError("Email delivery is not configured")
     reset_url = (
-        f"{settings.frontend_origin.rstrip('/')}/reset-password?"
-        f"{urlencode({'token': token})}"
+        f"{settings.frontend_origin.rstrip('/')}/reset-password?" f"{urlencode({'token': token})}"
     )
     message = EmailMessage()
     message["Subject"] = "Reset your Sabuj Pran password"

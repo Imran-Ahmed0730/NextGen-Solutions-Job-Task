@@ -4,9 +4,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
 
-EmployeeCode = Annotated[
-    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)
-]
+EmployeeCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
 EmployeeName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=150)
 ]
@@ -19,12 +17,10 @@ EmployeeMobile = Annotated[
         pattern=r"^01[3-9]\d{8}$",
     ),
 ]
-OptionalDesignation = Annotated[
-    str, StringConstraints(strip_whitespace=True, max_length=100)
-] | None
-OptionalDepartment = Annotated[
-    str, StringConstraints(strip_whitespace=True, max_length=100)
-] | None
+OptionalDesignation = (
+    Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)] | None
+)
+OptionalDepartment = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)] | None
 BaseSalary = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=2)]
 
 

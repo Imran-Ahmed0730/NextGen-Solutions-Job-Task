@@ -28,9 +28,7 @@ def upgrade() -> None:
         sa.Column(
             "credit_limit", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False
         ),
-        sa.Column(
-            "opening_due", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False
-        ),
+        sa.Column("opening_due", sa.Numeric(18, 2), server_default=sa.text("0.00"), nullable=False),
         sa.Column("price_list_id", BIGINT(unsigned=True), nullable=True),
         sa.Column("is_active", sa.Boolean(), server_default=sa.text("1"), nullable=False),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),

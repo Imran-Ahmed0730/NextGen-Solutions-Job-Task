@@ -4,9 +4,7 @@ from sqlalchemy.orm import Session
 from app.modules.units.models import Unit
 
 
-def list_units(
-    db: Session, *, include_inactive: bool, offset: int, limit: int
-) -> list[Unit]:
+def list_units(db: Session, *, include_inactive: bool, offset: int, limit: int) -> list[Unit]:
     statement = select(Unit)
     if not include_inactive:
         statement = statement.where(Unit.is_active.is_(True), Unit.deleted_at.is_(None))

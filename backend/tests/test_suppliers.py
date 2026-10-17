@@ -180,12 +180,10 @@ def test_supplier_permission_denial(client, db_session):
 
     assert client.get("/api/v1/suppliers", headers=headers).status_code == 403
     assert (
-        client.get(f"/api/v1/suppliers/{supplier.id}/statement", headers=headers).status_code
-        == 403
+        client.get(f"/api/v1/suppliers/{supplier.id}/statement", headers=headers).status_code == 403
     )
     assert (
-        client.get(f"/api/v1/suppliers/{supplier.id}/contacts", headers=headers).status_code
-        == 403
+        client.get(f"/api/v1/suppliers/{supplier.id}/contacts", headers=headers).status_code == 403
     )
     assert (
         client.post(

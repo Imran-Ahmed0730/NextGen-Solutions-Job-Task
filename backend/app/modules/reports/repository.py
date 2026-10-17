@@ -64,11 +64,7 @@ def dashboard_totals(db: Session, period_from: date, period_to: date) -> dict[st
     )
     returned_cogs = _sum(
         db,
-        select(
-            func.coalesce(
-                func.sum(SalesReturnLine.qty * SalesReturnLine.unit_cost_cogs), 0
-            )
-        )
+        select(func.coalesce(func.sum(SalesReturnLine.qty * SalesReturnLine.unit_cost_cogs), 0))
         .join(SalesReturn, SalesReturn.id == SalesReturnLine.return_id)
         .where(SalesReturn.doc_date >= period_from, SalesReturn.doc_date <= period_to),
     )
@@ -177,9 +173,7 @@ def dashboard_totals(db: Session, period_from: date, period_to: date) -> dict[st
         )
         .exists()
     )
-    pending_orders = db.scalar(
-        select(func.count(SalesOrder.id)).where(remaining_order)
-    ) or 0
+    pending_orders = db.scalar(select(func.count(SalesOrder.id)).where(remaining_order)) or 0
 
     return {
         "period_from": period_from,
@@ -416,9 +410,9 @@ def report_data(
                 func.coalesce(func.sum(StockBalance.qty_on_hand), 0).label("on_hand"),
                 Product.reorder_level.label("reorder_level"),
                 Product.avg_cost.label("unit_cost"),
-                (
-                    func.coalesce(func.sum(StockBalance.qty_on_hand), 0) * Product.avg_cost
-                ).label("value"),
+                (func.coalesce(func.sum(StockBalance.qty_on_hand), 0) * Product.avg_cost).label(
+                    "value"
+                ),
             )
             .outerjoin(
                 StockBalance,

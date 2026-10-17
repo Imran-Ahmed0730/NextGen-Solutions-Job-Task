@@ -46,9 +46,7 @@ def _validate_is_active(value: object) -> bool:
 
 def _validate_dates(valid_from: date | None, valid_to: date | None) -> None:
     if valid_from is not None and valid_to is not None and valid_to < valid_from:
-        raise HTTPException(
-            status_code=422, detail="valid_to must be on or after valid_from"
-        )
+        raise HTTPException(status_code=422, detail="valid_to must be on or after valid_from")
 
 
 def _clear_other_defaults(db: Session, *, exclude_id: int | None = None) -> None:

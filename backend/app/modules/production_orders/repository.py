@@ -4,9 +4,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.modules.production_orders.models import ProductionOrder
 
 
-def list_production_orders(
-    db: Session, *, offset: int, limit: int
-) -> list[ProductionOrder]:
+def list_production_orders(db: Session, *, offset: int, limit: int) -> list[ProductionOrder]:
     statement = (
         select(ProductionOrder)
         .options(

@@ -9,9 +9,7 @@ WarehouseName = Annotated[
 WarehouseCode = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=30)
 ]
-WarehouseAddress = Annotated[
-    str, StringConstraints(strip_whitespace=True, max_length=255)
-]
+WarehouseAddress = Annotated[str, StringConstraints(strip_whitespace=True, max_length=255)]
 
 
 class WarehouseCreate(BaseModel):

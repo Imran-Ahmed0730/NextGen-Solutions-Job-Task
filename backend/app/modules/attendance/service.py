@@ -27,9 +27,7 @@ ATTENDANCE_HEADERS = (
 )
 
 
-def list_attendance_for_range(
-    db: Session, from_date: date, to_date: date
-) -> list[Attendance]:
+def list_attendance_for_range(db: Session, from_date: date, to_date: date) -> list[Attendance]:
     if from_date > to_date:
         raise HTTPException(status_code=422, detail="Start date cannot be after end date")
     return repository.list_attendance_for_range(db, from_date, to_date)
@@ -141,9 +139,7 @@ def import_attendance(
         try:
             line = adapter.validate_python(raw_line)
         except ValidationError as exc:
-            errors.append(
-                {"row_number": row_number, "message": _validation_message(exc)}
-            )
+            errors.append({"row_number": row_number, "message": _validation_message(exc)})
             continue
 
         employee = repository.get_employee_by_code(db, line.employee_code.strip())
@@ -151,9 +147,7 @@ def import_attendance(
             errors.append({"row_number": row_number, "message": "Employee code not found"})
             continue
         key = (employee.id, line.att_date)
-        if key in seen or repository.get_employee_attendance(
-            db, employee.id, line.att_date
-        ):
+        if key in seen or repository.get_employee_attendance(db, employee.id, line.att_date):
             errors.append(
                 {
                     "row_number": row_number,
@@ -235,9 +229,7 @@ def parse_attendance_workbook(data: bytes) -> list[dict[str, object]]:
                 "out_time": _excel_value(cells, indexes["Out Time"], "time"),
             }
             if not any(
-                value not in (None, "")
-                for key, value in line.items()
-                if key != "row_number"
+                value not in (None, "") for key, value in line.items() if key != "row_number"
             ):
                 continue
             status_value = line["status"]
@@ -317,8 +309,7 @@ def _snapshot(attendance: Attendance) -> dict[str, object]:
 
 def _validation_message(error: ValidationError) -> str:
     return "; ".join(
-        f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}"
-        for item in error.errors()
+        f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}" for item in error.errors()
     )
 
 

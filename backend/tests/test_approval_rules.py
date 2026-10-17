@@ -139,9 +139,7 @@ def test_approval_rule_deactivation_and_reactivation_overlap_validation(
         headers=headers,
         json=_rule_payload(role.id, "0.00", "999.99"),
     ).json()
-    deactivated = client.post(
-        f"/api/v1/approvals/rules/{first['id']}/deactivate", headers=headers
-    )
+    deactivated = client.post(f"/api/v1/approvals/rules/{first['id']}/deactivate", headers=headers)
     assert deactivated.status_code == 200
     assert deactivated.json()["is_active"] is False
 
@@ -152,23 +150,20 @@ def test_approval_rule_deactivation_and_reactivation_overlap_validation(
     )
     assert overlapping.status_code == 201
 
-    reactivated = client.post(
-        f"/api/v1/approvals/rules/{first['id']}/activate", headers=headers
-    )
+    reactivated = client.post(f"/api/v1/approvals/rules/{first['id']}/activate", headers=headers)
     assert reactivated.status_code == 409
-    assert client.get(
-        "/api/v1/approvals/rules", headers=headers
-    ).json()[0]["is_active"] is True
-    inactive = client.get(
-        "/api/v1/approvals/rules?include_inactive=true", headers=headers
-    )
+    assert client.get("/api/v1/approvals/rules", headers=headers).json()[0]["is_active"] is True
+    inactive = client.get("/api/v1/approvals/rules?include_inactive=true", headers=headers)
     assert len(inactive.json()) == 2
-    assert [item.action for item in db_session.scalars(
-        select(AuditLog).where(
-            AuditLog.entity_type == "approval_rule",
-            AuditLog.entity_id == str(first["id"]),
+    assert [
+        item.action
+        for item in db_session.scalars(
+            select(AuditLog).where(
+                AuditLog.entity_type == "approval_rule",
+                AuditLog.entity_id == str(first["id"]),
+            )
         )
-    )] == ["CREATE", "DEACTIVATE"]
+    ] == ["CREATE", "DEACTIVATE"]
     assert db_session.scalar(select(ApprovalRule).where(ApprovalRule.id == first["id"])) is not None
 
 

@@ -9,13 +9,9 @@ def list_warehouses(
 ) -> list[Warehouse]:
     statement = select(Warehouse)
     if not include_inactive:
-        statement = statement.where(
-            Warehouse.is_active.is_(True), Warehouse.deleted_at.is_(None)
-        )
+        statement = statement.where(Warehouse.is_active.is_(True), Warehouse.deleted_at.is_(None))
     return list(
-        db.scalars(
-            statement.order_by(Warehouse.name, Warehouse.id).offset(offset).limit(limit)
-        )
+        db.scalars(statement.order_by(Warehouse.name, Warehouse.id).offset(offset).limit(limit))
     )
 
 
@@ -41,9 +37,7 @@ def get_default_warehouse(db: Session) -> Warehouse | None:
     return db.scalar(statement)
 
 
-def list_default_warehouses(
-    db: Session, *, exclude_id: int | None = None
-) -> list[Warehouse]:
+def list_default_warehouses(db: Session, *, exclude_id: int | None = None) -> list[Warehouse]:
     statement = select(Warehouse).where(Warehouse.is_default.is_(True))
     if exclude_id is not None:
         statement = statement.where(Warehouse.id != exclude_id)

@@ -75,9 +75,7 @@ def delete_money_account(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("master_data.money_accounts.delete")),
 ) -> MoneyAccount:
-    return service.delete_money_account(
-        db, _account_or_404(db, account_id), actor, _ip(request)
-    )
+    return service.delete_money_account(db, _account_or_404(db, account_id), actor, _ip(request))
 
 
 @router.post("/{account_id}/activate", response_model=MoneyAccountResponse)
@@ -87,9 +85,7 @@ def activate_money_account(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("master_data.money_accounts.update")),
 ) -> MoneyAccount:
-    return service.activate_money_account(
-        db, _account_or_404(db, account_id), actor, _ip(request)
-    )
+    return service.activate_money_account(db, _account_or_404(db, account_id), actor, _ip(request))
 
 
 def _ip(request: Request) -> str | None:

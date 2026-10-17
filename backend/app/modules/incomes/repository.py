@@ -36,4 +36,3 @@ def get_account_for_update(db: Session, account_id: int) -> MoneyAccount | None:
         .with_for_update()
         .execution_options(populate_existing=True)
     )
-

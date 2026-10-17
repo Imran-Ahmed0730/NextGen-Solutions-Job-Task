@@ -42,15 +42,9 @@ def upgrade() -> None:
         mysql_engine="InnoDB",
         mysql_charset="utf8mb4",
     )
-    op.create_index(
-        "ix_price_lists_is_default", "price_lists", ["is_default"], unique=False
-    )
-    op.create_index(
-        "ix_price_lists_valid_from", "price_lists", ["valid_from"], unique=False
-    )
-    op.create_index(
-        "ix_price_lists_valid_to", "price_lists", ["valid_to"], unique=False
-    )
+    op.create_index("ix_price_lists_is_default", "price_lists", ["is_default"], unique=False)
+    op.create_index("ix_price_lists_valid_from", "price_lists", ["valid_from"], unique=False)
+    op.create_index("ix_price_lists_valid_to", "price_lists", ["valid_to"], unique=False)
 
     op.create_table(
         "product_prices",
@@ -83,9 +77,7 @@ def upgrade() -> None:
             ondelete="RESTRICT",
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "price_list_id", "product_id", name="uq_product_prices_list_product"
-        ),
+        sa.UniqueConstraint("price_list_id", "product_id", name="uq_product_prices_list_product"),
         mysql_engine="InnoDB",
         mysql_charset="utf8mb4",
     )
@@ -95,9 +87,7 @@ def upgrade() -> None:
         ["price_list_id"],
         unique=False,
     )
-    op.create_index(
-        "ix_product_prices_product_id", "product_prices", ["product_id"], unique=False
-    )
+    op.create_index("ix_product_prices_product_id", "product_prices", ["product_id"], unique=False)
 
 
 def downgrade() -> None:

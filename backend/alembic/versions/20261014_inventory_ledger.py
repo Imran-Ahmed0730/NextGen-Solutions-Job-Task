@@ -94,9 +94,7 @@ def upgrade() -> None:
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
-        sa.CheckConstraint(
-            "qty_reserved >= 0", name="ck_stock_balances_reserved_nonnegative"
-        ),
+        sa.CheckConstraint("qty_reserved >= 0", name="ck_stock_balances_reserved_nonnegative"),
         sa.ForeignKeyConstraint(
             ["product_id"],
             ["products.id"],
@@ -125,7 +123,5 @@ def downgrade() -> None:
     op.drop_index("ix_stock_balances_warehouse_product", table_name="stock_balances")
     op.drop_table("stock_balances")
     op.drop_index("ix_stock_transactions_source", table_name="stock_transactions")
-    op.drop_index(
-        "ix_stock_transactions_product_warehouse_date", table_name="stock_transactions"
-    )
+    op.drop_index("ix_stock_transactions_product_warehouse_date", table_name="stock_transactions")
     op.drop_table("stock_transactions")

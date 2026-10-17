@@ -4,9 +4,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
-MoneyAmount = Annotated[
-    Decimal, Field(ge=0, max_digits=18, decimal_places=2, allow_inf_nan=False)
-]
+MoneyAmount = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=2, allow_inf_nan=False)]
 
 
 class PayrollRunCreate(BaseModel):

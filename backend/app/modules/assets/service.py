@@ -15,9 +15,7 @@ from app.modules.employees import service as employee_service
 def list_assets(
     db: Session, *, include_inactive: bool = False, offset: int = 0, limit: int = 50
 ) -> list[Asset]:
-    return repository.list_assets(
-        db, include_inactive=include_inactive, offset=offset, limit=limit
-    )
+    return repository.list_assets(db, include_inactive=include_inactive, offset=offset, limit=limit)
 
 
 def get_asset(db: Session, asset_id: int, *, for_update: bool = False) -> Asset | None:
@@ -111,9 +109,7 @@ def update_asset(
         raise
 
 
-def delete_asset(
-    db: Session, asset_id: int, actor: User, ip: str | None = None
-) -> Asset:
+def delete_asset(db: Session, asset_id: int, actor: User, ip: str | None = None) -> Asset:
     try:
         asset = _active_asset(db, asset_id, for_update=True)
         before = _asset_snapshot(asset)
@@ -136,9 +132,7 @@ def delete_asset(
         raise
 
 
-def restore_asset(
-    db: Session, asset_id: int, actor: User, ip: str | None = None
-) -> Asset:
+def restore_asset(db: Session, asset_id: int, actor: User, ip: str | None = None) -> Asset:
     try:
         asset = repository.get_asset(db, asset_id, for_update=True)
         if asset is None:
@@ -227,9 +221,7 @@ def return_asset(
 ) -> Asset:
     try:
         asset = _active_asset(db, asset_id, for_update=True)
-        assignment = next(
-            (item for item in asset.assignments if item.id == assignment_id), None
-        )
+        assignment = next((item for item in asset.assignments if item.id == assignment_id), None)
         if assignment is None or assignment.returned_on is not None:
             raise HTTPException(status_code=404, detail="Active asset assignment not found")
         if returned_on < assignment.assigned_on:
@@ -367,9 +359,7 @@ def _assignment_snapshot(assignment: AssetAssignment) -> dict[str, object]:
         "employee_id": assignment.employee_id,
         "location": assignment.location,
         "assigned_on": assignment.assigned_on.isoformat(),
-        "returned_on": (
-            assignment.returned_on.isoformat() if assignment.returned_on else None
-        ),
+        "returned_on": (assignment.returned_on.isoformat() if assignment.returned_on else None),
     }
 
 

@@ -7,9 +7,7 @@ from app.modules.attendance.models import Attendance
 from app.modules.employees.models import Employee
 
 
-def list_attendance_for_range(
-    db: Session, from_date: date, to_date: date
-) -> list[Attendance]:
+def list_attendance_for_range(db: Session, from_date: date, to_date: date) -> list[Attendance]:
     statement = (
         select(Attendance)
         .options(joinedload(Attendance.employee))
@@ -46,9 +44,7 @@ def get_employee(db: Session, employee_id: int) -> Employee | None:
     return db.get(Employee, employee_id)
 
 
-def get_employee_attendance(
-    db: Session, employee_id: int, att_date: date
-) -> Attendance | None:
+def get_employee_attendance(db: Session, employee_id: int, att_date: date) -> Attendance | None:
     statement = select(Attendance).where(
         Attendance.employee_id == employee_id,
         Attendance.att_date == att_date,

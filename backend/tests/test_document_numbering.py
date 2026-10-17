@@ -86,9 +86,7 @@ def test_document_sequence_crud_and_gap_free_numbering(
     )
     assert duplicate.status_code == 409
 
-    generated = [
-        generate_next_number(db_session, "INVOICE", 2026) for _ in range(3)
-    ]
+    generated = [generate_next_number(db_session, "INVOICE", 2026) for _ in range(3)]
     db_session.commit()
     assert generated == ["INV-20260001", "INV-20260002", "INV-20260003"]
 
@@ -110,9 +108,7 @@ def test_document_sequence_crud_and_gap_free_numbering(
     assert missing.status_code == 404
 
 
-def test_document_numbering_permission_denial(
-    client: TestClient, db_session: Session
-) -> None:
+def test_document_numbering_permission_denial(client: TestClient, db_session: Session) -> None:
     user = User(
         username="readonly",
         full_name="Read Only",

@@ -100,9 +100,7 @@ def activate_price_list(
     return service.activate_price_list(db, price_list, actor, _ip(request))
 
 
-@router.get(
-    "/{price_list_id}/prices", response_model=list[ProductPriceResponse]
-)
+@router.get("/{price_list_id}/prices", response_model=list[ProductPriceResponse])
 def list_product_prices(
     price_list_id: int,
     db: Session = Depends(get_db),
@@ -130,9 +128,7 @@ def create_product_price(
     )
 
 
-@router.patch(
-    "/{price_list_id}/prices/{price_id}", response_model=ProductPriceResponse
-)
+@router.patch("/{price_list_id}/prices/{price_id}", response_model=ProductPriceResponse)
 def update_product_price(
     price_list_id: int,
     price_id: int,
@@ -150,9 +146,7 @@ def update_product_price(
     )
 
 
-@router.delete(
-    "/{price_list_id}/prices/{price_id}", status_code=status.HTTP_204_NO_CONTENT
-)
+@router.delete("/{price_list_id}/prices/{price_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product_price(
     price_list_id: int,
     price_id: int,

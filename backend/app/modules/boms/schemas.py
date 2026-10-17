@@ -6,9 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from app.modules.products.models import ProductType
 
-BOMCode = Annotated[
-    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)
-]
+BOMCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
 Quantity = Annotated[Decimal, Field(gt=0, max_digits=18, decimal_places=3)]
 Cost = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=2)]
 
@@ -25,6 +23,7 @@ class BOMCreate(BaseModel):
     labor_cost_default: Cost = Decimal("0.00")
     overhead_cost_default: Cost = Decimal("0.00")
     lines: list[BOMLineInput] = Field(min_length=1, max_length=500)
+
 
 class BOMLineResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

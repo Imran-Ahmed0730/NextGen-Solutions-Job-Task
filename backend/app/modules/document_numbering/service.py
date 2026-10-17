@@ -10,9 +10,7 @@ from app.modules.document_numbering import repository
 from app.modules.document_numbering.models import DocumentSequence
 
 
-def list_sequences(
-    db: Session, *, limit: int = 100, offset: int = 0
-) -> list[DocumentSequence]:
+def list_sequences(db: Session, *, limit: int = 100, offset: int = 0) -> list[DocumentSequence]:
     return repository.list_sequences(db, limit=limit, offset=offset)
 
 

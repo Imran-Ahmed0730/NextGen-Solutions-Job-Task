@@ -18,9 +18,7 @@ def _default_settings() -> dict[str, str]:
         "company_name": os.getenv("COMPANY_NAME", "Sabuj Pran").strip() or "Sabuj Pran",
         "company_address": os.getenv("COMPANY_ADDRESS", "").strip(),
         "company_phone": os.getenv("COMPANY_PHONE", "").strip(),
-        "company_email": (
-            os.getenv("COMPANY_EMAIL") or settings.smtp_from_email or ""
-        ).strip(),
+        "company_email": (os.getenv("COMPANY_EMAIL") or settings.smtp_from_email or "").strip(),
         "company_logo_path": DEFAULT_BRAND_ASSETS["logo"],
         "company_favicon_path": DEFAULT_BRAND_ASSETS["favicon"],
         "currency_code": os.getenv("CURRENCY_CODE", "BDT").strip() or "BDT",

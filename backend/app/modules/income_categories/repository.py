@@ -14,9 +14,7 @@ def list_categories(
         )
     return list(
         db.scalars(
-            statement.order_by(IncomeCategory.name, IncomeCategory.id)
-            .offset(offset)
-            .limit(limit)
+            statement.order_by(IncomeCategory.name, IncomeCategory.id).offset(offset).limit(limit)
         )
     )
 

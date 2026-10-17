@@ -200,22 +200,28 @@ def test_production_posting_consumes_stock_and_updates_cost_atomically(
     assert raw_balance is not None and raw_balance.qty_on_hand == Decimal("18.750")
     assert finished_balance is not None and finished_balance.qty_on_hand == Decimal("7.000")
     assert finished.avg_cost == Decimal("2.0000")
-    assert db_session.scalar(
-        select(func.count(StockTransaction.id)).where(
-            StockTransaction.source_type == "PRODUCTION_ORDER",
-            StockTransaction.source_id == order["id"],
+    assert (
+        db_session.scalar(
+            select(func.count(StockTransaction.id)).where(
+                StockTransaction.source_type == "PRODUCTION_ORDER",
+                StockTransaction.source_id == order["id"],
+            )
         )
-    ) == 2
+        == 2
+    )
     output = db_session.scalar(
         select(ProductionOutput).where(ProductionOutput.production_order_id == order["id"])
     )
     assert output is not None and output.unit_cost == Decimal("1.2000")
-    assert db_session.scalar(
-        select(func.count(AuditLog.id)).where(
-            AuditLog.entity_type == "production_order",
-            AuditLog.entity_id == str(order["id"]),
+    assert (
+        db_session.scalar(
+            select(func.count(AuditLog.id)).where(
+                AuditLog.entity_type == "production_order",
+                AuditLog.entity_id == str(order["id"]),
+            )
         )
-    ) == 3
+        == 3
+    )
 
     duplicate_post = client.post(
         f"/api/v1/production/orders/{order['id']}/complete",
@@ -312,9 +318,7 @@ def test_linked_production_updates_sales_order_and_rejects_excess_output(
     assert mismatch.status_code == 422
     assert mismatch.json()["detail"] == "PRODUCTION_SALES_ORDER_LINE_MISMATCH"
 
-    order = _create_order(
-        client, headers, bom, warehouse, qty="5.000", sales_order_line_id=line.id
-    )
+    order = _create_order(client, headers, bom, warehouse, qty="5.000", sales_order_line_id=line.id)
     started = client.post(
         f"/api/v1/production/orders/{order['id']}/start",
         headers=headers,
@@ -328,12 +332,15 @@ def test_linked_production_updates_sales_order_and_rejects_excess_output(
     )
     assert excess.status_code == 409
     assert excess.json()["detail"] == "PRODUCTION_EXCEEDS_SALES_ORDER_REMAINING"
-    assert db_session.scalar(
-        select(func.count(StockTransaction.id)).where(
-            StockTransaction.source_type == "PRODUCTION_ORDER",
-            StockTransaction.source_id == order["id"],
+    assert (
+        db_session.scalar(
+            select(func.count(StockTransaction.id)).where(
+                StockTransaction.source_type == "PRODUCTION_ORDER",
+                StockTransaction.source_id == order["id"],
+            )
         )
-    ) == 0
+        == 0
+    )
 
     completed = client.post(
         f"/api/v1/production/orders/{order['id']}/complete",
@@ -344,13 +351,16 @@ def test_linked_production_updates_sales_order_and_rejects_excess_output(
     db_session.refresh(line)
     assert line.qty_produced == Decimal("5.000")
     assert completed.json()["sales_order_line_id"] == line.id
-    assert db_session.scalar(
-        select(func.count(AuditLog.id)).where(
-            AuditLog.entity_type == "sales_order",
-            AuditLog.entity_id == str(sales_order.id),
-            AuditLog.action == "UPDATE",
+    assert (
+        db_session.scalar(
+            select(func.count(AuditLog.id)).where(
+                AuditLog.entity_type == "sales_order",
+                AuditLog.entity_id == str(sales_order.id),
+                AuditLog.action == "UPDATE",
+            )
         )
-    ) == 1
+        == 1
+    )
     tracked_order = client.get(
         f"/api/v1/sales/orders/{sales_order.id}",
         headers=headers,

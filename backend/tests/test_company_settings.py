@@ -56,9 +56,7 @@ def _login_admin(client: TestClient, db: Session) -> dict[str, str]:
     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
-def test_company_setting_key_value_crud_audit(
-    client: TestClient, db_session: Session
-) -> None:
+def test_company_setting_key_value_crud_audit(client: TestClient, db_session: Session) -> None:
     headers = _login_admin(client, db_session)
 
     created = client.post(
@@ -98,17 +96,13 @@ def test_company_setting_key_value_crud_audit(
     assert missing.status_code == 404
 
     audits = list(
-        db_session.scalars(
-            select(AuditLog).where(AuditLog.entity_type == "company_setting")
-        )
+        db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "company_setting"))
     )
     actions = [entry.action for entry in audits]
     assert actions == ["CREATE", "UPDATE", "DELETE"]
 
 
-def test_company_setting_permission_denial(
-    client: TestClient, db_session: Session
-) -> None:
+def test_company_setting_permission_denial(client: TestClient, db_session: Session) -> None:
     user = User(
         username="readonly",
         full_name="Read Only",
@@ -167,10 +161,7 @@ def test_company_setting_seed_is_idempotent_and_preserves_custom_values(
     assert db_session.get(CompanySetting, "company_name").value == "Seeded Company"
     assert db_session.get(CompanySetting, "currency_code").value == "BDT"
     assert db_session.get(CompanySetting, "timezone").value == "Asia/Dhaka"
-    assert (
-        db_session.get(CompanySetting, "company_logo_path").value
-        == DEFAULT_BRAND_ASSETS["logo"]
-    )
+    assert db_session.get(CompanySetting, "company_logo_path").value == DEFAULT_BRAND_ASSETS["logo"]
     assert (
         db_session.get(CompanySetting, "company_favicon_path").value
         == DEFAULT_BRAND_ASSETS["favicon"]
@@ -251,9 +242,7 @@ def test_authenticated_branding_endpoint_uses_seeded_defaults(
     }
 
 
-def test_company_setting_validation(
-    client: TestClient, db_session: Session
-) -> None:
+def test_company_setting_validation(client: TestClient, db_session: Session) -> None:
     headers = _login_admin(client, db_session)
 
     invalid_settings = [

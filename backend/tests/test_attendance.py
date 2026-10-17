@@ -140,17 +140,16 @@ def test_attendance_create_update_date_filter_and_audit(
     assert listed.status_code == 200
     assert len(listed.json()) == 1
     assert listed.json()[0]["status"] == "LATE"
-    assert client.get(
-        "/api/v1/attendance",
-        headers=headers,
-        params={"from_date": "2026-10-17", "to_date": "2026-10-16"},
-    ).status_code == 422
-
-    audits = list(
-        db_session.scalars(
-            select(AuditLog).where(AuditLog.entity_type == "attendance")
-        )
+    assert (
+        client.get(
+            "/api/v1/attendance",
+            headers=headers,
+            params={"from_date": "2026-10-17", "to_date": "2026-10-16"},
+        ).status_code
+        == 422
     )
+
+    audits = list(db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "attendance")))
     assert [entry.action for entry in audits] == ["CREATE", "UPDATE"]
     assert audits[-1].before_json["status"] == "PRESENT"
     assert audits[-1].after_json["status"] == "LATE"
@@ -187,9 +186,7 @@ def test_attendance_import_creates_valid_rows_and_reports_rejected_rows(
         ),
         headers={
             **headers,
-            "Content-Type": (
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            ),
+            "Content-Type": ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
         },
     )
     assert result.status_code == 200
@@ -251,9 +248,7 @@ def test_attendance_workbook_template_export_and_invalid_upload(
         "/api/v1/attendance/import",
         headers={
             **headers,
-            "Content-Type": (
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            ),
+            "Content-Type": ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
         },
         content=b"not an xlsx workbook",
     )
@@ -288,11 +283,12 @@ def test_attendance_validation_and_permission_denial(
     actor.roles[0].permissions.remove(permission)
     db_session.commit()
     headers = _login(client, actor, password)
-    assert client.get(
-        "/api/v1/attendance/options", headers=headers
-    ).status_code == 403
-    assert client.get(
-        "/api/v1/attendance",
-        headers=headers,
-        params={"from_date": "2026-10-16", "to_date": "2026-10-16"},
-    ).status_code == 403
+    assert client.get("/api/v1/attendance/options", headers=headers).status_code == 403
+    assert (
+        client.get(
+            "/api/v1/attendance",
+            headers=headers,
+            params={"from_date": "2026-10-16", "to_date": "2026-10-16"},
+        ).status_code
+        == 403
+    )

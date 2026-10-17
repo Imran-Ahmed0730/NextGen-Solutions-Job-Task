@@ -4,9 +4,7 @@ from sqlalchemy.orm import Session
 from app.modules.document_numbering.models import DocumentSequence
 
 
-def list_sequences(
-    db: Session, *, limit: int = 100, offset: int = 0
-) -> list[DocumentSequence]:
+def list_sequences(db: Session, *, limit: int = 100, offset: int = 0) -> list[DocumentSequence]:
     return list(
         db.scalars(
             select(DocumentSequence)

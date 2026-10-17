@@ -16,9 +16,7 @@ from app.modules.products.models import Product, ProductType
 def list_boms(
     db: Session, *, include_inactive: bool = False, offset: int = 0, limit: int = 50
 ) -> list[BOM]:
-    return repository.list_boms(
-        db, include_inactive=include_inactive, offset=offset, limit=limit
-    )
+    return repository.list_boms(db, include_inactive=include_inactive, offset=offset, limit=limit)
 
 
 def get_bom(db: Session, bom_id: int, *, active_only: bool = False) -> BOM | None:
@@ -29,9 +27,7 @@ def get_bom(db: Session, bom_id: int, *, active_only: bool = False) -> BOM | Non
 
 
 def get_bom_options(db: Session) -> BOMOptionsResponse:
-    raw_products = product_service.list_products(
-        db, product_type=ProductType.RAW, limit=200
-    )
+    raw_products = product_service.list_products(db, product_type=ProductType.RAW, limit=200)
     finished_products = product_service.list_products(
         db, product_type=ProductType.FINISHED, limit=200
     )
@@ -59,8 +55,7 @@ def create_bom(db: Session, payload: BOMCreate, actor: User, ip: str | None = No
             labor_cost_default=payload.labor_cost_default,
             overhead_cost_default=payload.overhead_cost_default,
             lines=[
-                BOMLine(raw_product_id=line.raw_product_id, qty=line.qty)
-                for line in payload.lines
+                BOMLine(raw_product_id=line.raw_product_id, qty=line.qty) for line in payload.lines
             ],
         )
         db.add(bom)
@@ -107,8 +102,7 @@ def update_bom(
         bom.labor_cost_default = payload.labor_cost_default
         bom.overhead_cost_default = payload.overhead_cost_default
         bom.lines = [
-            BOMLine(raw_product_id=line.raw_product_id, qty=line.qty)
-            for line in payload.lines
+            BOMLine(raw_product_id=line.raw_product_id, qty=line.qty) for line in payload.lines
         ]
         bom.updated_at = datetime.now(UTC)
         db.flush()
@@ -195,16 +189,13 @@ def _validate_raw_products(db: Session, payload: BOMCreate) -> None:
         ):
             raise HTTPException(status_code=422, detail="BOM_RAW_PRODUCT_INVALID")
         if not product.unit.allow_decimal and any(
-            line.raw_product_id == product_id
-            and line.qty != line.qty.to_integral_value()
+            line.raw_product_id == product_id and line.qty != line.qty.to_integral_value()
             for line in payload.lines
         ):
             raise HTTPException(status_code=422, detail="BOM_COMPONENT_REQUIRES_WHOLE_QTY")
 
 
-def _ensure_code_available(
-    db: Session, code: str, *, exclude_id: int | None = None
-) -> None:
+def _ensure_code_available(db: Session, code: str, *, exclude_id: int | None = None) -> None:
     if repository.get_bom_by_code(db, code, exclude_id=exclude_id) is not None:
         raise HTTPException(status_code=409, detail="BOM_CODE_ALREADY_EXISTS")
 
@@ -229,7 +220,6 @@ def _snapshot(bom: BOM) -> dict[str, object]:
         "is_active": bom.is_active,
         "deleted_at": bom.deleted_at.isoformat() if bom.deleted_at else None,
         "lines": [
-            {"raw_product_id": line.raw_product_id, "qty": str(line.qty)}
-            for line in bom.lines
+            {"raw_product_id": line.raw_product_id, "qty": str(line.qty)} for line in bom.lines
         ],
     }

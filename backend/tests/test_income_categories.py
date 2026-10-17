@@ -88,16 +88,12 @@ def test_income_category_crud_soft_delete_restore_and_audit(
     active = client.get("/api/v1/income-categories", headers=headers).json()
     assert active == []
 
-    restored = client.post(
-        f"/api/v1/income-categories/{category_id}/activate", headers=headers
-    )
+    restored = client.post(f"/api/v1/income-categories/{category_id}/activate", headers=headers)
     assert restored.status_code == 200
     assert restored.json()["deleted_at"] is None
 
     audits = list(
-        db_session.scalars(
-            select(AuditLog).where(AuditLog.entity_type == "income_category")
-        )
+        db_session.scalars(select(AuditLog).where(AuditLog.entity_type == "income_category"))
     )
     actions = [entry.action for entry in audits]
     assert actions.count("CREATE") == 1
@@ -106,9 +102,7 @@ def test_income_category_crud_soft_delete_restore_and_audit(
     assert actions.count("STATUS") == 1
 
 
-def test_income_category_permission_denial(
-    client: TestClient, db_session: Session
-) -> None:
+def test_income_category_permission_denial(client: TestClient, db_session: Session) -> None:
     user = User(
         username="readonly",
         full_name="Read Only",
@@ -131,12 +125,8 @@ def test_income_category_permission_denial(
         == 403
     )
     assert (
-        client.patch(
-            "/api/v1/income-categories/1", headers=headers, json={"name": "X"}
-        ).status_code
+        client.patch("/api/v1/income-categories/1", headers=headers, json={"name": "X"}).status_code
         == 403
     )
     assert client.delete("/api/v1/income-categories/1", headers=headers).status_code == 403
-    assert (
-        client.post("/api/v1/income-categories/1/activate", headers=headers).status_code == 403
-    )
+    assert client.post("/api/v1/income-categories/1/activate", headers=headers).status_code == 403

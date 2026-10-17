@@ -77,9 +77,7 @@ def delete_sequence(
     service.delete_sequence(db, sequence, actor, _ip(request))
 
 
-@router.get(
-    "/{doc_type}/next", response_model=NextDocumentNumberResponse
-)
+@router.get("/{doc_type}/next", response_model=NextDocumentNumberResponse)
 def preview_next_number(
     doc_type: str,
     year: int | None = None,
@@ -90,9 +88,7 @@ def preview_next_number(
 
     resolved_year = year if year is not None else datetime.now(timezone.utc).year
     number = service.preview_next_number(db, doc_type, resolved_year)
-    return NextDocumentNumberResponse(
-        doc_type=doc_type, year=resolved_year, number=number
-    )
+    return NextDocumentNumberResponse(doc_type=doc_type, year=resolved_year, number=number)
 
 
 def _ip(request: Request) -> str | None:

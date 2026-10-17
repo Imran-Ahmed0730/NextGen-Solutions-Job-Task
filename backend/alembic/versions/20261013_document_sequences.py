@@ -33,9 +33,7 @@ def upgrade() -> None:
     op.create_index(
         "ix_document_sequences_doc_type", "document_sequences", ["doc_type"], unique=False
     )
-    op.create_index(
-        "ix_document_sequences_year", "document_sequences", ["year"], unique=False
-    )
+    op.create_index("ix_document_sequences_year", "document_sequences", ["year"], unique=False)
 
 
 def downgrade() -> None:

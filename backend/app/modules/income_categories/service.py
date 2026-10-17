@@ -77,9 +77,7 @@ def update_category(
         entity_type="income_category",
         entity_id=category.id,
         action=(
-            "STATUS"
-            if is_active != before["is_active"] and name == before["name"]
-            else "UPDATE"
+            "STATUS" if is_active != before["is_active"] and name == before["name"] else "UPDATE"
         ),
         before=before,
         after=_snapshot(category),

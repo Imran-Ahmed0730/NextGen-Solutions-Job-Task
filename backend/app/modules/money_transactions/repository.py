@@ -111,4 +111,3 @@ def list_account_transactions(
 
     transactions = list(db.scalars(stmt))
     return opening_balance, transactions
-

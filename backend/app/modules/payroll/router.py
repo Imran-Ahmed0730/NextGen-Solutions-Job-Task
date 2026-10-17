@@ -67,9 +67,7 @@ def update_payroll_line(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("employees.payroll.update")),
 ) -> PayrollRun:
-    return service.update_line(
-        db, run_id, line_id, payload.deductions, actor, _ip(request)
-    )
+    return service.update_line(db, run_id, line_id, payload.deductions, actor, _ip(request))
 
 
 @router.post("/runs/{run_id}/post", response_model=PayrollRunResponse)

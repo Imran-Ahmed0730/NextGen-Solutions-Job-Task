@@ -41,4 +41,3 @@ class IncomeResponse(BaseModel):
     status: str
     note: str | None
     created_at: datetime
-

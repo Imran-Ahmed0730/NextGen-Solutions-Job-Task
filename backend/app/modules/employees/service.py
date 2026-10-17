@@ -231,9 +231,7 @@ def _money(value: object) -> Decimal:
     return result
 
 
-def _ensure_code_available(
-    db: Session, code: str, *, exclude_id: int | None = None
-) -> None:
+def _ensure_code_available(db: Session, code: str, *, exclude_id: int | None = None) -> None:
     if repository.get_employee_by_code(db, code, exclude_id=exclude_id) is not None:
         raise _duplicate_code_error()
 

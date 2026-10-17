@@ -86,9 +86,7 @@ def test_user_employee_link_is_validated_and_audited(
     assert created.status_code == 201
     assert created.json()["employee_id"] == employee.json()["id"]
 
-    inactive = client.delete(
-        f"/api/v1/employees/{employee.json()['id']}", headers=headers
-    )
+    inactive = client.delete(f"/api/v1/employees/{employee.json()['id']}", headers=headers)
     assert inactive.status_code == 200
     updated = client.patch(
         f"/api/v1/auth/users/{created.json()['id']}",
@@ -111,10 +109,12 @@ def test_user_employee_link_is_validated_and_audited(
 
     employee_audits = list(
         db_session.scalars(
-            select(AuditLog).where(
+            select(AuditLog)
+            .where(
                 AuditLog.entity_type == "user",
                 AuditLog.entity_id == str(created.json()["id"]),
-            ).order_by(AuditLog.id)
+            )
+            .order_by(AuditLog.id)
         )
     )
     assert employee_audits[0].after_json is not None

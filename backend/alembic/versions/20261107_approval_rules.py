@@ -44,19 +44,13 @@ def upgrade() -> None:
             "max_amount IS NULL OR max_amount >= min_amount",
             name="ck_approval_rules_max_gte_min",
         ),
-        sa.ForeignKeyConstraint(
-            ["approver_role_id"], ["roles.id"], ondelete="RESTRICT"
-        ),
+        sa.ForeignKeyConstraint(["approver_role_id"], ["roles.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("id"),
         mysql_engine="InnoDB",
         mysql_charset="utf8mb4",
     )
-    op.create_index(
-        "ix_approval_rules_document_type", "approval_rules", ["doc_type"]
-    )
-    op.create_index(
-        "ix_approval_rules_approver_role_id", "approval_rules", ["approver_role_id"]
-    )
+    op.create_index("ix_approval_rules_document_type", "approval_rules", ["doc_type"])
+    op.create_index("ix_approval_rules_approver_role_id", "approval_rules", ["approver_role_id"])
 
     for code, description in PERMISSIONS:
         op.execute(

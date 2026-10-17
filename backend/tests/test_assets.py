@@ -134,9 +134,7 @@ def test_asset_location_maintenance_lifecycle_and_audit(
     assert deleted.json()["is_active"] is False
     assert client.get("/api/v1/assets", headers=headers).json() == []
 
-    inactive = client.get(
-        "/api/v1/assets", headers=headers, params={"include_inactive": "true"}
-    )
+    inactive = client.get("/api/v1/assets", headers=headers, params={"include_inactive": "true"})
     assert inactive.status_code == 200
     assert len(inactive.json()) == 1
 
@@ -146,9 +144,9 @@ def test_asset_location_maintenance_lifecycle_and_audit(
 
     audit = list(
         db_session.scalars(
-            select(AuditLog).where(AuditLog.entity_type.in_(
-                ("asset", "asset_assignment", "asset_maintenance")
-            ))
+            select(AuditLog).where(
+                AuditLog.entity_type.in_(("asset", "asset_assignment", "asset_maintenance"))
+            )
         )
     )
     assert {row.action for row in audit} >= {"CREATE", "DELETE", "STATUS"}
@@ -222,9 +220,7 @@ def test_asset_assignment_links_active_employee_and_audits_relationship(
         "name": "Asset Custodian",
     }
 
-    audit = db_session.scalar(
-        select(AuditLog).where(AuditLog.entity_type == "asset_assignment")
-    )
+    audit = db_session.scalar(select(AuditLog).where(AuditLog.entity_type == "asset_assignment"))
     assert audit is not None
     assert audit.after_json is not None
     assert audit.after_json["employee_id"] == employee.json()["id"]
@@ -249,9 +245,7 @@ def test_asset_assignment_rejects_inactive_employee(
     )
     assert employee.status_code == 201
     assert (
-        client.delete(
-            f"/api/v1/employees/{employee.json()['id']}", headers=headers
-        ).status_code
+        client.delete(f"/api/v1/employees/{employee.json()['id']}", headers=headers).status_code
         == 200
     )
     asset = client.post("/api/v1/assets", headers=headers, json=_asset_payload())

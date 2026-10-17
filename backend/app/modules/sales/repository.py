@@ -16,9 +16,7 @@ def get_order_line_for_update(
     if order is None:
         return None
     line = db.scalar(
-        select(SalesOrderLine)
-        .where(SalesOrderLine.id == sales_order_line_id)
-        .with_for_update()
+        select(SalesOrderLine).where(SalesOrderLine.id == sales_order_line_id).with_for_update()
     )
     if line is None or line.order_id != order.id:
         return None

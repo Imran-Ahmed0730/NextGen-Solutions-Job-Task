@@ -8,8 +8,8 @@ Create Date: 2026-10-17 16:25:41.134887
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '318177480193'
-down_revision = '20261111_reporting_views'
+revision = "318177480193"
+down_revision = "20261111_reporting_views"
 branch_labels = None
 depends_on = None
 
@@ -21,18 +21,12 @@ def upgrade() -> None:
         "ix_customer_collections_doc_date", "customer_collections", ["doc_date"], unique=False
     )
     op.create_index("ix_goods_receipts_doc_date", "goods_receipts", ["doc_date"], unique=False)
-    op.create_index(
-        "ix_direct_purchases_doc_date", "direct_purchases", ["doc_date"], unique=False
-    )
-    op.create_index(
-        "ix_purchase_returns_doc_date", "purchase_returns", ["doc_date"], unique=False
-    )
+    op.create_index("ix_direct_purchases_doc_date", "direct_purchases", ["doc_date"], unique=False)
+    op.create_index("ix_purchase_returns_doc_date", "purchase_returns", ["doc_date"], unique=False)
     op.create_index(
         "ix_supplier_payments_doc_date", "supplier_payments", ["doc_date"], unique=False
     )
-    op.create_index(
-        "ix_expenses_status_doc_date", "expenses", ["status", "doc_date"], unique=False
-    )
+    op.create_index("ix_expenses_status_doc_date", "expenses", ["status", "doc_date"], unique=False)
     op.create_index("ix_incomes_doc_date", "incomes", ["doc_date"], unique=False)
     op.create_index(
         "ix_production_orders_status_doc_date",

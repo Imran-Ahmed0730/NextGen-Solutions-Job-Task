@@ -77,9 +77,7 @@ def get_available_quantities(
     )
     balance_by_pair = {(balance.product_id, balance.warehouse_id): balance for balance in balances}
     return {
-        pair: balance_by_pair[pair].available
-        if pair in balance_by_pair
-        else Decimal("0.000")
+        pair: balance_by_pair[pair].available if pair in balance_by_pair else Decimal("0.000")
         for pair in stock_items
     }
 

@@ -45,9 +45,7 @@ def upgrade() -> None:
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
-        sa.CheckConstraint(
-            "base_salary >= 0", name="ck_employees_base_salary_nonnegative"
-        ),
+        sa.CheckConstraint("base_salary >= 0", name="ck_employees_base_salary_nonnegative"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("code", name="uq_employees_code"),
         mysql_engine="InnoDB",

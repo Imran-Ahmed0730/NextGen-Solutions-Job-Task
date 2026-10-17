@@ -27,9 +27,7 @@ def upgrade() -> None:
         "asset_assignments",
         sa.Column("employee_id", ID, nullable=True),
     )
-    op.create_index(
-        "ix_asset_assignments_employee_id", "asset_assignments", ["employee_id"]
-    )
+    op.create_index("ix_asset_assignments_employee_id", "asset_assignments", ["employee_id"])
     op.create_foreign_key(
         "fk_asset_assignments_employee_id_employees",
         "asset_assignments",
@@ -48,7 +46,5 @@ def downgrade() -> None:
     )
     op.drop_index("ix_asset_assignments_employee_id", table_name="asset_assignments")
     op.drop_column("asset_assignments", "employee_id")
-    op.drop_constraint(
-        "fk_users_employee_id_employees", "users", type_="foreignkey"
-    )
+    op.drop_constraint("fk_users_employee_id_employees", "users", type_="foreignkey")
     op.drop_index("ix_users_employee_id", table_name="users")

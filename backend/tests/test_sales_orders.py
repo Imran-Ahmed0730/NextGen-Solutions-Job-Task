@@ -458,17 +458,13 @@ def test_post_delivery_consumes_reserved_or_available_stock_and_records_cogs(
     assert balance.qty_on_hand == Decimal("7.000")
     assert balance.qty_reserved == Decimal("0.000")
     delivery_movement = db_session.scalar(
-        select(StockTransaction).where(
-            StockTransaction.movement_type == MovementType.SALE_DELIVERY
-        )
+        select(StockTransaction).where(StockTransaction.movement_type == MovementType.SALE_DELIVERY)
     )
     assert delivery_movement is not None
     assert delivery_movement.qty_signed == Decimal("-3.000")
     assert delivery_movement.unit_cost == Decimal("2.5000")
     assert (
-        db_session.scalar(
-            select(func.count(AuditLog.id)).where(AuditLog.entity_type == "delivery")
-        )
+        db_session.scalar(select(func.count(AuditLog.id)).where(AuditLog.entity_type == "delivery"))
         == 1
     )
 
@@ -644,9 +640,7 @@ def test_invoice_posts_from_delivery_updates_due_and_preserves_cogs(
     assert balance is not None
     assert balance.qty_on_hand == Decimal("7.000")
     movement = db_session.scalar(
-        select(StockTransaction).where(
-            StockTransaction.movement_type == MovementType.SALE_DELIVERY
-        )
+        select(StockTransaction).where(StockTransaction.movement_type == MovementType.SALE_DELIVERY)
     )
     assert movement is not None
     assert movement.qty_signed == Decimal("-3.000")
@@ -678,9 +672,7 @@ def test_invoice_posts_from_delivery_updates_due_and_preserves_cogs(
     assert second_invoice.status_code == 201
     assert second_invoice.json()["invoice"]["discount"] == "0.40"
     assert second_invoice.json()["invoice"]["total"] == "9.60"
-    updated_statement = client.get(
-        f"/api/v1/customers/{customer.id}/statement", headers=headers
-    )
+    updated_statement = client.get(f"/api/v1/customers/{customer.id}/statement", headers=headers)
     assert updated_statement.json()["balance"] == "24.00"
 
     account = db_session.scalar(select(MoneyAccount))
@@ -697,9 +689,7 @@ def test_invoice_posts_from_delivery_updates_due_and_preserves_cogs(
         },
     )
     assert collection.status_code == 201
-    collected_statement = client.get(
-        f"/api/v1/customers/{customer.id}/statement", headers=headers
-    )
+    collected_statement = client.get(f"/api/v1/customers/{customer.id}/statement", headers=headers)
     assert collected_statement.json()["balance"] == "19.00"
 
 
@@ -900,9 +890,12 @@ def test_sales_return_reduces_customer_due_and_restocks_at_original_cogs(
     assert return_movement is not None
     assert return_movement.qty_signed == Decimal("1.000")
     assert return_movement.unit_cost == Decimal("2.5000")
-    assert db_session.scalar(
-        select(func.count(AuditLog.id)).where(AuditLog.entity_type == "sales_return")
-    ) == 1
+    assert (
+        db_session.scalar(
+            select(func.count(AuditLog.id)).where(AuditLog.entity_type == "sales_return")
+        )
+        == 1
+    )
     options = client.get("/api/v1/sales/returns/options", headers=headers)
     assert options.status_code == 200
     option_line = options.json()["invoices"][0]["lines"][0]
@@ -982,11 +975,14 @@ def test_sales_return_requires_permission_and_caps_qty_at_delivered(
     excessive = client.post("/api/v1/sales/returns", headers=headers, json=payload)
     assert excessive.status_code == 409
     assert excessive.json()["detail"] == "SALES_RETURN_EXCEEDS_DELIVERED_QTY"
-    assert db_session.scalar(
-        select(func.count(StockTransaction.id)).where(
-            StockTransaction.movement_type == MovementType.SALE_RETURN
+    assert (
+        db_session.scalar(
+            select(func.count(StockTransaction.id)).where(
+                StockTransaction.movement_type == MovementType.SALE_RETURN
+            )
         )
-    ) == 0
+        == 0
+    )
 
 
 def test_delivery_route_requires_permission(

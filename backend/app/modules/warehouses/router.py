@@ -85,9 +85,7 @@ def activate_warehouse(
     db: Session = Depends(get_db),
     actor: User = Depends(require_permission("master_data.warehouses.update")),
 ) -> Warehouse:
-    return service.activate_warehouse(
-        db, _warehouse_or_404(db, warehouse_id), actor, _ip(request)
-    )
+    return service.activate_warehouse(db, _warehouse_or_404(db, warehouse_id), actor, _ip(request))
 
 
 def _ip(request: Request) -> str | None:

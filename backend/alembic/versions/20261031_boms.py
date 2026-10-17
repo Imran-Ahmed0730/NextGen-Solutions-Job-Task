@@ -58,9 +58,7 @@ def upgrade() -> None:
         sa.CheckConstraint("output_qty > 0", name="ck_boms_positive_output_qty"),
         sa.CheckConstraint("labor_cost_default >= 0", name="ck_boms_nonnegative_labor"),
         sa.CheckConstraint("overhead_cost_default >= 0", name="ck_boms_nonnegative_overhead"),
-        sa.ForeignKeyConstraint(
-            ["finished_product_id"], ["products.id"], ondelete="RESTRICT"
-        ),
+        sa.ForeignKeyConstraint(["finished_product_id"], ["products.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("code", name="uq_boms_code"),
         mysql_engine="InnoDB",
