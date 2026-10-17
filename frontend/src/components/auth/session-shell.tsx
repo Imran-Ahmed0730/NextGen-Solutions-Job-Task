@@ -14,321 +14,117 @@ import {
 } from '@/lib/auth-api';
 import { showErrorToast } from '@/lib/notifications';
 
+const dashboardLink = {
+  href: '/',
+  label: 'Dashboard',
+  icon: 'grid',
+  permissions: ['reports.dashboard.read'],
+} as const;
+
 const navigation = [
   {
-    label: 'Workspace',
-    items: [
-      { href: '/', label: 'Dashboard', icon: 'grid', permissions: ['reports.dashboard.read'] },
-    ],
-  },
-  {
-    label: 'Administration',
-    items: [
-      { href: '/users', label: 'Users', icon: 'users', permissions: ['auth.users.read'] },
-      {
-        href: '/roles',
-        label: 'Roles',
-        icon: 'shield',
-        permissions: ['auth.roles.read', 'auth.permissions.read'],
-      },
-      {
-        href: '/permissions',
-        label: 'Permissions',
-        icon: 'list',
-        permissions: ['auth.permissions.read'],
-      },
-      {
-        href: '/audit-logs',
-        label: 'Audit Log',
-        icon: 'list',
-        permissions: ['auth.audit_logs.read'],
-      },
-    ],
-  },
-  {
-    label: 'Master data',
-    items: [
-      { href: '/units', label: 'Units', icon: 'box', permissions: ['master_data.units.read'] },
-      {
-        href: '/categories',
-        label: 'Product Categories',
-        icon: 'folder',
-        permissions: ['master_data.product_categories.read'],
-      },
-      {
-        href: '/products',
-        label: 'Products',
-        icon: 'tag',
-        permissions: ['master_data.products.read'],
-      },
-      {
-        href: '/warehouses',
-        label: 'Warehouses',
-        icon: 'warehouse',
-        permissions: ['master_data.warehouses.read'],
-      },
-      {
-        href: '/expense-categories',
-        label: 'Expense Categories',
-        icon: 'expense',
-        permissions: ['master_data.expense_categories.read'],
-      },
-      {
-        href: '/income-categories',
-        label: 'Income Categories',
-        icon: 'income',
-        permissions: ['master_data.income_categories.read'],
-      },
-      {
-        href: '/payment-methods',
-        label: 'Payment Methods',
-        icon: 'payment',
-        permissions: ['master_data.payment_methods.read'],
-      },
-      {
-        href: '/money-accounts',
-        label: 'Money Accounts',
-        icon: 'account',
-        permissions: ['master_data.money_accounts.read'],
-      },
-      {
-        href: '/price-lists',
-        label: 'Price Lists',
-        icon: 'pricelist',
-        permissions: ['master_data.price_lists.read'],
-      },
-      {
-        href: '/company-settings',
-        label: 'Company Settings',
-        icon: 'settings',
-        permissions: ['master_data.company_settings.read'],
-      },
-      {
-        href: '/document-numbering',
-        label: 'Document Numbering',
-        icon: 'number',
-        permissions: ['master_data.document_numbering.read'],
-      },
-      {
-        href: '/approval-rules',
-        label: 'Approval Rules',
-        icon: 'settings',
-        permissions: ['approvals.rules.read'],
-      },
-      {
-        href: '/pending-approvals',
-        label: 'Pending Approvals',
-        icon: 'list',
-        permissions: ['approvals.requests.read'],
-      },
-    ],
-  },
-  {
-    label: 'Operations',
-    items: [
-      {
-        href: '/assets',
-        label: 'Assets',
-        icon: 'box',
-        permissions: ['assets.read'],
-      },
-      {
-        href: '/employees',
-        label: 'Employees',
-        icon: 'users',
-        permissions: ['employees.read'],
-      },
-      {
-        href: '/attendance',
-        label: 'Attendance',
-        icon: 'users',
-        permissions: ['employees.attendance.read'],
-      },
-      {
-        href: '/payroll',
-        label: 'Payroll',
-        icon: 'account',
-        permissions: ['employees.payroll.read'],
-      },
-    ],
-  },
-  {
-    label: 'Parties',
-    items: [
-      {
-        href: '/customers',
-        label: 'Customers',
-        icon: 'customer',
-        permissions: ['master_data.customers.read'],
-      },
-      {
-        href: '/suppliers',
-        label: 'Suppliers',
-        icon: 'supplier',
-        permissions: ['master_data.suppliers.read'],
-      },
-    ],
-  },
-  {
-    label: 'Inventory',
-    items: [
-      {
-        href: '/warehouse-stock',
-        label: 'Warehouse Stock',
-        icon: 'warehouse',
-        permissions: ['inventory.stock.read'],
-      },
-      {
-        href: '/stock-ledger',
-        label: 'Product Stock Ledger',
-        icon: 'warehouse',
-        permissions: ['inventory.stock.read'],
-      },
-      {
-        href: '/stock-transfers',
-        label: 'Stock Transfers',
-        icon: 'warehouse',
-        permissions: ['inventory.transfers.read'],
-      },
-      {
-        href: '/stock-adjustments',
-        label: 'Stock Adjustments',
-        icon: 'warehouse',
-        permissions: ['inventory.adjustments.read'],
-      },
-      {
-        href: '/physical-counts',
-        label: 'Physical Count',
-        icon: 'warehouse',
-        permissions: ['inventory.physical_counts.read'],
-      },
-    ],
-  },
-  {
-    label: 'Purchase',
-    items: [
-      {
-        href: '/purchase-orders',
-        label: 'Purchase Orders',
-        icon: 'supplier',
-        permissions: ['purchase.orders.read'],
-      },
-      {
-        href: '/goods-receipts',
-        label: 'Goods Receipts',
-        icon: 'supplier',
-        permissions: ['purchase.receipts.read'],
-      },
-      {
-        href: '/direct-purchases',
-        label: 'Direct Purchases',
-        icon: 'supplier',
-        permissions: ['purchase.direct_purchases.read'],
-      },
-      {
-        href: '/purchase-returns',
-        label: 'Purchase Returns',
-        icon: 'supplier',
-        permissions: ['purchase.returns.read'],
-      },
-    ],
-  },
-  {
     label: 'Sales',
+    icon: 'salesGroup',
     items: [
-      {
-        href: '/quotations',
-        label: 'Quotations',
-        icon: 'customer',
-        permissions: ['sales.quotations.read'],
-      },
-      {
-        href: '/sales-orders',
-        label: 'Sales Orders',
-        icon: 'customer',
-        permissions: ['sales.orders.read'],
-      },
-      {
-        href: '/sales-invoices',
-        label: 'Sales Invoices',
-        icon: 'customer',
-        permissions: ['sales.invoices.read'],
-      },
-      {
-        href: '/sales-returns',
-        label: 'Sales Returns',
-        icon: 'customer',
-        permissions: ['sales.returns.read'],
-      },
+      { href: '/quotations', label: 'Quotations', icon: 'quote', permissions: ['sales.quotations.read'] },
+      { href: '/sales-orders', label: 'Sales Orders', icon: 'cart', permissions: ['sales.orders.read'] },
+      { href: '/sales-invoices', label: 'Sales Invoices', icon: 'invoice', permissions: ['sales.invoices.read'] },
+      { href: '/sales-returns', label: 'Sales Returns', icon: 'salesReturn', permissions: ['sales.returns.read'] },
+      { href: '/customers', label: 'Customers', icon: 'customer', permissions: ['master_data.customers.read'] },
     ],
   },
   {
-    label: 'Production',
+    label: 'Purchasing',
+    icon: 'purchaseGroup',
     items: [
-      {
-        href: '/production-orders',
-        label: 'Production Orders',
-        icon: 'warehouse',
-        permissions: ['production.orders.read'],
-      },
-      {
-        href: '/boms',
-        label: 'Bills of Materials',
-        icon: 'warehouse',
-        permissions: ['production.boms.read'],
-      },
+      { href: '/purchase-orders', label: 'Purchase Orders', icon: 'purchaseOrder', permissions: ['purchase.orders.read'] },
+      { href: '/goods-receipts', label: 'Goods Receipts', icon: 'goodsReceipt', permissions: ['purchase.receipts.read'] },
+      { href: '/direct-purchases', label: 'Direct Purchases', icon: 'directPurchase', permissions: ['purchase.direct_purchases.read'] },
+      { href: '/purchase-returns', label: 'Purchase Returns', icon: 'purchaseReturn', permissions: ['purchase.returns.read'] },
+      { href: '/suppliers', label: 'Suppliers', icon: 'supplier', permissions: ['master_data.suppliers.read'] },
     ],
   },
   {
     label: 'Money',
+    icon: 'moneyGroup',
     items: [
-      {
-        href: '/customer-collections',
-        label: 'Customer Collections',
-        icon: 'customer',
-        permissions: ['money.collections.read'],
-      },
-      {
-        href: '/supplier-payments',
-        label: 'Supplier Payments',
-        icon: 'supplier',
-        permissions: ['money.supplier_payments.read'],
-      },
-      {
-        href: '/expenses',
-        label: 'Expenses',
-        icon: 'expense',
-        permissions: ['money.expenses.read'],
-      },
-      {
-        href: '/incomes',
-        label: 'Incomes',
-        icon: 'income',
-        permissions: ['money.incomes.read'],
-      },
-      {
-        href: '/fund-transfers',
-        label: 'Fund Transfers',
-        icon: 'account',
-        permissions: ['money.transfers.read'],
-      },
-      {
-        href: '/account-ledger',
-        label: 'Account Balances & Ledger',
-        icon: 'account',
-        permissions: ['money.transactions.read'],
-      },
+      { href: '/customer-collections', label: 'Customer Collections', icon: 'collection', permissions: ['money.collections.read'] },
+      { href: '/supplier-payments', label: 'Supplier Payments', icon: 'supplierPayment', permissions: ['money.supplier_payments.read'] },
+      { href: '/expenses', label: 'Expenses', icon: 'expense', permissions: ['money.expenses.read'] },
+      { href: '/incomes', label: 'Incomes', icon: 'income', permissions: ['money.incomes.read'] },
+      { href: '/fund-transfers', label: 'Fund Transfers', icon: 'fundTransfer', permissions: ['money.transfers.read'] },
+      { href: '/account-ledger', label: 'Account Balances & Ledger', icon: 'accountLedger', permissions: ['money.transactions.read'] },
+    ],
+  },
+  {
+    label: 'Inventory',
+    icon: 'inventoryGroup',
+    items: [
+      { href: '/warehouse-stock', label: 'Warehouse Stock', icon: 'warehouseStock', permissions: ['inventory.stock.read'] },
+      { href: '/stock-ledger', label: 'Product Stock Ledger', icon: 'stockLedger', permissions: ['inventory.stock.read'] },
+      { href: '/stock-transfers', label: 'Stock Transfers', icon: 'stockTransfer', permissions: ['inventory.transfers.read'] },
+      { href: '/stock-adjustments', label: 'Stock Adjustments', icon: 'stockAdjustment', permissions: ['inventory.adjustments.read'] },
+      { href: '/physical-counts', label: 'Physical Count', icon: 'physicalCount', permissions: ['inventory.physical_counts.read'] },
+    ],
+  },
+  {
+    label: 'Production',
+    icon: 'productionGroup',
+    items: [
+      { href: '/production-orders', label: 'Production Orders', icon: 'productionOrder', permissions: ['production.orders.read'] },
+      { href: '/boms', label: 'Bills of Materials', icon: 'billOfMaterials', permissions: ['production.boms.read'] },
+    ],
+  },
+  {
+    label: 'Approvals',
+    icon: 'approvalsGroup',
+    items: [
+      { href: '/pending-approvals', label: 'Pending Approvals', icon: 'pendingApproval', permissions: ['approvals.requests.read'] },
+      { href: '/approval-rules', label: 'Approval Rules', icon: 'approvalRules', permissions: ['approvals.rules.read'] },
     ],
   },
   {
     label: 'Reports',
+    icon: 'reportsGroup',
     items: [
-      {
-        href: '/reports',
-        label: 'Report Center',
-        icon: 'list',
-        permissions: ['reports.read'],
-      },
+      { href: '/reports', label: 'Report Center', icon: 'reportCenter', permissions: ['reports.read'] },
+    ],
+  },
+  {
+    label: 'People & Assets',
+    icon: 'peopleGroup',
+    items: [
+      { href: '/employees', label: 'Employees', icon: 'employee', permissions: ['employees.read'] },
+      { href: '/attendance', label: 'Attendance', icon: 'attendance', permissions: ['employees.attendance.read'] },
+      { href: '/payroll', label: 'Payroll', icon: 'payroll', permissions: ['employees.payroll.read'] },
+      { href: '/assets', label: 'Assets', icon: 'asset', permissions: ['assets.read'] },
+    ],
+  },
+  {
+    label: 'Setup',
+    icon: 'setupGroup',
+    items: [
+      { href: '/products', label: 'Products', icon: 'product', permissions: ['master_data.products.read'] },
+      { href: '/categories', label: 'Product Categories', icon: 'productCategory', permissions: ['master_data.product_categories.read'] },
+      { href: '/units', label: 'Units', icon: 'unit', permissions: ['master_data.units.read'] },
+      { href: '/warehouses', label: 'Warehouses', icon: 'warehouseSetup', permissions: ['master_data.warehouses.read'] },
+      { href: '/price-lists', label: 'Price Lists', icon: 'priceList', permissions: ['master_data.price_lists.read'] },
+      { href: '/expense-categories', label: 'Expense Categories', icon: 'expenseCategory', permissions: ['master_data.expense_categories.read'] },
+      { href: '/income-categories', label: 'Income Categories', icon: 'incomeCategory', permissions: ['master_data.income_categories.read'] },
+      { href: '/payment-methods', label: 'Payment Methods', icon: 'paymentMethod', permissions: ['master_data.payment_methods.read'] },
+      { href: '/money-accounts', label: 'Money Accounts', icon: 'moneyAccount', permissions: ['master_data.money_accounts.read'] },
+      { href: '/company-settings', label: 'Company Settings', icon: 'companySettings', permissions: ['master_data.company_settings.read'] },
+      { href: '/document-numbering', label: 'Document Numbering', icon: 'documentNumbering', permissions: ['master_data.document_numbering.read'] },
+    ],
+  },
+  {
+    label: 'Administration',
+    icon: 'adminGroup',
+    items: [
+      { href: '/users', label: 'Users', icon: 'users', permissions: ['auth.users.read'] },
+      { href: '/roles', label: 'Roles', icon: 'role', permissions: ['auth.roles.read', 'auth.permissions.read'] },
+      { href: '/permissions', label: 'Permissions', icon: 'permission', permissions: ['auth.permissions.read'] },
+      { href: '/audit-logs', label: 'Audit Log', icon: 'auditLog', permissions: ['auth.audit_logs.read'] },
     ],
   },
 ] as const;
@@ -380,6 +176,57 @@ const iconPaths = {
   supplier: <path d="M3 7h18M5 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2M4 7v13h16V7M9 11h6" />,
   shield: <path d="M12 3 20 6v5.5c0 4.6-3.1 7.8-8 9.5-4.9-1.7-8-4.9-8-9.5V6l8-3Zm-3.5 9 2.3 2.3 4.8-5" />,
   list: <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />,
+  salesGroup: <path d="M3 7h18M5 7l1.5 13h11L19 7M9 11v5m6-5v5M8 4h8" />,
+  purchaseGroup: <path d="M4 8h16l-1 12H5L4 8Zm4 0a4 4 0 0 1 8 0M8 12h8" />,
+  moneyGroup: <path d="M3 6h18v12H3zM7 10h.01M17 14h.01M10 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z" />,
+  approvalsGroup: <path d="M9 12.5 11 14.5 16 9.5M12 3l8 3v5.5c0 4.3-3.3 7.3-8 9-4.7-1.7-8-4.7-8-9V6l8-3Z" />,
+  inventoryGroup: <path d="m3 7 9-4 9 4-9 4-9-4Zm0 0v10l9 4 9-4V7M12 11v10" />,
+  productionGroup: <path d="M3 21V9l6 3V9l6 3V5h6v16H3Zm12-12h2m-2 4h2m-2 4h2" />,
+  reportsGroup: <path d="M4 19V5m0 14h17M7 15l4-4 3 2 5-6M16 7h3v3" />,
+  peopleGroup: <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2m6-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8-7.5a3 3 0 0 1 0 5.8m1 4c2 .5 3 1.9 3 4.2" />,
+  setupGroup: <path d="M12 8v8m-4-4h8M4 4h16v16H4zM2 8h2m16 0h2M2 16h2m16 0h2" />,
+  adminGroup: <path d="M12 3 20 7v5c0 4-3 7-8 9-5-2-8-5-8-9V7l8-4Zm-3 8h6m-3-3v6" />,
+  quote: <path d="M7 17H4v-5c0-4 2-6 6-6v3c-2 0-3 1-3 3h3v5H7Zm10 0h-3v-5c0-4 2-6 6-6v3c-2 0-3 1-3 3h3v5h-3Z" />,
+  cart: <path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 1.9-1.4L21 8H6m4 12h.01M17 20h.01" />,
+  invoice: <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6m-6 4h6m-6 4h3" />,
+  salesReturn: <path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2" />,
+  purchaseOrder: <path d="M5 3h14v18l-3-2-4 2-4-2-3 2V3Zm3 5h8m-8 4h8m-8 4h4" />,
+  goodsReceipt: <path d="M3 12h12m-5-5 5 5-5 5m6-13h4v16h-4" />,
+  directPurchase: <path d="m13 2-9 12h7l-1 8 10-13h-7l1-7Z" />,
+  purchaseReturn: <path d="M15 14 20 9l-5-5m5 5H10a6 6 0 0 0 0 12h2" />,
+  collection: <path d="M3 12h13m-5-5 5 5-5 5M17 5h4v14h-4" />,
+  supplierPayment: <path d="M12 2v20m5-16H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />,
+  fundTransfer: <path d="M7 7h13l-3-3m3 3-3 3M17 17H4l3 3m-3-3 3-3" />,
+  accountLedger: <path d="M5 3h14v18H5zM8 7h8m-8 4h8m-8 4h5m-5 3h8" />,
+  warehouseStock: <path d="m3 9 9-6 9 6v12H3V9Zm0 0h18M8 21v-7h8v7" />,
+  stockLedger: <path d="M5 4h14v16H5zM8 8h8m-8 4h8m-8 4h5" />,
+  stockTransfer: <path d="M4 7h14l-3-3m3 3-3 3M20 17H6l3 3m-3-3 3-3" />,
+  stockAdjustment: <path d="M4 6h16M4 12h16M4 18h16M8 3v6m8 0V3m-4 6v6m4 0v6" />,
+  physicalCount: <path d="M8 4h8l2 3h3v14H3V7h3l2-3Zm1 10 2 2 5-5" />,
+  productionOrder: <path d="M3 20V9l5 3V9l5 3V5h8v15H3Zm12-10h2m-2 4h2" />,
+  billOfMaterials: <path d="M12 3v6m0 0-6 4m6-4 6 4M6 13v6m12-6v6M4 19h4m8 0h4M10 3h4" />,
+  reportCenter: <path d="M4 19V5m0 14h17M7 15l4-4 3 2 5-6" />,
+  employee: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0H5Zm14-13h3m-1.5-1.5v3" />,
+  attendance: <path d="M4 5h16v16H4zM8 3v4m8-4v4M4 9h16m3 5h-6v6" />,
+  payroll: <path d="M4 4h16v16H4zM8 8h8m-8 4h8m-8 4h4m7-2 2 2 3-4" />,
+  asset: <path d="M4 8 12 3l8 5v9l-8 4-8-4V8Zm0 0 8 5 8-5m-8 5v8m-4-12 8-5" />,
+  product: <path d="m3 7 9-4 9 4-9 4-9-4Zm0 0v10l9 4 9-4V7m-9 4v10m-5-8 10-5" />,
+  productCategory: <path d="M3 5h7l2 2h9v12H3V5Zm3 7h12m-12 4h8" />,
+  unit: <path d="M3 17 17 3l4 4L7 21H3v-4Zm4-4 4 4m-1-9 4 4m-1-9 4 4" />,
+  warehouseSetup: <path d="m3 10 9-7 9 7v11H3V10Zm5 11v-7h8v7m-8-11h8" />,
+  priceList: <path d="M4 4h16v16H4zM8 8h8m-8 4h8m-8 4h4m8-9-8 9" />,
+  expenseCategory: <path d="M4 4h16v16H4zM8 8h8m-8 4h5m-5 4h3m6-4 2 2-2 2" />,
+  incomeCategory: <path d="M4 20V4m0 16h16M7 16l4-4 3 2 5-7m-4 0h4v4" />,
+  paymentMethod: <path d="M3 6h18v12H3zM3 10h18m-13 4h4m5 2h.01" />,
+  moneyAccount: <path d="M3 7h18v12H3zM7 7V5h10v2m-7 5h4m-7 3h10" />,
+  companySettings: <path d="M4 21V4h16v17M8 8h2m4 0h2m-8 4h2m4 0h2m-8 9v-5h8v5M2 21h20" />,
+  documentNumbering: <path d="M7 3h10v18H7zM4 7H2m2 5H2m2 5H2m7-9h4m-4 4h4m-4 4h4" />,
+  pendingApproval: <path d="M12 3v9l6 3m2-3a8 8 0 1 1-2.3-5.7M12 3a9 9 0 0 1 8.7 6.5" />,
+  approvalRules: <path d="M4 6h16M4 12h16M4 18h16M8 4v4m8 2v4m-5 2v4" />,
+  role: <path d="M12 3 20 7v5c0 4-3 7-8 9-5-2-8-5-8-9V7l8-4Zm-3 8h6m-3-3v6" />,
+  permission: <path d="M5 4h14v16H5zM8 8h8m-8 4h8m-8 4h3m4-1 1.5 1.5L19 13" />,
+  auditLog: <path d="M4 5h16v15H4zM8 3v4m8-4v4M4 9h16m-12 4h8m-8 3h5" />,
+  chevron: <path d="m9 18 6-6-6-6" />,
   logout: <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5m5-4 4-4-4-4m4 4H9" />,
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
@@ -407,11 +254,12 @@ function isNavigationItemActive(href: string, pathname: string): boolean {
 }
 
 function getNavigationLabel(pathname: string): string {
+  if (isNavigationItemActive(dashboardLink.href, pathname)) return dashboardLink.label;
   for (const group of navigation) {
     const item = group.items.find((entry) => isNavigationItemActive(entry.href, pathname));
     if (item) return item.label;
   }
-  return 'Workspace';
+  return 'Sabuj Pran';
 }
 
 const SessionContext = createContext<Profile | null>(null);
@@ -443,8 +291,18 @@ export function SessionShell({ children }: { children: ReactNode }) {
   const [branding, setBranding] = useState(defaultBranding);
   const [error, setError] = useState('');
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const activeGroup = navigation.find((group) =>
+      group.items.some((item) => isNavigationItemActive(item.href, pathname)),
+    );
+    if (activeGroup) {
+      setExpandedGroups((current) => ({ ...current, [activeGroup.label]: true }));
+    }
+  }, [pathname]);
 
   useEffect(() => {
     if (!sessionStorage.getItem('access_token')) {
@@ -608,18 +466,64 @@ export function SessionShell({ children }: { children: ReactNode }) {
           </button>
         </div>
 
-        <nav aria-label="Main navigation" className="flex-1 space-y-7 overflow-y-auto px-4 py-6">
+        <nav aria-label="Main navigation" className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          {dashboardLink.permissions.every((permission) =>
+            profile.permissions.includes(permission),
+          ) && (
+            <Link
+              href={dashboardLink.href}
+              aria-current={isNavigationItemActive(dashboardLink.href, pathname) ? 'page' : undefined}
+              onClick={() => setMobileNavigationOpen(false)}
+              className={`mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                isNavigationItemActive(dashboardLink.href, pathname)
+                  ? 'bg-emerald-50 font-semibold text-emerald-800'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <AppIcon name={dashboardLink.icon} className="h-[18px] w-[18px] shrink-0" />
+              {dashboardLink.label}
+            </Link>
+          )}
           {navigation.map((group) => {
             const items = group.items.filter((item) =>
               item.permissions.every((permission) => profile.permissions.includes(permission)),
             );
             if (!items.length) return null;
+            const expanded = expandedGroups[group.label] ?? false;
+            const active = items.some((item) => isNavigationItemActive(item.href, pathname));
+            const groupId = `navigation-${group.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
             return (
               <section key={group.label}>
-                <h2 className="px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                  {group.label}
-                </h2>
-                <div className="mt-2 space-y-1">
+                <button
+                  type="button"
+                  aria-expanded={expanded}
+                  aria-controls={groupId}
+                  onClick={() =>
+                    setExpandedGroups((current) => ({
+                      ...current,
+                      [group.label]: !expanded,
+                    }))
+                  }
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                    active
+                      ? 'font-semibold text-emerald-800'
+                      : 'font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <AppIcon name={group.icon} className="h-[18px] w-[18px] shrink-0" />
+                  <span className="flex-1 text-left">{group.label}</span>
+                  <AppIcon
+                    name="chevron"
+                    className={`h-4 w-4 shrink-0 transition-transform ${
+                      expanded ? 'rotate-90' : ''
+                    }`}
+                  />
+                </button>
+                <div
+                  id={groupId}
+                  hidden={!expanded}
+                  className="ml-4 mt-1 space-y-1 border-l border-slate-200 pl-3"
+                >
                   {items.map((item) => {
                     const current = isNavigationItemActive(item.href, pathname);
                     return (
@@ -628,19 +532,16 @@ export function SessionShell({ children }: { children: ReactNode }) {
                         href={item.href}
                         aria-current={current ? 'page' : undefined}
                         onClick={() => setMobileNavigationOpen(false)}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                        className={`flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors ${
                           current
                             ? 'bg-emerald-50 font-semibold text-emerald-800'
                             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                         }`}
                       >
-                        <AppIcon
-                          name={item.icon}
-                          className="h-[18px] w-[18px] shrink-0"
-                        />
-                        {item.label}
+                        <AppIcon name={item.icon} className="h-4 w-4 shrink-0" />
+                        <span className="flex-1">{item.label}</span>
                         {current && (
-                          <span className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
                         )}
                       </Link>
                     );
