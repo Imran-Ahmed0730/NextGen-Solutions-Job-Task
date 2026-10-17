@@ -189,7 +189,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Date, party, product, and warehouse filters for applicable reports
 - [x] CSV export and browser print/PDF from the report viewer
 - [x] Audit Log screen with read-only before/after history
-- [ ] DB views (stock, due, balances, profit, KPIs)
+- [x] DB views (stock, due, balances, profit, KPIs)
 - [ ] Dedicated print layouts for invoices and party statements
 - [ ] Exit: dashboard figures reconcile with corresponding report totals
 

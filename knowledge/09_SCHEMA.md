@@ -166,15 +166,19 @@ pending.
 ## Views (read-only)
 | View | Purpose |
 |---|---|
-| `v_current_stock` | product, warehouse, on-hand, reserved, available, avg_cost, value |
-| `v_stock_valuation` | per product and total value (on-hand × avg_cost) |
-| `v_customer_due` | opening + posted invoices − collections − returns, per customer |
-| `v_supplier_due` | opening + receipts/direct purchases − payments − returns, per supplier |
-| `v_account_balance` | opening + SUM(money_transactions) per account |
+| `v_current_stock` | existing product/warehouse balances: on-hand, reserved, available, avg_cost, value |
+| `v_stock_valuation` | per-stocked-product totals and value (on-hand × avg_cost), including zero stock |
+| `v_customer_due` | current opening + posted invoices − collections − returns, per customer |
+| `v_supplier_due` | current opening + receipts/direct purchases − payments − returns, per supplier |
+| `v_account_balance` | opening + SUM(money_transactions) per money account |
 | `v_order_status` | ordered / reserved / produced / delivered / remaining per order line |
-| `v_profit_summary` | sales − COGS − expenses by period |
-| `v_dashboard_kpis` | the 11 dashboard KPIs for a date |
-| `v_low_stock` | products at/below reorder level |
+| `v_profit_summary` | net sales − net COGS − posted expenses per activity date |
+| `v_dashboard_kpis` | daily activity KPIs plus current balances, dues, inventory and pending orders |
+| `v_low_stock` | active stocked products at/below reorder level (global stock) |
+
+These read-only MySQL views are created by Alembic migration `20261111_reporting_views`; MySQL
+uses the `TEMPTABLE` algorithm to prevent writes through the views. Application accounts must also
+be denied direct write access to `stock_balances` and the append-only ledgers.
 
 ## Key constraints
 - `CHECK (qty_on_hand >= 0)` on `stock_balances` (stocked products).

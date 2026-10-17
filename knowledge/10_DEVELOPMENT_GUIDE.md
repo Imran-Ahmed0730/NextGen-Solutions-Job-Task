@@ -916,10 +916,13 @@ selected dates. Party, product, and warehouse filters are provided where applica
 purchase reports, a product filter matches documents containing that product while retaining full
 document totals. Dashboard and report routes have API coverage; the dashboard, report center, and
 Audit Log have frontend regression coverage. Dashboard/report total reconciliation is covered for
-profit and inventory valuation.
+profit and inventory valuation. Migration `20261111_reporting_views` creates read-only reporting
+views for stock, valuation, low stock, current party dues, account balances, order quantities, daily
+profit, and dashboard KPIs. `v_dashboard_kpis` stores daily activity alongside current balance and
+snapshot values; historical due reports continue to calculate as of the selected end date.
 
-The remaining Phase 12 work includes database views, dedicated invoice/statement print layouts,
-and full dashboard/report reconciliation, followed by full-cycle hardening. Consult
+The remaining Phase 12 work includes dedicated invoice/statement print layouts and full
+dashboard/report reconciliation, followed by full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 planned work is complete until its modules, persistence, permissions, tests, and screens are
 actually delivered.

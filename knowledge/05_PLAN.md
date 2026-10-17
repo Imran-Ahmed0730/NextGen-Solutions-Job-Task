@@ -170,8 +170,10 @@ Center (`GET /api/v1/reports`), CSV export/browser print, and the read-only Audi
 implemented. Report types cover sales, purchases, stock valuation, low stock, customer/supplier due,
 production cost, cash book, expense/income, profit, assets, and attendance/payroll. Report date,
 party, product, and warehouse filters are supported where applicable. Dashboard and reports use
-posted records/ledger data and are covered by API/UI tests. Database views and full report/dashboard
-parity remain before the phase exit.
+posted records/ledger data and are covered by API/UI tests. Full report/dashboard parity remains
+before the phase exit. The read-only stock, valuation, low-stock, party-due, account-balance,
+order-status, profit-summary, and daily dashboard KPI views are added by migration
+`20261111_reporting_views`; view calculations have seeded-data coverage.
 
 ## Phase 13 — Hardening & Delivery
 **Build:** full-cycle E2E test, seed/demo data, performance indexes, security review, README, API docs (OpenAPI), demo script, interview notes.
