@@ -71,7 +71,11 @@ def upgrade() -> None:
         mysql_charset="utf8mb4",
     )
     op.create_index("ix_sales_return_lines_return_id", "sales_return_lines", ["return_id"])
-    op.create_index("ix_sales_return_lines_invoice_line_id", "sales_return_lines", ["invoice_line_id"])
+    op.create_index(
+        "ix_sales_return_lines_invoice_line_id",
+        "sales_return_lines",
+        ["invoice_line_id"],
+    )
 
     for code, description in PERMISSIONS:
         op.execute(
