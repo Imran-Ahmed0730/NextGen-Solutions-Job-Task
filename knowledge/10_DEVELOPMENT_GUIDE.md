@@ -468,52 +468,50 @@ migration to the configured database should be an intentional deployment operati
 
 ## 8. Running the project
 
+For the full deployment checklist, environment-variable guidance, database lifecycle notes, and
+operational cautions, see the README's [Deployment Guideline](../README.md#deployment-guideline).
+
 ### Docker Compose
 
-1. Copy `.env.example` to `.env`.
-2. Set a private `SECRET_KEY`, database connection values, and SMTP values if password recovery is
-   needed.
-3. Start services:
+1. Copy `.env.example` to `.env` and configure a private `SECRET_KEY` and database credentials.
+   Configure SMTP if password recovery email is required.
+2. Start MySQL and apply the schema migrations:
 
    ```powershell
-   docker compose up --build
+   docker compose up -d db
+   docker compose build api
+   docker compose run --rm --no-deps api alembic upgrade head
    ```
 
-4. Apply migrations:
+3. Seed the initial administrator and company defaults:
 
    ```powershell
-   docker compose run --build --rm --no-deps api alembic upgrade head
-   ```
-
-5. Create the initial admin if needed:
-
-   ```powershell
-   docker compose run --rm --no-deps api python -m app.modules.auth.seed
-   ```
-
-6. Seed company defaults from the environment if needed:
-
-   ```powershell
+   docker compose run --rm --no-deps api python -c "import app.main; from app.modules.auth.seed import main; main()"
    docker compose run --rm --no-deps api python -m app.modules.company_settings.seed
    ```
 
-   Existing values are preserved; use `--overwrite` only when intentionally replacing them.
+   The application import loads the complete model registry before the auth seed writes permission
+   records. The generated administrator password is printed only when the account is first created.
+   Existing company settings are preserved unless the seed is run with `--overwrite`.
 
-7. Seed reusable demo master data and document sequences:
+4. For a development/demo database only, optionally seed sample master data and document sequences:
 
    ```powershell
-   docker compose run --rm --no-deps api python -m app.demo_seed
+   docker compose run --rm --no-deps api python -c "import app.main; from app.demo_seed import main; main()"
    ```
 
-   This idempotently adds demo parties, products, a BOM, money accounts, an expense category, and
-   document sequences for the current year. Existing demo records are preserved. Demo accounts
-   have opening balances for payment workflows; no purchase, sale, expense, stock, or money ledger
-   transactions are posted by this command. The end-to-end test covers the complete posted cycle.
+5. Start the application and check the service status:
 
-8. Open `http://localhost:3000/login`. API health is at `http://localhost:8000/health`.
+   ```powershell
+   docker compose up --build -d
+   docker compose ps
+   ```
+
+6. Open `http://localhost:3000/login`. API health is at `http://localhost:8000/health`.
 
 Compose has `db`, `api`, and `web` services. The development web service runs `next dev`; the API
 uses Uvicorn reload. The local MySQL data persists in the Compose-managed `mysql_data` volume.
+Do not use this development Compose configuration as-is for an internet-facing production deploy.
 
 ### Local frontend
 

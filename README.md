@@ -9,8 +9,8 @@ administration in one FastAPI API and Next.js web application backed by MySQL.
 Phases 0–12 are implemented, including authentication and administration, master data, parties,
 inventory, purchasing, money workflows, sales, production, assets, attendance, payroll, approvals,
 and reporting. Phase 13 hardening is in progress: the full business-cycle E2E test, reusable
-demo-data seed, and report-query index review are complete; security and delivery-documentation
-tasks remain.
+demo-data seed, report-query index review, and JWT signing-key hardening are complete; delivery
+documentation remains.
 
 See [the phased plan](./knowledge/05_PLAN.md), [the current checklist](./knowledge/06_TODO.md), and
 [the implementation guide](./knowledge/10_DEVELOPMENT_GUIDE.md) for details. The business and
@@ -31,53 +31,149 @@ engineering requirements in [04_RULES.md](./knowledge/04_RULES.md) govern implem
 - Frontend: Next.js + TypeScript + Tailwind CSS + shadcn-style UI primitives
 - Tooling: Ruff, Mypy, Pytest, Vitest, GitHub Actions
 
-## Quick start
+## Deployment Guideline
 
-1. Copy `.env.example` to `.env`.
-2. Generate and set a private signing key (minimum 32 characters):
+This guide deploys the application locally or to a trusted development/test host with Docker
+Compose. The repository's Compose configuration runs the Next.js development server and starts
+Uvicorn with auto-reload; it is **not a production-hardened deployment configuration**. Before
+internet-facing or production use, use production application servers, TLS through a reverse proxy,
+private secret management, restricted network access, and a tested database backup/restore process.
 
-   ```powershell
-   python -c "import secrets; print(secrets.token_urlsafe(48))"
-   ```
+### 1. Requirements
 
-   Replace the example `SECRET_KEY` value in `.env` with the generated value. The API refuses to
-   start if `SECRET_KEY` is missing, a known placeholder, or shorter than 32 characters.
-3. Start infrastructure: `docker compose up --build`
-4. API: http://localhost:8000/health
-5. Web: http://localhost:3000/login
+- Git and Docker Desktop (or Docker Engine) with the Docker Compose plugin.
+- Ports `3000`, `8000`, and `3306` available for the web app, API, and MySQL respectively.
+- For local frontend development without Docker: Node.js 20 and npm.
 
-## Initial administrator seed
+### 2. Get the application and configure the environment
 
-Start the database, apply migrations, and seed the initial administrator:
+From the repository root, copy the example environment file:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edit `.env` before starting the API. At minimum:
+
+- Replace `SECRET_KEY` with a unique random value of at least 32 characters. Generate one with:
+
+  ```powershell
+  python -c "import secrets; print(secrets.token_urlsafe(48))"
+  ```
+
+  Keep the value private and stable for this installation. Changing it invalidates existing login
+  sessions. The API refuses to start when it is missing, a known placeholder, or too short.
+- Set unique `MYSQL_PASSWORD` and `MYSQL_ROOT_PASSWORD` values. Set `DATABASE_URL` to use the same
+  database username/password and database name as `MYSQL_USER`, `MYSQL_PASSWORD`, and
+  `MYSQL_DATABASE`; the Compose default URL uses the Compose service hostname `db`.
+- Set `NEXT_PUBLIC_API_URL` to the API URL reachable by the user's browser and set
+  `FRONTEND_ORIGIN` to the exact web app origin (scheme, host, and port), for example
+  `http://localhost:3000`. They must reflect the URLs used by your deployment.
+- Configure `SMTP_HOST`, `SMTP_FROM_EMAIL`, and any required SMTP credentials if users need
+  password-reset email. The default is STARTTLS on port 587. For implicit TLS, set
+  `SMTP_USE_TLS=false` and `SMTP_USE_SSL=true`.
+- Review company defaults such as `COMPANY_NAME`, `CURRENCY_CODE`, `TIMEZONE`,
+  `CREDIT_LIMIT_MODE`, and `RECEIPT_TOLERANCE_PCT`.
+
+Do not commit `.env` or use the example database credentials for a shared or production
+installation. If a database password contains URL-reserved characters, percent-encode it in
+`DATABASE_URL`. Compose initializes MySQL users and the database only when its data volume is
+first created; changing the MySQL variables later does not update an existing database account.
+
+### 3. Start MySQL and initialize the schema
+
+Start the database and wait until its health check passes:
 
 ```powershell
 docker compose up -d db
-docker compose run --build --rm --no-deps api alembic upgrade head
-docker compose run --rm --no-deps api python -m app.modules.auth.seed
-docker compose run --rm --no-deps api python -m app.modules.company_settings.seed
-docker compose run --rm --no-deps api python -m app.demo_seed
+docker compose ps
 ```
 
-The initial-admin command creates `admin` with a randomly generated Argon2-hashed password and an
-Administrator role. The company-settings command seeds defaults for the Company Settings screen,
-using the `COMPANY_*`, `CURRENCY_CODE`, `TIMEZONE`, `INVOICE_FOOTER`, `CREDIT_LIMIT_MODE`, and
-`RECEIPT_TOLERANCE_PCT` environment variables from `.env.example`. Existing settings are preserved
-by default; run the company-settings command with `--overwrite` only when you intend to replace
-saved values with environment defaults.
-Uploaded logo and favicon images are saved under `backend/media` and persist through the Compose
-media mount; the default brand artwork remains available if no custom file is uploaded. The
-Company Settings screen previews current assets and provides a **Use default** action. Logo uploads
-accept PNG, JPEG, or WebP (up to 2 MB); favicon uploads accept PNG, WebP, or ICO (up to 512 KB).
+Build the API image and apply all Alembic migrations to the configured database:
 
-The admin plaintext password is printed only when the account is first created; save it securely.
-Running the command again does not reset an existing password. Sign in at `/login`; the
-Administrator role is assigned the seeded auth and master-data permissions, including
-`master_data.units.*` and `master_data.product_categories.*`. Run the seed again after upgrading
-the database to add newly introduced permissions; this does not change the existing admin password.
-The demo-data command adds reusable sample parties, products, a BOM, money accounts, an expense
-category, and current-year document sequences. It is safe to rerun: existing demo records are
-preserved. Demo money accounts have opening balances for payment workflows; the command does not
-post purchases, sales, expenses, or other business transactions.
+```powershell
+docker compose build api
+docker compose run --rm --no-deps api alembic upgrade head
+```
+
+Migrations create and update the schema; they do not create the initial administrator or demo
+records. Run these seed commands from the repository root:
+
+```powershell
+docker compose run --rm --no-deps api python -c "import app.main; from app.modules.auth.seed import main; main()"
+docker compose run --rm --no-deps api python -m app.modules.company_settings.seed
+```
+
+The auth seed creates the `admin` user, an active Administrator role, and the current permission
+catalog. Its generated password is Argon2-hashed and printed only when the account is first
+created; store it securely. Re-running the command does not reset an existing password. Re-run it
+after application upgrades to synchronize newly introduced permissions.
+
+Company settings are seeded from `.env.example`'s `COMPANY_*`, `CURRENCY_CODE`, `TIMEZONE`,
+`INVOICE_FOOTER`, `CREDIT_LIMIT_MODE`, and `RECEIPT_TOLERANCE_PCT` values. Existing values are
+preserved. Use the seed command's `--overwrite` option only when intentionally replacing saved
+settings with environment defaults.
+
+For a development or demo installation only, seed sample master data and current-year document
+sequences:
+
+```powershell
+docker compose run --rm --no-deps api python -c "import app.main; from app.demo_seed import main; main()"
+```
+
+This command is idempotent and does not post purchases, sales, expenses, or stock/money ledger
+transactions. Skip it for production data.
+
+### 4. Start and verify the application
+
+Start all services:
+
+```powershell
+docker compose up --build -d
+docker compose ps
+```
+
+Open the sign-in page at <http://localhost:3000/login>. Confirm the API is responding at
+<http://localhost:8000/health>; it should return HTTP 200 and `{"status":"ok",...}`. Use the
+one-time password printed by the first admin seed. Change it after the first sign-in and add a
+valid email to the administrator profile before relying on password recovery.
+
+To inspect service startup errors:
+
+```powershell
+docker compose logs --tail 100 api
+docker compose logs --tail 100 web
+docker compose logs --tail 100 db
+```
+
+### 5. Data persistence, upgrades, and operations
+
+- MySQL data is stored in the Compose-managed `mysql_data` volume. Uploaded company logos and
+  favicons are stored in `backend/media`, which is mounted into the API container.
+- Back up the database volume/data and `backend/media` according to your retention policy, and
+  periodically test restoring those backups. A container rebuild does not replace the MySQL volume.
+- To deploy an application update, build the new API image, apply migrations, then rebuild/restart
+  services:
+
+  ```powershell
+  docker compose build api
+  docker compose run --rm --no-deps api alembic upgrade head
+  docker compose up --build -d
+  ```
+
+- Never edit an applied migration or change the database manually. Review the release's migrations
+  and back up the database before applying schema changes.
+- `docker compose down` stops and removes containers but preserves the named database volume.
+  `docker compose down -v` removes the volume and permanently deletes its database contents; only
+  use it when you deliberately intend to destroy the local database.
+- The Compose file publishes MySQL on port 3306 and uses development servers. Do not expose these
+  settings directly to the public internet. A production deployment must restrict database access,
+  use TLS, production server commands, secure environment-secret storage, and a separately reviewed
+  production deployment configuration.
+
+Uploaded logo and favicon images persist through the Compose media mount. The default brand artwork
+remains available when no custom file is uploaded. Logo uploads accept PNG, JPEG, or WebP (up to
+2 MB); favicon uploads accept PNG, WebP, or ICO (up to 512 KB).
 
 ## Run the web app locally
 
