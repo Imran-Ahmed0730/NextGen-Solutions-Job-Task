@@ -141,7 +141,7 @@ The frontend route tree currently includes:
 | `/customer-collections` | Post customer collections and view recent collection history |
 | `/quotations` | Create, edit, and browse sales quotation drafts |
 | `/sales-orders` | Create, edit, browse, view draft sales order details, and post deliveries with COGS |
-| `/sales-invoices` | Post invoices from deliveries, apply credit-limit mode, and browse invoice/COGS history |
+| `/sales-invoices` | Post invoices from deliveries, apply credit-limit mode, browse history, and print readable invoices |
 | `/sales-returns` | Return remaining invoiced quantities, restore stock at original COGS, and reduce customer due |
 | `/boms` | Create, edit, browse, soft-delete, and restore Bills of Materials |
 | `/assets` | Register/edit assets, assign/return locations, and review maintenance history |
@@ -328,6 +328,7 @@ The implemented auth API is:
 | `POST /api/v1/sales/orders/{id}/deliveries` | `sales.deliveries.create` | Post delivery through the stock service, consume reservations first, and store unit COGS |
 | `GET /api/v1/sales/invoices/options` | `sales.invoices.read` | List posted deliveries that have not yet been invoiced |
 | `GET /api/v1/sales/invoices` / `GET /api/v1/sales/invoices/{id}` | `sales.invoices.read` | List or view posted invoices and line snapshots |
+| `GET /api/v1/sales/invoices/{id}/print` | `sales.invoices.read` | Read company, customer, product, delivery, and order details for invoice printing |
 | `POST /api/v1/sales/invoices` | `sales.invoices.create` | Post one invoice per delivery, add customer due, and check credit-limit mode |
 | `GET /api/v1/sales/returns/options` | `sales.returns.read` | List posted invoices and invoice lines with quantities still returnable |
 | `GET /api/v1/sales/returns` / `GET /api/v1/sales/returns/{id}` | `sales.returns.read` | List or view posted sales returns |
@@ -921,8 +922,10 @@ views for stock, valuation, low stock, current party dues, account balances, ord
 profit, and dashboard KPIs. `v_dashboard_kpis` stores daily activity alongside current balance and
 snapshot values; historical due reports continue to calculate as of the selected end date.
 
-The remaining Phase 12 work includes dedicated invoice/statement print layouts and full
-dashboard/report reconciliation, followed by full-cycle hardening. Consult
+Dedicated invoice and party-statement print layouts are implemented: invoice history links to a
+branded, readable invoice view, and customer/supplier statements provide a print/PDF action.
+Printing is read-only and uses the existing posting and statement data. The remaining Phase 12 work
+is full dashboard/report reconciliation, followed by full-cycle hardening. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 planned work is complete until its modules, persistence, permissions, tests, and screens are
 actually delivered.

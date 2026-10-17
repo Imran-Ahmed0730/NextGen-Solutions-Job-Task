@@ -10,6 +10,7 @@ from app.modules.sales_invoices.schemas import (
     SalesInvoiceCreate,
     SalesInvoiceCreateResponse,
     SalesInvoiceOptionsResponse,
+    SalesInvoicePrintResponse,
     SalesInvoiceResponse,
 )
 
@@ -67,6 +68,18 @@ def get_invoice(
     _: User = Depends(require_permission("sales.invoices.read")),
 ) -> SalesInvoice:
     invoice = service.get_invoice(db, invoice_id)
+    if invoice is None:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    return invoice
+
+
+@router.get("/{invoice_id}/print", response_model=SalesInvoicePrintResponse)
+def get_invoice_print_data(
+    invoice_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_permission("sales.invoices.read")),
+) -> SalesInvoicePrintResponse:
+    invoice = service.get_invoice_print_data(db, invoice_id)
     if invoice is None:
         raise HTTPException(status_code=404, detail="Invoice not found")
     return invoice

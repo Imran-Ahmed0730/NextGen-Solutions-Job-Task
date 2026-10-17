@@ -33,13 +33,28 @@ textarea::placeholder {
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
   body {
     background: #fff;
+    color: #0f172a;
   }
 
   table {
     width: 100%;
     border-collapse: collapse;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  img {
+    break-inside: avoid;
   }
 
   th,

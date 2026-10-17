@@ -3,8 +3,12 @@
 import { useParams } from 'next/navigation';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
+import {
+  PrintDocumentButton,
+  PrintDocumentHeader,
+  usePrintBranding,
+} from '@/components/documents/print-document';
 import { apiRequest } from '@/lib/auth-api';
-import { showErrorToast } from '@/lib/notifications';
 import { useEffect, useState } from 'react';
 
 type SupplierStatement = {
@@ -24,6 +28,7 @@ type SupplierStatement = {
 export default function SupplierStatementPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const { branding, error: brandingError } = usePrintBranding();
   const [statement, setStatement] = useState<SupplierStatement | null>(null);
   const [error, setError] = useState('');
 
@@ -39,10 +44,23 @@ export default function SupplierStatementPage() {
   return (
     <ProtectedPage>
       <div className="space-y-4">
-        <h1 className="text-2xl font-semibold">Supplier Statement</h1>
+        <div className="flex items-center justify-between gap-3 print:hidden">
+          <h1 className="text-2xl font-semibold">Supplier Statement</h1>
+          {statement && branding && <PrintDocumentButton />}
+        </div>
         {error && <p className="text-rose-700">{error}</p>}
+        {brandingError && (
+          <p className="text-rose-700">Company branding could not be loaded for printing: {brandingError}</p>
+        )}
         {statement && (
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <article className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm print:border-0 print:p-0 print:shadow-none">
+            {branding && (
+              <PrintDocumentHeader
+                branding={branding}
+                title="Supplier Statement"
+                subtitle={`Generated ${new Date().toLocaleDateString()}`}
+              />
+            )}
             <p className="font-medium text-slate-900">{statement.supplier_name}</p>
             <p className="mt-2 text-sm text-slate-600">Opening due: {Number(statement.opening_due).toFixed(2)}</p>
             <p className="text-sm font-semibold text-slate-900">Current balance: {Number(statement.balance).toFixed(2)}</p>
@@ -72,7 +90,7 @@ export default function SupplierStatementPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </article>
         )}
       </div>
     </ProtectedPage>

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { ProtectedPage } from '@/components/auth/protected-page';
@@ -240,7 +241,14 @@ function SalesInvoicesContent() {
               <tbody className="divide-y divide-slate-100">
                 {invoices.map((invoice) => (
                   <tr key={invoice.id}>
-                    <td className="px-4 py-3 font-medium text-slate-900">{invoice.doc_no}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link
+                        href={`/sales-invoices/${invoice.id}/print`}
+                        className="text-emerald-800 hover:underline"
+                      >
+                        {invoice.doc_no}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3">
                       {invoice.doc_date} / {invoice.due_date}
                     </td>

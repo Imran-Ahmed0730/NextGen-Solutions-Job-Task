@@ -44,6 +44,10 @@ def get_product(db: Session, product_id: int) -> Product | None:
     return repository.get_product(db, product_id)
 
 
+def get_products_by_ids(db: Session, product_ids: set[int]) -> list[Product]:
+    return repository.get_products_by_ids(db, product_ids)
+
+
 def lock_product_for_stock_posting(db: Session, product_id: int) -> Product | None:
     return repository.lock_product_for_stock_posting(db, product_id)
 

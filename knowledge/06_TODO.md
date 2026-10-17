@@ -190,7 +190,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] CSV export and browser print/PDF from the report viewer
 - [x] Audit Log screen with read-only before/after history
 - [x] DB views (stock, due, balances, profit, KPIs)
-- [ ] Dedicated print layouts for invoices and party statements
+- [x] Dedicated print layouts for invoices and party statements
 - [ ] Exit: dashboard figures reconcile with corresponding report totals
 
 ## Phase 13 — Hardening

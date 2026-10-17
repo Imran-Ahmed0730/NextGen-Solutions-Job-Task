@@ -7,15 +7,21 @@ from sqlalchemy.orm import Session
 from app.modules.auth.audit import record_audit
 from app.modules.auth.models import User
 from app.modules.company_settings import repository as settings_repository
+from app.modules.company_settings import service as company_settings_service
 from app.modules.customers import repository as customer_repository
 from app.modules.customers import service as customer_service
 from app.modules.document_numbering.service import generate_next_number
+from app.modules.products import service as product_service
 from app.modules.sales.models import SalesDelivery
 from app.modules.sales_invoices import repository
 from app.modules.sales_invoices.models import SalesInvoice, SalesInvoiceLine
 from app.modules.sales_invoices.schemas import (
     SalesInvoiceDeliveryOption,
     SalesInvoiceOptionsResponse,
+    SalesInvoicePrintCompany,
+    SalesInvoicePrintCustomer,
+    SalesInvoicePrintLine,
+    SalesInvoicePrintResponse,
 )
 
 DOCUMENT_TYPE = "INVOICE"
@@ -29,6 +35,69 @@ def list_invoices(db: Session, *, offset: int = 0, limit: int = 50) -> list[Sale
 
 def get_invoice(db: Session, invoice_id: int) -> SalesInvoice | None:
     return repository.get_invoice(db, invoice_id)
+
+
+def get_invoice_print_data(
+    db: Session,
+    invoice_id: int,
+) -> SalesInvoicePrintResponse | None:
+    invoice = repository.get_invoice(db, invoice_id)
+    if invoice is None:
+        return None
+    customer = customer_service.get_customer(db, invoice.customer_id)
+    if customer is None:
+        raise HTTPException(status_code=500, detail="Invoice customer could not be loaded")
+    products = product_service.get_products_by_ids(
+        db, {line.product_id for line in invoice.lines}
+    )
+    products_by_id = {product.id: product for product in products}
+    missing_product_ids = {line.product_id for line in invoice.lines} - products_by_id.keys()
+    if missing_product_ids:
+        raise HTTPException(status_code=500, detail="Invoice product details could not be loaded")
+    delivery = invoice.delivery
+    if delivery is None:
+        raise HTTPException(status_code=500, detail="Invoice delivery could not be loaded")
+    settings = {
+        setting.key: setting.value for setting in company_settings_service.list_settings(db)
+    }
+    branding = company_settings_service.get_branding(db)
+    return SalesInvoicePrintResponse(
+        company=SalesInvoicePrintCompany(
+            company_name=branding["company_name"],
+            company_logo_path=branding["company_logo_path"],
+            address=settings.get("company_address", ""),
+            phone=settings.get("company_phone", ""),
+            email=settings.get("company_email", ""),
+            currency_code=settings.get("currency_code"),
+            footer=settings.get("invoice_footer", ""),
+        ),
+        invoice_no=invoice.doc_no,
+        invoice_date=invoice.doc_date,
+        due_date=invoice.due_date,
+        delivery_no=delivery.doc_no,
+        order_no=delivery.sales_order.doc_no,
+        customer=SalesInvoicePrintCustomer(
+            code=customer.code,
+            name=customer.name,
+            mobile=customer.mobile,
+            email=customer.email,
+            address=customer.address,
+        ),
+        lines=[
+            SalesInvoicePrintLine(
+                product_sku=products_by_id[line.product_id].sku,
+                product_name=products_by_id[line.product_id].name,
+                unit_code=products_by_id[line.product_id].unit.code,
+                qty=line.qty,
+                unit_price=line.unit_price,
+                line_total=line.line_total,
+            )
+            for line in invoice.lines
+        ],
+        subtotal=invoice.subtotal,
+        discount=invoice.discount,
+        total=invoice.total,
+    )
 
 
 def get_invoice_options(db: Session) -> SalesInvoiceOptionsResponse:

@@ -43,6 +43,47 @@ class SalesInvoiceCreateResponse(BaseModel):
     credit_limit_warning: bool
 
 
+class SalesInvoicePrintCompany(BaseModel):
+    company_name: str
+    company_logo_path: str
+    address: str
+    phone: str
+    email: str
+    currency_code: str | None
+    footer: str
+
+
+class SalesInvoicePrintCustomer(BaseModel):
+    code: str
+    name: str
+    mobile: str | None
+    email: str | None
+    address: str | None
+
+
+class SalesInvoicePrintLine(BaseModel):
+    product_sku: str
+    product_name: str
+    unit_code: str
+    qty: Decimal
+    unit_price: Decimal
+    line_total: Decimal
+
+
+class SalesInvoicePrintResponse(BaseModel):
+    company: SalesInvoicePrintCompany
+    invoice_no: str
+    invoice_date: date
+    due_date: date
+    delivery_no: str
+    order_no: str
+    customer: SalesInvoicePrintCustomer
+    lines: list[SalesInvoicePrintLine]
+    subtotal: Decimal
+    discount: Decimal
+    total: Decimal
+
+
 class SalesInvoiceDeliveryOption(BaseModel):
     id: int
     doc_no: str

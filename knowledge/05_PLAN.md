@@ -161,8 +161,8 @@ Backend tests cover rule matching, all three hooks, role/self-approval checks, r
 and rollback when posting fails.
 
 ## Phase 12 — Reports & Dashboard
-**Build:** database views, report services, Report Center + Report Viewer, PDF/CSV export, management dashboard.
-**Screens:** Dashboard, Report Center, Report Viewer, Audit Log.
+**Build:** database views, report services, Report Center + Report Viewer, PDF/CSV export, management dashboard, readable invoice/statement print layouts.
+**Screens:** Dashboard, Report Center, Report Viewer, Audit Log, Invoice Print, Party Statement Print.
 **Exit:** dashboard figures equal report totals; every report has a test with seeded data.
 
 **Progress:** Dashboard (`GET /api/v1/reports/dashboard` and `/`), the permission-protected Report
@@ -174,6 +174,9 @@ posted records/ledger data and are covered by API/UI tests. Full report/dashboar
 before the phase exit. The read-only stock, valuation, low-stock, party-due, account-balance,
 order-status, profit-summary, and daily dashboard KPI views are added by migration
 `20261111_reporting_views`; view calculations have seeded-data coverage.
+Sales invoice history links to a read-only branded invoice layout with customer, product, delivery,
+order, company, and amount details. Customer and supplier statements have branded browser-print/PDF
+actions. Full report/dashboard parity remains the final Phase 12 exit requirement.
 
 ## Phase 13 — Hardening & Delivery
 **Build:** full-cycle E2E test, seed/demo data, performance indexes, security review, README, API docs (OpenAPI), demo script, interview notes.

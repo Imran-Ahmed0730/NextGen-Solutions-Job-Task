@@ -113,6 +113,10 @@ Sales returns reference the original posted invoice and line, cannot exceed the 
 invoiced quantity, and restock through the inventory posting service at the stored COGS. Each return
 line snapshots the original unit price, discounted refund amount, and original unit COGS. Posted
 returns reduce customer due in the statement calculation.
+The read-only invoice print response joins the posted invoice with customer, product/unit, delivery,
+sales-order, and company-setting details for a human-readable invoice. Customer and supplier
+statements can be printed from their existing statement screens with company branding; printing does
+not alter posted records or balances.
 
 ## 8. Money
 **money_transactions** (ledger, append-only): id, txn_date, account_id(FK), amount_signed, txn_type(COLLECTION/PAYMENT/EXPENSE/INCOME/TRANSFER_OUT/TRANSFER_IN/OPENING/PURCHASE_PAYMENT/SALARY), source_type, source_id, party_type, party_id, note, created_by, created_at. `money_accounts.opening_balance` is the pre-ledger baseline; `OPENING` transactions are later signed adjustments included in the sum, and the baseline is immutable after the first ledger transaction.

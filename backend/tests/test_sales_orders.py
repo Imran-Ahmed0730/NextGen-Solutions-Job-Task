@@ -619,6 +619,21 @@ def test_invoice_posts_from_delivery_updates_due_and_preserves_cogs(
     assert invoice["cogs_total"] == "7.50"
     assert invoice["lines"][0]["unit_cost_cogs"] == "2.5000"
     assert result["credit_limit_warning"] is False
+    print_response = client.get(
+        f"/api/v1/sales/invoices/{invoice['id']}/print",
+        headers=headers,
+    )
+    assert print_response.status_code == 200
+    print_data = print_response.json()
+    assert print_data["company"]["company_name"] == "Sabuj Pran"
+    assert print_data["invoice_no"] == "INV-20260001"
+    assert print_data["customer"]["name"] == customer.name
+    assert print_data["delivery_no"] == delivery_response.json()["doc_no"]
+    assert print_data["order_no"] == order["doc_no"]
+    assert print_data["lines"][0]["product_name"] == product.name
+    assert print_data["lines"][0]["unit_code"] == "pc"
+    assert print_data["lines"][0]["qty"] == "3.000"
+    assert print_data["total"] == "14.40"
     balance = db_session.get(StockBalance, (product.id, warehouse.id))
     assert balance is not None
     assert balance.qty_on_hand == Decimal("7.000")
@@ -788,6 +803,11 @@ def test_invoice_requires_permission_and_rejects_duplicate_delivery_invoice(
 
     posted = client.post("/api/v1/sales/invoices", headers=headers, json=payload)
     assert posted.status_code == 201
+    print_denied = client.get(
+        f"/api/v1/sales/invoices/{posted.json()['invoice']['id']}/print",
+        headers=_login(client, readonly.username, "ReadOnly-Password-123"),
+    )
+    assert print_denied.status_code == 403
     duplicate = client.post("/api/v1/sales/invoices", headers=headers, json=payload)
     assert duplicate.status_code == 409
     assert duplicate.json()["detail"] == "DELIVERY_ALREADY_INVOICED"

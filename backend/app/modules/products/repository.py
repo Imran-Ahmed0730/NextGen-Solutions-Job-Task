@@ -63,6 +63,17 @@ def get_product(db: Session, product_id: int) -> Product | None:
     return db.scalar(statement)
 
 
+def get_products_by_ids(db: Session, product_ids: set[int]) -> list[Product]:
+    if not product_ids:
+        return []
+    statement = (
+        select(Product)
+        .options(joinedload(Product.category), joinedload(Product.unit))
+        .where(Product.id.in_(product_ids))
+    )
+    return list(db.scalars(statement))
+
+
 def lock_product_for_stock_posting(db: Session, product_id: int) -> Product | None:
     statement = (
         select(Product)
