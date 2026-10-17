@@ -431,7 +431,6 @@ def report_data(
             )
             .where(
                 Product.is_stocked.is_(True),
-                Product.is_active.is_(True),
             )
             .group_by(Product.id)
             .order_by(Product.name)
@@ -439,7 +438,7 @@ def report_data(
         if report_type == "low_stock":
             statement = statement.having(
                 func.coalesce(func.sum(StockBalance.qty_on_hand), 0) <= Product.reorder_level
-            )
+            ).where(Product.is_active.is_(True), Product.deleted_at.is_(None))
         if product_id is not None:
             statement = statement.where(Product.id == product_id)
         return _rows(db, statement)

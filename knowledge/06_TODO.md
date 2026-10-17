@@ -191,7 +191,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Audit Log screen with read-only before/after history
 - [x] DB views (stock, due, balances, profit, KPIs)
 - [x] Dedicated print layouts for invoices and party statements
-- [ ] Exit: dashboard figures reconcile with corresponding report totals
+- [x] Exit: dashboard figures reconcile with corresponding report totals; every report has seeded-data coverage
 
 ## Phase 13 — Hardening
 - [x] Shared searchable entity selectors and visible required-field markers across existing screens
@@ -201,4 +201,3 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [ ] Security review
 - [ ] README, OpenAPI docs, demo script
 - [ ] Interview notes: architecture, ledger design, costing, transaction flow
-- [ ] Include drafted order, purchase receipt, sales order invoice printing feature if we have time.

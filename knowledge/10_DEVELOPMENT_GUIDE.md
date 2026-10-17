@@ -905,7 +905,7 @@ email-reset UI adjustments also passed frontend typecheck, tests, lint, and prod
   approval and rejected-document edit permissions to Administrator. Backend workflow tests cover
   matching, all three document hooks, self-approval, rejection/resubmission, and posting rollback.
 
-### Planned, not yet implemented
+### Phase 12 status and next steps
 
 Phase 12 now includes the read-only management dashboard (`reports.dashboard.read`), a report
 catalog/viewer (`reports.read`), CSV export/browser print, and the read-only Audit Log screen
@@ -916,16 +916,21 @@ selected end date. Stock valuation, low stock, and assets are current snapshots 
 selected dates. Party, product, and warehouse filters are provided where applicable. In sales and
 purchase reports, a product filter matches documents containing that product while retaining full
 document totals. Dashboard and report routes have API coverage; the dashboard, report center, and
-Audit Log have frontend regression coverage. Dashboard/report total reconciliation is covered for
-profit and inventory valuation. Migration `20261111_reporting_views` creates read-only reporting
+Audit Log have frontend regression coverage. Seeded-data API tests cover every report type. The
+dashboard reconciles with sales, purchases, collections, expenses, cash-book activity plus account
+opening balances, current customer/supplier due, stock valuation, profit, and order-status quantities.
+Dashboard due values are current; compare them with due reports as of today because due reports can
+show a historical end-date snapshot. Stock valuation includes inactive stocked products with
+remaining on-hand quantity to match the dashboard's valuation; low-stock reports include only active
+products. Migration `20261111_reporting_views` creates read-only reporting
 views for stock, valuation, low stock, current party dues, account balances, order quantities, daily
 profit, and dashboard KPIs. `v_dashboard_kpis` stores daily activity alongside current balance and
 snapshot values; historical due reports continue to calculate as of the selected end date.
 
 Dedicated invoice and party-statement print layouts are implemented: invoice history links to a
 branded, readable invoice view, and customer/supplier statements provide a print/PDF action.
-Printing is read-only and uses the existing posting and statement data. The remaining Phase 12 work
-is full dashboard/report reconciliation, followed by full-cycle hardening. Consult
+Printing is read-only and uses the existing posting and statement data. Phase 12 exit checks now
+cover dashboard/report reconciliation and seeded report results. Phase 13 hardening is next. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 planned work is complete until its modules, persistence, permissions, tests, and screens are
 actually delivered.

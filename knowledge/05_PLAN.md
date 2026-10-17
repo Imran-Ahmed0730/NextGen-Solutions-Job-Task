@@ -163,20 +163,25 @@ and rollback when posting fails.
 ## Phase 12 — Reports & Dashboard
 **Build:** database views, report services, Report Center + Report Viewer, PDF/CSV export, management dashboard, readable invoice/statement print layouts.
 **Screens:** Dashboard, Report Center, Report Viewer, Audit Log, Invoice Print, Party Statement Print.
-**Exit:** dashboard figures equal report totals; every report has a test with seeded data.
+**Exit:** dashboard figures reconcile with report totals; every report has seeded-data coverage.
 
 **Progress:** Dashboard (`GET /api/v1/reports/dashboard` and `/`), the permission-protected Report
 Center (`GET /api/v1/reports`), CSV export/browser print, and the read-only Audit Log screen are
 implemented. Report types cover sales, purchases, stock valuation, low stock, customer/supplier due,
 production cost, cash book, expense/income, profit, assets, and attendance/payroll. Report date,
 party, product, and warehouse filters are supported where applicable. Dashboard and reports use
-posted records/ledger data and are covered by API/UI tests. Full report/dashboard parity remains
-before the phase exit. The read-only stock, valuation, low-stock, party-due, account-balance,
+posted records/ledger data and are covered by API/UI tests. Seeded-data API tests cover every report
+type. The dashboard reconciles to sales, purchases, collections, expenses, cash-book activity plus
+account opening balances, current customer/supplier dues, stock valuation, profit, and pending-order
+quantities in the order-status view. Current dashboard dues are compared with due reports as of
+today; historical due reports remain end-date snapshots. Stock valuation includes inactive stocked
+products that retain on-hand quantities, while low-stock reporting remains limited to active
+products. The read-only stock, valuation, low-stock, party-due, account-balance,
 order-status, profit-summary, and daily dashboard KPI views are added by migration
 `20261111_reporting_views`; view calculations have seeded-data coverage.
 Sales invoice history links to a read-only branded invoice layout with customer, product, delivery,
 order, company, and amount details. Customer and supplier statements have branded browser-print/PDF
-actions. Full report/dashboard parity remains the final Phase 12 exit requirement.
+actions. Phase 12 exit criteria are covered by seeded report tests and dashboard reconciliation.
 
 ## Phase 13 — Hardening & Delivery
 **Build:** full-cycle E2E test, seed/demo data, performance indexes, security review, README, API docs (OpenAPI), demo script, interview notes.
