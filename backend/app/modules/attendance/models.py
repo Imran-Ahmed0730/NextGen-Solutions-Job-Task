@@ -5,6 +5,7 @@ from sqlalchemy import (
     CheckConstraint,
     Date,
     ForeignKey,
+    Index,
     Integer,
     String,
     UniqueConstraint,
@@ -31,6 +32,7 @@ class Attendance(Base):
             "status IN ('PRESENT', 'ABSENT', 'LEAVE', 'LATE')",
             name="ck_attendance_status",
         ),
+        Index("ix_attendance_att_date", "att_date"),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)

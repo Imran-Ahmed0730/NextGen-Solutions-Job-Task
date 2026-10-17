@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from typing import Any
 
@@ -540,6 +540,8 @@ def report_data(
         )
 
     if report_type == "cash_book":
+        period_start = datetime.combine(period_from, time.min, tzinfo=UTC)
+        period_end = datetime.combine(period_to, time.max, tzinfo=UTC)
         return _rows(
             db,
             select(
@@ -553,8 +555,8 @@ def report_data(
             )
             .join(MoneyAccount, MoneyAccount.id == MoneyTransaction.account_id)
             .where(
-                func.date(MoneyTransaction.txn_date) >= period_from,
-                func.date(MoneyTransaction.txn_date) <= period_to,
+                MoneyTransaction.txn_date >= period_start,
+                MoneyTransaction.txn_date <= period_end,
             )
             .order_by(MoneyTransaction.txn_date, MoneyTransaction.id),
         )

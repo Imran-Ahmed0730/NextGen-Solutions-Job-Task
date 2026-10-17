@@ -8,8 +8,9 @@ administration in one FastAPI API and Next.js web application backed by MySQL.
 
 Phases 0–12 are implemented, including authentication and administration, master data, parties,
 inventory, purchasing, money workflows, sales, production, assets, attendance, payroll, approvals,
-and reporting. Phase 13 hardening is in progress: the full business-cycle E2E test and reusable
-demo-data seed are complete; performance, security, and delivery-documentation tasks remain.
+and reporting. Phase 13 hardening is in progress: the full business-cycle E2E test, reusable
+demo-data seed, and report-query index review are complete; security and delivery-documentation
+tasks remain.
 
 See [the phased plan](./knowledge/05_PLAN.md), [the current checklist](./knowledge/06_TODO.md), and
 [the implementation guide](./knowledge/10_DEVELOPMENT_GUIDE.md) for details. The business and

@@ -7,6 +7,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -32,6 +33,7 @@ class DirectPurchase(Base):
         CheckConstraint("status = 'POSTED'", name="ck_direct_purchases_posted_status"),
         CheckConstraint("total >= 0", name="ck_direct_purchases_nonnegative_total"),
         CheckConstraint("paid_amount = 0", name="ck_direct_purchases_credit_only"),
+        Index("ix_direct_purchases_doc_date", "doc_date"),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)

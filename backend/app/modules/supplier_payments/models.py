@@ -31,6 +31,7 @@ class SupplierPayment(Base):
         UniqueConstraint("doc_no", name="uq_supplier_payments_doc_no"),
         CheckConstraint("amount > 0", name="ck_supplier_payments_positive_amount"),
         CheckConstraint("status = 'POSTED'", name="ck_supplier_payments_posted_status"),
+        Index("ix_supplier_payments_doc_date", "doc_date"),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)

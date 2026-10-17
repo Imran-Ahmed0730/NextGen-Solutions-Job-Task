@@ -36,6 +36,7 @@ class Expense(Base):
         ),
         Index("ix_expenses_category_id", "category_id"),
         Index("ix_expenses_account_id", "account_id"),
+        Index("ix_expenses_status_doc_date", "status", "doc_date"),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)

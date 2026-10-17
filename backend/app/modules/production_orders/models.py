@@ -7,6 +7,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -37,6 +38,7 @@ class ProductionOrder(Base):
             "actual_qty IS NULL OR actual_qty > 0",
             name="ck_production_orders_positive_actual_qty",
         ),
+        Index("ix_production_orders_status_doc_date", "status", "doc_date"),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)

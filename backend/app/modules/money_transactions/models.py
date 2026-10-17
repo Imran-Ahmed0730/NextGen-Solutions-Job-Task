@@ -47,6 +47,7 @@ class MoneyTransaction(Base):
             name="ck_money_transactions_txn_type",
         ),
         Index("ix_money_transactions_account_date", "account_id", "txn_date"),
+        Index("ix_money_transactions_txn_date", "txn_date"),
         Index("ix_money_transactions_source", "source_type", "source_id"),
     )
 

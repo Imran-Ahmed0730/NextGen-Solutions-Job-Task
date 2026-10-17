@@ -581,6 +581,58 @@ def test_dashboard_figures_reconcile_with_seeded_report_totals(
     assert dashboard["pending_orders"] == pending_orders_from_status
 
 
+def test_cash_book_date_range_includes_day_end_and_excludes_next_day(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    seeded = seed_initial_admin(db_session)
+    assert seeded.password is not None
+    actor = db_session.scalar(select(User).where(User.username == seeded.username))
+    assert actor is not None
+    today = date.today()
+    account = MoneyAccount(name="Cash Book Range", type=MoneyAccountType.CASH)
+    db_session.add(account)
+    db_session.flush()
+    db_session.add_all(
+        [
+            MoneyTransaction(
+                txn_date=datetime.combine(today, time.min),
+                account_id=account.id,
+                amount_signed=Decimal("1.00"),
+                txn_type=MoneyTransactionType.INCOME,
+            ),
+            MoneyTransaction(
+                txn_date=datetime.combine(today, time.max),
+                account_id=account.id,
+                amount_signed=Decimal("2.00"),
+                txn_type=MoneyTransactionType.INCOME,
+            ),
+            MoneyTransaction(
+                txn_date=datetime.combine(today + timedelta(days=1), time.min),
+                account_id=account.id,
+                amount_signed=Decimal("3.00"),
+                txn_type=MoneyTransactionType.INCOME,
+            ),
+        ]
+    )
+    db_session.commit()
+
+    headers = _login(client, actor, seeded.password)
+    response = client.get(
+        "/api/v1/reports",
+        params={
+            "report_type": "cash_book",
+            "period_from": today.isoformat(),
+            "period_to": today.isoformat(),
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 200, response.text
+    rows = response.json()["rows"]
+    assert [row["amount"] for row in rows] == ["1.00", "2.00"]
+
+
 def test_production_asset_and_attendance_payroll_reports_return_seeded_data(
     client: TestClient,
     db_session: Session,

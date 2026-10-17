@@ -7,6 +7,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -32,6 +33,7 @@ class PayrollRun(Base):
         CheckConstraint("period_month BETWEEN 1 AND 12", name="ck_payroll_runs_month"),
         CheckConstraint("status IN ('DRAFT', 'POSTED')", name="ck_payroll_runs_status"),
         CheckConstraint("total_amount >= 0", name="ck_payroll_runs_total_nonnegative"),
+        Index("ix_payroll_runs_paid_on", "paid_on"),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)

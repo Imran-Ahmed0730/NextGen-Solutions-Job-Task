@@ -196,7 +196,15 @@ Unmatched expenses are explicitly marked POSTED when their money-ledger effect i
 the dashboard to include them. The workflow and affected regression tests pass. The demo seeder adds
 idempotent sample master data and current-year document sequences using the existing module
 services; it leaves business ledgers untouched and creates audit history for seeded records.
-Performance, security, and remaining delivery-documentation work remain.
+
+Read-only MySQL EXPLAIN checks found table scans for date-filtered dashboard/report totals; the cash
+book also wrapped its timestamp in `DATE()`, preventing range-index use. Date and status/date indexes
+now cover the report filters, and cash-book filtering uses UTC datetime bounds. Synthetic MySQL
+EXPLAIN checks with 20,000 temporary rows selected range indexes for date-only and status/date
+queries (estimated 248 and 200 matching rows respectively). The configured database was at revision
+`20261108_employee_links`, behind repository head `20261111_reporting_views`; no migration was
+applied to that shared database. Upgrade SQL was rendered offline for validation. Security review
+and remaining delivery-documentation work remain.
 
 ---
 ## Per-module workflow (repeat for every module)

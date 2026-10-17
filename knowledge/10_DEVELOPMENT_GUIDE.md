@@ -951,8 +951,13 @@ this lets linked production output be delivered without creating an extra reserv
 same order quantity. Expenses without a matching approval rule are marked `POSTED` when the money
 transaction is posted, so dashboard expense totals include them. The focused workflow regression
 suite passes. The idempotent demo seed command adds audited master data and document sequences
-without posting business transactions. Performance, security, and remaining Phase 13 hardening work
-are still open. Consult
+without posting business transactions. The performance review added range indexes to date-filtered
+dashboard/report tables and status/date composites where the query filters by both; the cash-book
+query uses UTC datetime bounds instead of applying `DATE()` to the indexed column. Read-only EXPLAIN
+on the configured MySQL database found scans for these date-filtered report queries; synthetic
+20,000-row EXPLAIN checks selected the new range indexes. The configured database is behind the
+latest migration, so the index migration was validated by rendering SQL offline rather than applying
+it to that database. Security and remaining Phase 13 hardening work are still open. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 planned work is complete until its modules, persistence, permissions, tests, and screens are
 actually delivered.

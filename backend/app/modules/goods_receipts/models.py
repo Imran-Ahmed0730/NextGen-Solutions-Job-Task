@@ -7,6 +7,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -31,6 +32,7 @@ class GoodsReceipt(Base):
         UniqueConstraint("doc_no", name="uq_goods_receipts_doc_no"),
         CheckConstraint("status = 'POSTED'", name="ck_goods_receipts_posted_status"),
         CheckConstraint("total >= 0", name="ck_goods_receipts_nonnegative_total"),
+        Index("ix_goods_receipts_doc_date", "doc_date"),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)

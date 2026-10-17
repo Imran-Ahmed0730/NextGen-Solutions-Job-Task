@@ -7,6 +7,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -32,6 +33,7 @@ class PurchaseReturn(Base):
         UniqueConstraint("doc_no", name="uq_purchase_returns_doc_no"),
         CheckConstraint("status = 'POSTED'", name="ck_purchase_returns_posted_status"),
         CheckConstraint("total >= 0", name="ck_purchase_returns_nonnegative_total"),
+        Index("ix_purchase_returns_doc_date", "doc_date"),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)

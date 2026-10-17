@@ -199,7 +199,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
   production → delivery/COGS → invoice → collection → cash/bank/MFS → returns/payment/expense →
   statements and management dashboard
 - [x] Idempotent demo master-data and document-sequence seed command
-- [ ] Indexes + performance check
+- [x] Report date-range indexes and cash-book range filtering; validate MySQL plans with synthetic data
 - [ ] Security review
 - [ ] README, OpenAPI docs, demo script
 - [ ] Interview notes: architecture, ledger design, costing, transaction flow

@@ -33,6 +33,7 @@ class Income(Base):
         CheckConstraint("status = 'POSTED'", name="ck_incomes_posted_status"),
         Index("ix_incomes_category_id", "category_id"),
         Index("ix_incomes_account_id", "account_id"),
+        Index("ix_incomes_doc_date", "doc_date"),
     )
 
     id: Mapped[int] = mapped_column(ID_TYPE, primary_key=True, autoincrement=True)
@@ -53,4 +54,3 @@ class Income(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
-
