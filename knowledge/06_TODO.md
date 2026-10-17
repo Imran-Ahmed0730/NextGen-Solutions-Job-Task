@@ -200,6 +200,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
   statements and management dashboard
 - [x] Idempotent demo master-data and document-sequence seed command
 - [x] Report date-range indexes and cash-book range filtering; validate MySQL plans with synthetic data
-- [ ] Security review
-- [ ] README, OpenAPI docs, demo script
-- [ ] Interview notes: architecture, ledger design, costing, transaction flow
+- [x] Security review: predictable JWT default removed; startup enforces a private signing key
+- [x] README, generated OpenAPI guide, repeatable local demo runner and walkthrough
+- [x] Interview notes: architecture, ledger design, costing, transaction flow, and deployment status
+- [x] Exit: full business cycle, dashboard reconciliation, hardening checks, and delivery materials verified

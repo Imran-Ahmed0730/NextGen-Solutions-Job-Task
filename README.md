@@ -6,11 +6,11 @@ administration in one FastAPI API and Next.js web application backed by MySQL.
 
 ## Project status
 
-Phases 0–12 are implemented, including authentication and administration, master data, parties,
+Phases 0–13 are implemented, including authentication and administration, master data, parties,
 inventory, purchasing, money workflows, sales, production, assets, attendance, payroll, approvals,
-and reporting. Phase 13 hardening is in progress: the full business-cycle E2E test, reusable
-demo-data seed, report-query index review, and JWT signing-key hardening are complete; delivery
-documentation remains.
+reporting, full-cycle regression coverage, demo setup, report-query hardening, security review, and
+delivery documentation. The current Compose stack remains for development/demo, not production VPS
+deployment.
 
 See [the phased plan](./knowledge/05_PLAN.md), [the current checklist](./knowledge/06_TODO.md), and
 [the implementation guide](./knowledge/10_DEVELOPMENT_GUIDE.md) for details. The business and
@@ -32,6 +32,11 @@ engineering requirements in [04_RULES.md](./knowledge/04_RULES.md) govern implem
 - Tooling: Ruff, Mypy, Pytest, Vitest, GitHub Actions
 
 ## Deployment Guideline
+
+For a dedicated Ubuntu VPS deployment plan, see [VPS Deployment Guideline](./DEPLOYMENT_VPS.md).
+For live API endpoint documentation, see the [API and OpenAPI Guide](./API_GUIDE.md). For a
+repeatable local walkthrough and architecture interview review, see the [Full-Cycle Demo Script](./DEMO_SCRIPT.md)
+and [Interview Notes](./INTERVIEW_NOTES.md).
 
 This guide deploys the application locally or to a trusted development/test host with Docker
 Compose. The repository's Compose configuration runs the Next.js development server and starts
@@ -214,6 +219,10 @@ the API; reset tokens are never displayed in the Users screen or written to the 
 
 ## Documentation
 
+- [VPS deployment guideline](./DEPLOYMENT_VPS.md)
+- [API and OpenAPI guide](./API_GUIDE.md)
+- [Full-cycle demo script](./DEMO_SCRIPT.md)
+- [Interview notes](./INTERVIEW_NOTES.md)
 - [Project overview](./knowledge/01_PROJECT.md)
 - [Product requirements](./knowledge/03_PRD.md)
 - [Business and engineering rules](./knowledge/04_RULES.md)

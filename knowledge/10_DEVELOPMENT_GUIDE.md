@@ -470,6 +470,8 @@ migration to the configured database should be an intentional deployment operati
 
 For the full deployment checklist, environment-variable guidance, database lifecycle notes, and
 operational cautions, see the README's [Deployment Guideline](../README.md#deployment-guideline).
+For VPS-specific server preparation, DNS, HTTPS, and production readiness requirements, see the
+[VPS Deployment Guideline](../DEPLOYMENT_VPS.md).
 
 ### Docker Compose
 
@@ -954,11 +956,12 @@ dashboard/report tables and status/date composites where the query filters by bo
 query uses UTC datetime bounds instead of applying `DATE()` to the indexed column. Read-only EXPLAIN
 on the configured MySQL database found scans for these date-filtered report queries; synthetic
 20,000-row EXPLAIN checks selected the new range indexes. The configured database is behind the
-latest migration, so the index migration was validated by rendering SQL offline rather than applying
-it to that database. Security and remaining Phase 13 hardening work are still open. Consult
-`06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
-planned work is complete until its modules, persistence, permissions, tests, and screens are
-actually delivered.
+latest migration, so the index migration was validated by rendering SQL offline rather than
+applying it to that database. The security review found and fixed the predictable default JWT key;
+the OpenAPI guide/test, local demo runner/walkthrough, deployment documentation, and interview notes
+are available from the repository README. The VPS guide clearly states that production Compose and
+frontend build configuration are not yet included. See `06_TODO.md` for completion status and
+`05_PLAN.md` for phase details.
 
 ## 11. Project documentation map
 

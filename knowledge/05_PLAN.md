@@ -203,8 +203,19 @@ now cover the report filters, and cash-book filtering uses UTC datetime bounds. 
 EXPLAIN checks with 20,000 temporary rows selected range indexes for date-only and status/date
 queries (estimated 248 and 200 matching rows respectively). The configured database was at revision
 `20261108_employee_links`, behind repository head `20261111_reporting_views`; no migration was
-applied to that shared database. Upgrade SQL was rendered offline for validation. Security review
-and remaining delivery-documentation work remain.
+applied to that shared database. Upgrade SQL was rendered offline for validation. The security
+review found a predictable default JWT signing key; the default was removed, key length and
+placeholder validation were added, and regression tests were introduced. Full backend tests, mypy,
+Ruff lint, and the repository-wide Ruff format check pass. Existing backend files were formatted
+with Ruff to bring the CI format gate into compliance without changing application behavior.
+
+Delivery materials now include a deployment guideline, a generated OpenAPI usage guide, a local
+demo runner and walkthrough, and interview notes for the architecture and ledger workflows. The
+OpenAPI test checks that representative public/protected routes and bearer security are present.
+The VPS guide explicitly records that production Compose/frontend build configuration and real
+server verification are still prerequisites; the current development Compose stack is not claimed
+as production-ready. Phase 13 checklist and exit criteria are complete for the repository's stated
+scope.
 
 ---
 ## Per-module workflow (repeat for every module)
