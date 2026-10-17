@@ -6,12 +6,10 @@ administration in one FastAPI API and Next.js web application backed by MySQL.
 
 ## Project status
 
-Phases 0–11 are implemented, including authentication and administration, master data, parties,
-inventory, purchasing, money workflows, sales, production, assets, attendance, and basic payroll.
-Approval rules and requests, the pending-approvals inbox, and PO/expense/adjustment posting gates
-are complete. Phase 12 now includes the permission-protected management dashboard, a report center
-with CSV export/print, and a read-only Audit Log screen. Database views and report/dashboard parity
-remain in progress; Phase 13 hardening/delivery is planned.
+Phases 0–12 are implemented, including authentication and administration, master data, parties,
+inventory, purchasing, money workflows, sales, production, assets, attendance, payroll, approvals,
+and reporting. Phase 13 hardening is in progress: the full business-cycle E2E test and reusable
+demo-data seed are complete; performance, security, and delivery-documentation tasks remain.
 
 See [the phased plan](./knowledge/05_PLAN.md), [the current checklist](./knowledge/06_TODO.md), and
 [the implementation guide](./knowledge/10_DEVELOPMENT_GUIDE.md) for details. The business and
@@ -49,6 +47,7 @@ docker compose up -d db
 docker compose run --build --rm --no-deps api alembic upgrade head
 docker compose run --rm --no-deps api python -m app.modules.auth.seed
 docker compose run --rm --no-deps api python -m app.modules.company_settings.seed
+docker compose run --rm --no-deps api python -m app.demo_seed
 ```
 
 The initial-admin command creates `admin` with a randomly generated Argon2-hashed password and an
@@ -67,6 +66,10 @@ Running the command again does not reset an existing password. Sign in at `/logi
 Administrator role is assigned the seeded auth and master-data permissions, including
 `master_data.units.*` and `master_data.product_categories.*`. Run the seed again after upgrading
 the database to add newly introduced permissions; this does not change the existing admin password.
+The demo-data command adds reusable sample parties, products, a BOM, money accounts, an expense
+category, and current-year document sequences. It is safe to rerun: existing demo records are
+preserved. Demo money accounts have opening balances for payment workflows; the command does not
+post purchases, sales, expenses, or other business transactions.
 
 ## Run the web app locally
 

@@ -193,8 +193,10 @@ sales/purchase returns, supplier payment, expense posting, statements, account b
 dashboard totals. Delivery consumes remaining available stock directly after consuming reservations,
 so production output linked to the order can be delivered without creating an invalid reservation.
 Unmatched expenses are explicitly marked POSTED when their money-ledger effect is posted, allowing
-the dashboard to include them. The workflow and affected regression tests pass; demo data,
-performance, security, and delivery-documentation work remain.
+the dashboard to include them. The workflow and affected regression tests pass. The demo seeder adds
+idempotent sample master data and current-year document sequences using the existing module
+services; it leaves business ledgers untouched and creates audit history for seeded records.
+Performance, security, and remaining delivery-documentation work remain.
 
 ---
 ## Per-module workflow (repeat for every module)

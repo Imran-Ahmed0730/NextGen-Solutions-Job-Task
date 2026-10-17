@@ -499,7 +499,18 @@ migration to the configured database should be an intentional deployment operati
 
    Existing values are preserved; use `--overwrite` only when intentionally replacing them.
 
-7. Open `http://localhost:3000/login`. API health is at `http://localhost:8000/health`.
+7. Seed reusable demo master data and document sequences:
+
+   ```powershell
+   docker compose run --rm --no-deps api python -m app.demo_seed
+   ```
+
+   This idempotently adds demo parties, products, a BOM, money accounts, an expense category, and
+   document sequences for the current year. Existing demo records are preserved. Demo accounts
+   have opening balances for payment workflows; no purchase, sale, expense, stock, or money ledger
+   transactions are posted by this command. The end-to-end test covers the complete posted cycle.
+
+8. Open `http://localhost:3000/login`. API health is at `http://localhost:8000/health`.
 
 Compose has `db`, `api`, and `web` services. The development web service runs `next dev`; the API
 uses Uvicorn reload. The local MySQL data persists in the Compose-managed `mysql_data` volume.
@@ -939,7 +950,9 @@ unreserved available stock through the stock-posting service after consuming exi
 this lets linked production output be delivered without creating an extra reservation against the
 same order quantity. Expenses without a matching approval rule are marked `POSTED` when the money
 transaction is posted, so dashboard expense totals include them. The focused workflow regression
-suite passes. Seed/demo data and the remaining Phase 13 hardening work are still open. Consult
+suite passes. The idempotent demo seed command adds audited master data and document sequences
+without posting business transactions. Performance, security, and remaining Phase 13 hardening work
+are still open. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 planned work is complete until its modules, persistence, permissions, tests, and screens are
 actually delivered.

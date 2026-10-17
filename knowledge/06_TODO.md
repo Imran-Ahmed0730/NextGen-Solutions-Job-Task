@@ -198,7 +198,7 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 - [x] Full-cycle E2E test: purchase raw material → stock → sales order/reservation → linked
   production → delivery/COGS → invoice → collection → cash/bank/MFS → returns/payment/expense →
   statements and management dashboard
-- [ ] Seed/demo data script
+- [x] Idempotent demo master-data and document-sequence seed command
 - [ ] Indexes + performance check
 - [ ] Security review
 - [ ] README, OpenAPI docs, demo script
