@@ -314,16 +314,9 @@ def _consume_delivery_quantity(
             break
 
     if remaining > 0:
-        reservation = inventory_service.reserve_stock(
+        transaction = inventory_service.consume_available_stock(
             db,
             sales_order_line_id=line.id,
-            qty=remaining,
-            actor=actor,
-            ip=ip,
-        )
-        _, transaction = inventory_service.consume_reservation(
-            db,
-            reservation_id=reservation.id,
             qty=remaining,
             actor=actor,
             ip=ip,

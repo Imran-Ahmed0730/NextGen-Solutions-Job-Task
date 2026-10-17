@@ -509,10 +509,16 @@ def test_delivery_consumes_existing_reservation_before_available_stock(
     current_order = client.get(f"/api/v1/sales/orders/{order['id']}", headers=headers).json()
     assert current_order["lines"][0]["qty_reserved"] == "0.000"
     assert current_order["lines"][0]["qty_delivered"] == "3.000"
-    assert [item["status"] for item in current_order["lines"][0]["reservations"]] == [
-        "CONSUMED",
-        "CONSUMED",
-    ]
+    assert [item["status"] for item in current_order["lines"][0]["reservations"]] == ["CONSUMED"]
+    available_stock_delivery = db_session.scalar(
+        select(StockTransaction).where(
+            StockTransaction.movement_type == MovementType.SALE_DELIVERY,
+            StockTransaction.source_type == "SALES_ORDER",
+            StockTransaction.source_id == order["id"],
+        )
+    )
+    assert available_stock_delivery is not None
+    assert available_stock_delivery.qty_signed == Decimal("-1.000")
     balance = db_session.get(StockBalance, (product.id, warehouse.id))
     assert balance is not None
     assert balance.qty_on_hand == Decimal("7.000")

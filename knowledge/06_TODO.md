@@ -195,7 +195,9 @@ Legend: `[ ]` open · `[x]` done. Work top to bottom. Each phase's last item is 
 
 ## Phase 13 — Hardening
 - [x] Shared searchable entity selectors and visible required-field markers across existing screens
-- [ ] Full-cycle E2E test
+- [x] Full-cycle E2E test: purchase raw material → stock → sales order/reservation → linked
+  production → delivery/COGS → invoice → collection → cash/bank/MFS → returns/payment/expense →
+  statements and management dashboard
 - [ ] Seed/demo data script
 - [ ] Indexes + performance check
 - [ ] Security review

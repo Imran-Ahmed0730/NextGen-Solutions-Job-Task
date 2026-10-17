@@ -187,6 +187,15 @@ actions. Phase 12 exit criteria are covered by seeded report tests and dashboard
 **Build:** full-cycle E2E test, seed/demo data, performance indexes, security review, README, API docs (OpenAPI), demo script, interview notes.
 **Exit:** `docker compose up` + seed → run the full business cycle from the PRD with correct dashboard numbers.
 
+**Progress:** The seeded SQLite API E2E test now exercises raw-material purchase and receipt,
+sales-order reservation, linked production, delivery and COGS, invoicing, customer collection,
+sales/purchase returns, supplier payment, expense posting, statements, account balances, and
+dashboard totals. Delivery consumes remaining available stock directly after consuming reservations,
+so production output linked to the order can be delivered without creating an invalid reservation.
+Unmatched expenses are explicitly marked POSTED when their money-ledger effect is posted, allowing
+the dashboard to include them. The workflow and affected regression tests pass; demo data,
+performance, security, and delivery-documentation work remain.
+
 ---
 ## Per-module workflow (repeat for every module)
 1. Read PRD section + rules + schema section.

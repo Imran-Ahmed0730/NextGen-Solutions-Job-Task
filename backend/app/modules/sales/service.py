@@ -75,3 +75,30 @@ def consume_reserved_quantity(
         ip=ip,
     )
     db.flush()
+
+
+def record_unreserved_delivery_quantity(
+    db: Session,
+    *,
+    line: SalesOrderLine,
+    quantity: Decimal,
+    actor: User,
+    ip: str | None = None,
+) -> None:
+    before: dict[str, object] = {"qty_delivered": str(line.qty_delivered)}
+    new_delivered = line.qty_delivered + quantity
+    if quantity <= 0 or new_delivered > line.qty_ordered:
+        raise HTTPException(status_code=409, detail="DELIVERY_EXCEEDS_ORDER_REMAINING")
+    line.qty_delivered = new_delivered
+    db.flush()
+    record_audit(
+        db,
+        actor_id=actor.id,
+        entity_type="sales_order_line",
+        entity_id=line.id,
+        action="UPDATE",
+        before=before,
+        after={"qty_delivered": str(line.qty_delivered)},
+        ip=ip,
+    )
+    db.flush()

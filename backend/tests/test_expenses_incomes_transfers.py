@@ -137,6 +137,7 @@ def test_expense_flow_posts_money_and_updates_balance(
     expense_data = create_res.json()
     assert expense_data["doc_no"] == "EXP-20260001"
     assert expense_data["amount"] == "250.00"
+    assert expense_data["status"] == "POSTED"
 
     # Verify money transaction
     txns = list(

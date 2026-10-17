@@ -930,7 +930,16 @@ snapshot values; historical due reports continue to calculate as of the selected
 Dedicated invoice and party-statement print layouts are implemented: invoice history links to a
 branded, readable invoice view, and customer/supplier statements provide a print/PDF action.
 Printing is read-only and uses the existing posting and statement data. Phase 12 exit checks now
-cover dashboard/report reconciliation and seeded report results. Phase 13 hardening is next. Consult
+cover dashboard/report reconciliation and seeded report results.
+
+Phase 13's full-cycle E2E test covers raw-material purchasing and receipt, reservation and linked
+production, delivery and stored COGS, invoice, customer collection, returns, supplier payment,
+expense, statements, account balances, and dashboard totals. Delivery consumes an order's
+unreserved available stock through the stock-posting service after consuming existing reservations;
+this lets linked production output be delivered without creating an extra reservation against the
+same order quantity. Expenses without a matching approval rule are marked `POSTED` when the money
+transaction is posted, so dashboard expense totals include them. The focused workflow regression
+suite passes. Seed/demo data and the remaining Phase 13 hardening work are still open. Consult
 `06_TODO.md` for the current checklist and `05_PLAN.md` for ordering and exit criteria. Do not claim
 planned work is complete until its modules, persistence, permissions, tests, and screens are
 actually delivered.

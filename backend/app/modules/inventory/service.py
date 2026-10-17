@@ -335,6 +335,57 @@ def consume_reservation(
     return reservation, transaction
 
 
+def consume_available_stock(
+    db: Session,
+    *,
+    sales_order_line_id: int,
+    qty: Decimal,
+    actor: User,
+    ip: str | None = None,
+) -> StockTransaction:
+    _validate_positive_quantity(qty)
+    line_and_order = sales_service.lock_order_line_for_reservation(db, sales_order_line_id)
+    if line_and_order is None:
+        raise HTTPException(status_code=404, detail="Sales order line not found")
+    line, order = line_and_order
+    if order.status != "DRAFT":
+        raise HTTPException(status_code=409, detail="SALES_ORDER_NOT_DELIVERABLE")
+    if qty > line.qty_ordered - line.qty_delivered:
+        raise HTTPException(status_code=409, detail="DELIVERY_EXCEEDS_ORDER_REMAINING")
+
+    product = product_service.lock_product_for_stock_posting(db, line.product_id)
+    if product is None or not product.is_active or product.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if not product.is_stocked:
+        raise HTTPException(status_code=422, detail="Only stocked products can be delivered")
+    if not product.unit.allow_decimal and qty != qty.to_integral_value():
+        raise HTTPException(status_code=422, detail="Product unit does not allow decimal quantity")
+    if warehouse_service.get_active_warehouse(db, order.warehouse_id) is None:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+
+    balance = repository.get_balance(
+        db, product_id=product.id, warehouse_id=order.warehouse_id, for_update=True
+    )
+    if balance is None or balance.available < qty:
+        raise HTTPException(status_code=409, detail="STOCK_INSUFFICIENT")
+
+    sales_service.record_unreserved_delivery_quantity(
+        db, line=line, quantity=qty, actor=actor, ip=ip
+    )
+    return post_stock_movement(
+        db,
+        product_id=product.id,
+        warehouse_id=order.warehouse_id,
+        movement_type=MovementType.SALE_DELIVERY,
+        qty_signed=-qty,
+        unit_cost=product.avg_cost,
+        source_type="SALES_ORDER",
+        source_id=order.id,
+        source_line_id=line.id,
+        actor=actor,
+    )
+
+
 def list_stock(
     db: Session,
     *,

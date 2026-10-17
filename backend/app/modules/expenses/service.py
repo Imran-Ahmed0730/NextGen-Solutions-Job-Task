@@ -82,6 +82,7 @@ def create_expense(
         if approval_request:
             expense.status = "PENDING_APPROVAL"
         else:
+            expense.status = "POSTED"
             _post_expense_effects(db, expense, category.name, actor, ip)
 
         record_audit(
